@@ -1,1 +1,244 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linket Ultimate Edition</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#182344;color:white;font-family:Arial,sans-serif}
+header{padding:20px 5%;background:#111a36;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.logo{font-size:34px;font-weight:900}.logo span{color:#ff589e}
+.tokens{background:#293b69;padding:15px 22px;border-radius:30px;color:#ffd166;font-weight:bold}
+main{max-width:1150px;margin:auto;padding:25px}
+.hero{padding:45px;background:linear-gradient(120deg,#60439e,#146b83);border-radius:35px;margin:15px 0 25px}
+.hero h1{font-size:48px;margin:10px 0}
+button{border:0;border-radius:13px;padding:14px 20px;font-weight:bold;cursor:pointer;background:#ff589e;color:#201633;margin:4px}
+button:hover{filter:brightness(1.12)}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
+.tabs button{background:#30416f;color:white}
+.tabs button.active{background:#ff589e;color:#201633}
+.panel{display:none}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}
+.card{background:#29385f;padding:20px;border-radius:18px;text-align:center}
+.emoji{font-size:45px}
+.rarity{font-size:12px;font-weight:bold;padding:6px 12px;border-radius:20px;display:inline-block}
+.Common{background:#dce3ed;color:#39445b}
+.Rare{background:#6fcaff;color:#143b68}
+.Epic{background:#bd8bff;color:#35135c}
+.Legendary{background:#ffd166;color:#674500}
+.Mythical{background:#ff72cf;color:#65104c}
+input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}
+.login{max-width:400px;margin:60px auto;background:#29385f;padding:28px;border-radius:20px}
+.small{color:#c3cbe2;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo">✨ Link<span>et</span></div>
+ <div class="tokens">🪙 Tokens: <span id="tokens">0</span></div>
+</header>
+
+<main>
+<div id="login" class="login">
+ <h1>Welcome to Linket!</h1>
+ <p>Create your player account.</p>
+ <input id="username" placeholder="Username">
+ <input id="password" type="password" placeholder="Password">
+ <button onclick="login()">Enter Linket</button>
+ <p class="small">Prototype accounts are saved in this browser. Do not use a real password.</p>
+ <p id="error"></p>
+</div>
+
+<div id="game" style="display:none">
+ <section class="hero">
+  <h2>YOUR GAME • YOUR COLLECTION</h2>
+  <h1>Play big.<br>Collect everything.</h1>
+  <p>Answer questions, open awesome packs, and build your ultimate collection!</p>
+  <button onclick="tab('modes')">▶ Play Linket</button>
+ </section>
+
+ <nav class="tabs">
+  <button class="active" onclick="tab('modes',this)">🎮 Game Modes</button>
+  <button onclick="tab('packs',this)">🎁 Packs</button>
+  <button onclick="tab('locker',this)">📚 Collection</button>
+ </nav>
+
+ <section id="modes" class="panel active">
+  <h1>Game Modes</h1>
+  <div class="grid" id="modeGrid"></div>
+ </section>
+
+ <section id="packs" class="panel">
+  <h1>Open a pack</h1>
+  <p>No daily limits! Open as many packs as you can afford.</p>
+  <div class="grid" id="packGrid"></div>
+ </section>
+
+ <section id="locker" class="panel">
+  <h1>Your collection</h1>
+  <p id="count"></p>
+  <div class="grid" id="collection"></div>
+ </section>
+
+ <button onclick="logout()">Log out</button>
+</div>
+</main>
+
+<script>
+const items=[
+ ["Happy Turtle","🐢","Common"],
+ ["Tiny Bee","🐝","Common"],
+ ["Bouncy Bunny","🐰","Common"],
+ ["Robot Buddy","🤖","Rare"],
+ ["Frost Wolf","🐺","Epic"],
+ ["Golden Owl","🦉","Legendary"],
+ ["Crystal Cat","🐱","Legendary"],
+ ["Lumi Fox","🦊","Mythical"],
+ ["Galaxy Dragon","🐉","Mythical"],
+ ["Starwing","🦄","Mythical"]
+];
+
+const modes=[
+ ["🛡️","Tower Defense"],
+ ["💰","Gold Quest"],
+ ["☕","Cafe"],
+ ["🏭","Factory"]
+];
+
+const packs=[
+ ["🎄","Christmas Pack",50],
+ ["🌈","Rainbow Pack",100],
+ ["🌌","Galaxy Pack",150]
+];
+
+let player=null;
+let accounts=JSON.parse(localStorage.getItem("linketAccounts")||"{}");
+
+function save(){
+ accounts[player.name]=player;
+ localStorage.setItem("linketAccounts",JSON.stringify(accounts));
+ update();
+}
+
+function login(){
+ let name=document.getElementById("username").value.trim();
+ let pass=document.getElementById("password").value;
+ if(!name||!pass){document.getElementById("error").textContent="Enter both fields.";return;}
+
+ if(accounts[name]){
+  if(accounts[name].password!==pass){
+   document.getElementById("error").textContent="Incorrect password.";
+   return;
+  }
+  player=accounts[name];
+ }else{
+  const owner=name.toLowerCase()==="owner";
+  player={
+   name,password:pass,
+   owner,
+   tokens:owner?1000000:250,
+   owned:owner?items.filter(x=>x[2]==="Mythical").map(x=>x[0]):["Happy Turtle"]
+  };
+ }
+ if(player.owner){
+  player.tokens=1000000;
+  items.filter(x=>x[2]==="Mythical").forEach(x=>{
+   if(!player.owned.includes(x[0]))player.owned.push(x[0]);
+  });
+ }
+ save();
+ document.getElementById("login").style.display="none";
+ document.getElementById("game").style.display="block";
+ draw();
+}
+
+function logout(){
+ player=null;
+ document.getElementById("game").style.display="none";
+ document.getElementById("login").style.display="block";
+}
+
+function update(){
+ document.getElementById("tokens").textContent=player.tokens.toLocaleString();
+ document.getElementById("count").textContent=player.owned.length+" collectibles owned";
+}
+
+function tab(id,btn){
+ document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+ if(btn)btn.classList.add("active");
+}
+
+function draw(){
+ document.getElementById("modeGrid").innerHTML=modes.map(m=>`
+ <div class="card">
+ <div class="emoji">${m[0]}</div>
+ <h2>${m[1]}</h2>
+ <button onclick="play()">Play</button>
+ </div>`).join("");
+
+ document.getElementById("packGrid").innerHTML=packs.map(p=>`
+ <div class="card">
+ <div class="emoji">${p[0]}</div>
+ <h2>${p[1]}</h2>
+ <p>${p[2]} tokens</p>
+ <button onclick="openPack(${p[2]},'${p[1]}')">Open Pack</button>
+ </div>`).join("");
+
+ drawCollection();
+ update();
+}
+
+function drawCollection(){
+ document.getElementById("collection").innerHTML=items.map(x=>{
+ let owned=player.owned.includes(x[0]);
+ return `<div class="card">
+ <div class="emoji">${owned?x[1]:"❔"}</div>
+ <h3>${owned?x[0]:"???"}</h3>
+ <span class="rarity ${x[2]}">${x[2]}</span>
+ <p>${owned?"Owned":"Not collected"}</p>
+ </div>`;
+ }).join("");
+}
+
+function openPack(cost,name){
+ if(!player.owner&&player.tokens<cost){
+  alert("Not enough tokens! Play games to earn more.");
+  return;
+ }
+ let available=items.filter(x=>!player.owned.includes(x[0]));
+ if(!available.length){alert("You collected everything!");return;}
+ let found=available[Math.floor(Math.random()*available.length)];
+ if(!player.owner)player.tokens-=cost;
+ player.owned.push(found[0]);
+ save();
+ drawCollection();
+ alert("You found "+found[1]+" "+found[0]+"!\nRarity: "+found[2]);
+}
+
+function play(){
+ let questions=[
+  ["What is 8 × 7?",["54","56","64"],1],
+  ["Which planet is the Red Planet?",["Mars","Venus","Earth"],0],
+  ["How many sides does a hexagon have?",["5","6","8"],1],
+  ["What is 100 divided by 4?",["20","25","40"],1]
+ ];
+ let q=questions[Math.floor(Math.random()*questions.length)];
+ let answer=prompt(q[0]+"\n1. "+q[1][0]+"\n2. "+q[1][1]+"\n3. "+q[1][2]);
+ if(answer===null)return;
+ if(Number(answer)-1===q[2]){
+  player.tokens+=25;
+  save();
+  alert("Correct! You earned 25 tokens! 🎉");
+ }else{
+  alert("Not quite! Try again!");
+ }
+}
+
+</script>
+</body>
+</html>
+
