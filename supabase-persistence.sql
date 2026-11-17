@@ -99,11 +99,6 @@ BEGIN
       ('Robot Buddy'), ('Frost Wolf'), ('Golden Owl'),
       ('Crystal Cat'), ('Lumi Fox'), ('Galaxy Dragon'), ('Starwing')
     ) AS catalog(collectible)
-    WHERE NOT EXISTS (
-      SELECT 1 FROM public.owned_collectibles oc
-      WHERE oc.user_id = v_user_id
-        AND oc.collectible_id = catalog.collectible
-    )
     ORDER BY random()
     LIMIT 1;
 
