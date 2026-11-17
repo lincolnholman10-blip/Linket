@@ -6,7 +6,7 @@
 <title>Linket Ultimate Edition</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#182344;color:white;font-family:Arial,sans-serif}header{padding:20px 5%;background:#111a36;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.logo{font-size:34px;font-weight:900}.logo span{color:#ff589e}.tokens{background:#293b69;padding:15px 22px;border-radius:30px;color:#ffd166;font-weight:bold}main{max-width:1150px;margin:auto;padding:25px}.hero{padding:45px;background:linear-gradient(120deg,#60439e,#146b83);border-radius:35px;margin:15px 0 25px}.hero h1{font-size:48px;margin:10px 0}button{border:0;border-radius:13px;padding:14px 20px;font-weight:bold;cursor:pointer;background:#ff589e;color:#201633;margin:4px}button:hover{filter:brightness(1.12)}button:disabled{opacity:.55;cursor:wait}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}.tabs button{background:#30416f;color:white}.tabs button.active{background:#ff589e;color:#201633}.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}.card{background:#29385f;padding:20px;border-radius:18px;text-align:center}.emoji{font-size:45px}.rarity{font-size:12px;font-weight:bold;padding:6px 12px;border-radius:20px;display:inline-block}.Common{background:#dce3ed;color:#39445b}.Rare{background:#6fcaff;color:#143b68}.Epic{background:#bd8bff;color:#35135c}.Legendary{background:#ffd166;color:#674500}.Mythical{background:#ff72cf;color:#65104c}input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}.login{max-width:400px;margin:60px auto;background:#29385f;padding:28px;border-radius:20px}.small{color:#c3cbe2;font-size:13px}#error{white-space:pre-wrap;color:#ffd166;line-height:1.4}.hidden{display:none!important}
-</style>
+.owner-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.owner-stats{margin:16px 0}.owner-section{margin:18px 0;text-align:left}.owner-section h2{margin-top:0}.owner-tools-grid{align-items:stretch}.owner-section label{display:block;text-align:left;margin-top:10px;color:#dce4ff;font-size:13px}.owner-select{width:100%;padding:13px;border:0;border-radius:10px;margin:8px 0;background:#fff;color:#182344}.owner-table{width:100%;border-collapse:collapse;min-width:650px;text-align:left}.owner-table th,.owner-table td{padding:11px;border-bottom:1px solid #526187}.table-wrap{overflow-x:auto}.owner-table button{padding:8px 12px;margin:0}.secondary{background:#526187;color:white}.activity-list{display:grid;gap:8px}.activity-item{background:#202f53;border-radius:10px;padding:12px;font-size:13px}.activity-item small{display:block;color:#bdc8e4;margin-top:5px}@media(max-width:600px){.owner-section{padding:14px}.owner-table{font-size:12px}}\n</style>
 </head>
 <body>
 <header><div class="logo">✨ Link<span>et</span></div><div class="tokens">🪙 Tokens: <span id="tokens">0</span></div></header>
@@ -28,7 +28,30 @@
 <section id="modes" class="panel active"><h1>Game Modes</h1><div class="grid" id="modeGrid"></div></section>
 <section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits! Open as many packs as you can afford.</p><div class="grid" id="packGrid"></div></section>
 <section id="locker" class="panel"><h1>Your collection</h1><p id="count"></p><div class="grid" id="collection"></div></section>
-<section id="ownerDashboard" class="panel"><h1>👑 Owner Dashboard</h1><p class="small">Owner access is read from your protected Supabase profile.</p><div class="grid"><div class="card"><div class="emoji">👤</div><h2 id="ownerName">—</h2><p>Signed-in owner</p></div><div class="card"><div class="emoji">🪙</div><h2 id="ownerTokens">—</h2><p>Current token balance</p></div><div class="card"><div class="emoji">✨</div><h2 id="ownerCollectibles">—</h2><p>Collectibles in this browser</p></div></div><div class="card" style="margin:18px 0"><h2>🛠️ Owner tools</h2><button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button><button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000 tokens (this browser)</button></div></section>
+<section id="ownerDashboard" class="panel">
+<h1>👑 Owner Dashboard</h1><p class="small">Private owner controls. Player changes are saved directly to Supabase.</p>
+<div class="owner-actions"><button onclick="loadOwnerDashboard()">↻ Refresh dashboard</button><button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button><button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000 tokens</button></div>
+<p id="ownerStatus" class="small" role="status" aria-live="polite"></p>
+<div class="grid owner-stats">
+<div class="card"><div class="emoji">👥</div><h2 id="ownerPlayerCount">—</h2><p>Total players</p></div>
+<div class="card"><div class="emoji">🪙</div><h2 id="ownerTokenTotal">—</h2><p>Tokens across all players</p></div>
+<div class="card"><div class="emoji">✨</div><h2 id="ownerCollectibleTotal">—</h2><p>Collectibles owned</p></div>
+<div class="card"><div class="emoji">👑</div><h2 id="ownerName">—</h2><p>Signed-in owner</p></div>
+</div>
+<div class="card owner-section"><h2>👥 Player management</h2><p class="small">Review player accounts and select one to manage.</p>
+<div class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div></div>
+<div class="grid owner-tools-grid">
+<div class="card owner-section"><h2>🪙 Adjust player tokens</h2><label for="ownerTarget">Player</label><select id="ownerTarget" class="owner-select"></select>
+<label for="ownerTokenAmount">Amount</label><input id="ownerTokenAmount" type="number" min="1" max="1000000000" value="100">
+<button onclick="ownerAdjustTokens(1)">＋ Add tokens</button><button class="secondary" onclick="ownerAdjustTokens(-1)">－ Remove tokens</button>
+</div>
+<div class="card owner-section"><h2>🎁 Grant a collectible</h2><label for="ownerCollectibleTarget">Player</label><select id="ownerCollectibleTarget" class="owner-select"></select>
+<label for="ownerCollectibleChoice">Collectible</label><select id="ownerCollectibleChoice" class="owner-select"></select>
+<label for="ownerCollectibleQuantity">Quantity</label><input id="ownerCollectibleQuantity" type="number" min="1" max="1000" value="1">
+<button onclick="ownerGrantCollectible()">Grant collectible</button></div>
+</div>
+<div class="card owner-section"><h2>🧾 Recent owner activity</h2><div id="ownerActivity" class="activity-list">Loading activity…</div></div>
+</section>
 <button onclick="logout()">Log out</button>
 </div>
 </main>
@@ -46,7 +69,7 @@ const packs = [["🎄","Christmas Pack",50],["🌈","Rainbow Pack",100],["🌌",
 let player = null;
 let profile = null;
 let session = null;
-let busy = false;
+let busy = false;\nlet ownerPlayers = [];\n
 
 function showError(message){document.getElementById("error").textContent=message||"";}
 function setBusy(value){busy=value;document.getElementById("loginButton").disabled=value;document.getElementById("createButton").disabled=value;}
@@ -145,7 +168,7 @@ async function logout(){
  showError("You have been signed out.");
 }
 function tab(id,btn){
- if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}
+ if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}\n if(id==="ownerDashboard")loadOwnerDashboard();
  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
@@ -161,6 +184,73 @@ function renderOwnerDashboard(){
  document.getElementById("ownerName").textContent=player.name;
  document.getElementById("ownerTokens").textContent=Number(player.tokens).toLocaleString();
  document.getElementById("ownerCollectibles").textContent=player.owned.length;
+}
+function ownerMessage(message){const el=document.getElementById("ownerStatus");if(el)el.textContent=message||"";}
+function ownerEscape(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+async function loadOwnerDashboard(){
+ if(!player||!player.owner)return;
+ ownerMessage("Loading live player data…");
+ try{
+  const [playersResult,activityResult]=await Promise.all([
+   supabaseClient.rpc("linket_owner_list_players"),
+   supabaseClient.rpc("linket_owner_recent_activity",{p_limit:30})
+  ]);
+  if(playersResult.error)throw playersResult.error;
+  if(activityResult.error)throw activityResult.error;
+  ownerPlayers=playersResult.data||[];
+  const tokenTotal=ownerPlayers.reduce((sum,p)=>sum+Number(p.tokens||0),0);
+  const collectibleTotal=ownerPlayers.reduce((sum,p)=>sum+Number(p.collectible_count||0),0);
+  document.getElementById("ownerPlayerCount").textContent=ownerPlayers.length.toLocaleString();
+  document.getElementById("ownerTokenTotal").textContent=tokenTotal.toLocaleString();
+  document.getElementById("ownerCollectibleTotal").textContent=collectibleTotal.toLocaleString();
+  document.getElementById("ownerName").textContent=player.name;
+  const body=document.getElementById("ownerPlayersBody");
+  body.innerHTML=ownerPlayers.length?ownerPlayers.map(p=>'<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':'Player')+'</td><td><button onclick="selectOwnerPlayer(\''+p.player_id+'\')">Manage</button></td></tr>').join(""):'<tr><td colspan="5">No player accounts found.</td></tr>';
+  const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
+  selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
+  const collectibleSelect=document.getElementById("ownerCollectibleChoice");
+  collectibleSelect.innerHTML=items.map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("");
+  const activity=document.getElementById("ownerActivity");
+  const entries=activityResult.data||[];
+  activity.innerHTML=entries.length?entries.map(a=>'<div class="activity-item"><strong>'+ownerEscape(a.action.replaceAll("_"," "))+'</strong> · '+ownerEscape(a.actor_username||"Former user")+(a.target_username?' → '+ownerEscape(a.target_username):'')+'<small>'+ownerEscape(JSON.stringify(a.details||{}))+' · '+new Date(a.created_at).toLocaleString()+'</small></div>').join(""):'No owner actions recorded yet.';
+  ownerMessage("Dashboard updated just now.");
+ }catch(e){ownerMessage("Could not load owner dashboard: "+(e.message||e));}
+}
+function selectOwnerPlayer(id){
+ document.getElementById("ownerTarget").value=id;
+ document.getElementById("ownerCollectibleTarget").value=id;
+}
+async function ownerAdjustTokens(direction){
+ if(!player||!player.owner)return;
+ const target=document.getElementById("ownerTarget").value;
+ const amount=Number(document.getElementById("ownerTokenAmount").value);
+ if(!target||!Number.isSafeInteger(amount)||amount<1||amount>1000000000){ownerMessage("Enter a valid token amount and select a player.");return;}
+ const signedAmount=direction*amount;
+ if(!confirm((direction>0?"Add ":"Remove ")+amount.toLocaleString()+" tokens?"))return;
+ ownerMessage("Saving token adjustment…");
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_owner_adjust_tokens",{p_user_id:target,p_amount:signedAmount});
+  if(error)throw error;
+  ownerMessage("Saved! New balance: "+Number(data).toLocaleString()+" tokens.");
+  await loadOwnerDashboard();
+  if(target===session.user.id){await refreshSavedGame();renderOwnerDashboard();}
+ }catch(e){ownerMessage("Token adjustment failed: "+e.message);}
+}
+async function ownerGrantCollectible(){
+ if(!player||!player.owner)return;
+ const target=document.getElementById("ownerCollectibleTarget").value;
+ const collectible=document.getElementById("ownerCollectibleChoice").value;
+ const quantity=Number(document.getElementById("ownerCollectibleQuantity").value);
+ if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;}
+ if(!confirm("Grant "+quantity+" × "+collectible+" to the selected player?"))return;
+ ownerMessage("Granting collectible…");
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_owner_grant_collectible",{p_user_id:target,p_collectible_id:collectible,p_quantity:quantity});
+  if(error)throw error;
+  ownerMessage("Granted! That player now owns "+data+" of this collectible.");
+  await loadOwnerDashboard();
+  if(target===session.user.id){await refreshSavedGame();drawCollection();renderOwnerDashboard();}
+ }catch(e){ownerMessage("Could not grant collectible: "+e.message);}
 }
 async function ownerUnlockAll(){
  if(!player||!player.owner)return;
