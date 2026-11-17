@@ -51,10 +51,27 @@ let busy = false;
 function showError(message){document.getElementById("error").textContent=message||"";}
 function setBusy(value){busy=value;document.getElementById("loginButton").disabled=value;document.getElementById("createButton").disabled=value;}
 function localKey(){return "linketGame_"+session.user.id;}
-function loadLocalGame(){
+async function loadGameData(){
  let saved={};
  try{saved=JSON.parse(localStorage.getItem(localKey())||"{}")||{};}catch(e){}
- player={name:profile.username||"Player",tokens:Number(profile.tokens)||0,owned:Array.isArray(saved.owned)?saved.owned:[],owner:profile.is_owner===true};
+ const {data:rows,error}=await supabaseClient.from("owned_collectibles")
+  .select("collectible_id,quantity").eq("user_id",session.user.id);
+ if(error)throw new Error("Could not load your saved collection: "+error.message);
+ const dbOwned=(rows||[]).map(row=>row.collectible_id);
+ const legacy=[...new Set((Array.isArray(saved.owned)?saved.owned:[]).filter(name=>items.some(item=>item[0]===name)))];
+ const missing=legacy.filter(name=>!dbOwned.includes(name));
+ if(missing.length){
+  const {error:saveError}=await supabaseClient.from("owned_collectibles").insert(
+   missing.map(name=>({user_id:session.user.id,collectible_id:name,quantity:1}))
+  );
+  if(saveError && !/duplicate|unique/i.test(saveError.message))throw new Error("Could not migrate your old collection: "+saveError.message);
+ }
+ const {data:latest,error:reloadError}=await supabaseClient.from("owned_collectibles")
+  .select("collectible_id,quantity").eq("user_id",session.user.id);
+ if(reloadError)throw new Error("Could not refresh your collection: "+reloadError.message);
+ player={name:profile.username||"Player",tokens:Number(profile.tokens)||0,
+  owned:[...new Set((latest||[]).map(row=>row.collectible_id))],owner:profile.is_owner===true};
+ try{localStorage.setItem(localKey(),JSON.stringify({owned:player.owned}));}catch(e){}
 }
 function save(){
  try{localStorage.setItem(localKey(),JSON.stringify({owned:player.owned}));}catch(e){}
@@ -74,7 +91,7 @@ async function loadProfile(user){
  const {data,error}=await supabaseClient.from("profiles").select("id,username,tokens,is_owner").eq("id",user.id).single();
  if(error)throw new Error("Signed in, but Linket could not load your player profile: "+error.message);
  profile=data;
- loadLocalGame();
+ await loadGameData();
  showGame();
 }
 async function login(){
@@ -145,15 +162,38 @@ function renderOwnerDashboard(){
  document.getElementById("ownerTokens").textContent=Number(player.tokens).toLocaleString();
  document.getElementById("ownerCollectibles").textContent=player.owned.length;
 }
-function ownerUnlockAll(){
+async function ownerUnlockAll(){
  if(!player||!player.owner)return;
- player.owned=items.map(item=>item[0]);save();drawCollection();renderOwnerDashboard();
- alert("Every Linket collectible has been added to your collection in this browser.");
+ try{
+  const {error}=await supabaseClient.rpc("linket_owner_unlock_all");
+  if(error)throw error;
+  await refreshSavedGame();
+  drawCollection();renderOwnerDashboard();
+  alert("Every Linket collectible has been saved to your account.");
+ }catch(e){alert("Could not unlock collectibles: "+e.message);}
 }
-function ownerRestoreTokens(){
+async function ownerRestoreTokens(){
  if(!player||!player.owner)return;
- player.tokens=1000000;update();renderOwnerDashboard();
- alert("The game balance is restored to 1,000,000 for this session. Database balance has not been changed.");
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_owner_restore_tokens");
+  if(error)throw error;
+  player.tokens=Number(data)||0;profile.tokens=player.tokens;
+  update();renderOwnerDashboard();
+  alert("Your 1,000,000 tokens have been saved to Supabase.");
+ }catch(e){alert("Could not restore tokens: "+e.message);}
+}
+async function refreshSavedGame(){
+ const {data:profileData,error:profileError}=await supabaseClient.from("profiles")
+  .select("id,username,tokens,is_owner").eq("id",session.user.id).single();
+ if(profileError)throw profileError;
+ profile=profileData;
+ const {data:rows,error}=await supabaseClient.from("owned_collectibles")
+  .select("collectible_id,quantity").eq("user_id",session.user.id);
+ if(error)throw error;
+ player.tokens=Number(profile.tokens)||0;
+ player.owned=[...new Set((rows||[]).map(row=>row.collectible_id))];
+ try{localStorage.setItem(localKey(),JSON.stringify({owned:player.owned}));}catch(e){}
+ update();
 }
 function drawCollection(){
  document.getElementById("collection").innerHTML=items.map(x=>{
@@ -161,22 +201,38 @@ function drawCollection(){
  return '<div class="card"><div class="emoji">'+(owned?x[1]:"❔")+'</div><h3>'+(owned?x[0]:"???")+'</h3><span class="rarity '+x[2]+'">'+x[2]+'</span><p>'+(owned?"Owned":"Not collected")+'</p></div>';
  }).join("");
 }
-function openPack(cost){
- if(!player.owner&&player.tokens<cost){alert("Not enough tokens! Play games to earn more.");return;}
- const available=items.filter(x=>!player.owned.includes(x[0]));
- if(!available.length){alert("You collected everything!");return;}
- const found=available[Math.floor(Math.random()*available.length)];
- if(!player.owner)player.tokens-=cost;
- player.owned.push(found[0]);save();drawCollection();
- alert("You found "+found[1]+" "+found[0]+"!\nRarity: "+found[2]);
+async function openPack(cost){
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_open_pack",{p_cost:cost});
+  if(error)throw error;
+  const result=Array.isArray(data)?data[0]:data;
+  if(!result)throw new Error("The pack did not return a collectible.");
+  const found=items.find(item=>item[0]===result.collectible_id);
+  if(!found)throw new Error("Unknown collectible returned by the database.");
+  player.tokens=Number(result.tokens)||0;
+  if(!player.owned.includes(found[0]))player.owned.push(found[0]);
+  save();drawCollection();renderOwnerDashboard();
+  alert("You found "+found[1]+" "+found[0]+"!\nRarity: "+found[2]+"\nYour progress has been saved.");
+ }catch(e){alert(e.message||"Could not open pack.");}
 }
-function play(){
+async function play(){
  const questions=[["What is 8 × 7?",["54","56","64"],1],["Which planet is the Red Planet?",["Mars","Venus","Earth"],0],["How many sides does a hexagon have?",["5","6","8"],1],["What is 100 divided by 4?",["20","25","40"],1]];
- const q=questions[Math.floor(Math.random()*questions.length)];
+ const questionIndex=Math.floor(Math.random()*questions.length);
+ const q=questions[questionIndex];
  const answer=prompt(q[0]+"\n1. "+q[1][0]+"\n2. "+q[1][1]+"\n3. "+q[1][2]);
  if(answer===null)return;
- if(Number(answer)-1===q[2]){player.tokens+=25;update();if(player.owner)renderOwnerDashboard();alert("Correct! You earned 25 tokens! 🎉");}
- else alert("Not quite! Try again!");
+ const selected=Number(answer);
+ if(!Number.isInteger(selected)||selected<1||selected>3){alert("Enter 1, 2, or 3.");return;}
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_answer_question",{p_question:questionIndex,p_answer:selected});
+  if(error)throw error;
+  const result=Array.isArray(data)?data[0]:data;
+  if(!result)throw new Error("The game did not return a result.");
+  player.tokens=Number(result.tokens)||0;profile.tokens=player.tokens;
+  update();renderOwnerDashboard();
+  if(result.correct)alert("Correct! You earned 25 tokens! 🎉 Your balance has been saved.");
+  else alert("Not quite! Try again!");
+ }catch(e){alert("Could not save your game result: "+e.message);}
 }
 (async function restoreSession(){
  try{
