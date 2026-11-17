@@ -28,7 +28,7 @@
 <button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('locker',this)">📚 Collection</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
 </nav>
 <section id="modes" class="panel active"><h1>Game Modes</h1><div class="grid" id="modeGrid"></div></section>
-<section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits! Open as many packs as you can afford.</p><div class="grid" id="packGrid"></div></section>
+<section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits or daily purchase cap! Choose how many packs to open each time. Buy again whenever you have enough tokens.</p><div class="grid" id="packGrid"></div></section>
 <section id="locker" class="panel"><h1>Your collection</h1><p id="count"></p><div class="grid" id="collection"></div></section>
 <section id="ownerDashboard" class="panel">
 <h1>👑 Owner Dashboard</h1><p class="small">Private owner controls. Player changes are saved directly to Supabase.</p>
@@ -132,7 +132,7 @@ function showGame(){
  document.getElementById("login").classList.add("hidden");
  document.getElementById("game").classList.remove("hidden");
  document.getElementById("ownerTab").classList.toggle("hidden",!player.owner);
- draw();
+ draw();loadModeUnlocks();
 }
 async function loadProfile(user){
  const {data,error}=await supabaseClient.from("profiles").select("id,username,tokens,is_owner,is_banned").eq("id",user.id).single();
@@ -205,11 +205,10 @@ function tab(id,btn){
 function draw(){
  document.getElementById("modeGrid").innerHTML=modes.map((m,i)=>{
   const key=modeKeys[i],level=modeUnlocks[key]||1;
-  return '<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small>'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><p><b>Quiz level: '+level+'/3</b></p><button onclick="startMode('+i+')">Play</button>'+(level<3?'<button class="secondary" onclick="unlockMode(\''+key+'\')">🧠 Answer a question to unlock Level '+(level+1)+'</button>':'<p>🏆 All quiz levels complete!</p>')+'</div>';
+  return '<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small">'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><p><b>Unlocked stage: '+level+'/3</b></p><button onclick="startMode('+i+')">Play Stage '+level+'</button>'+(level<3?'<button class="secondary" onclick="unlockMode(\\''+key+'\\')">🧠 Answer a question to unlock Stage '+(level+1)+'</button>':'<p>🏆 All stages unlocked!</p>')+'</div>';
  }).join("");
- document.getElementById("packGrid").innerHTML=packs.map(p=>'<div class="card"><div class="emoji">'+p[0]+'</div><h2>'+p[1]+'</h2><p>'+p[2]+' tokens</p><button onclick="openPack('+p[2]+')">Open Pack</button></div>').join("");
+ document.getElementById("packGrid").innerHTML=packs.map((p,i)=>'<div class="card"><div class="emoji">'+p[0]+'</div><h2>'+p[1]+'</h2><p>'+p[2]+' tokens each</p><label for="packQty'+i+'">Number of packs</label><input id="packQty'+i+'" type="number" min="1" step="1" value="1"><button onclick="openPack('+p[2]+','+i+')">Buy &amp; Open Packs</button></div>').join("");
  drawCollection();update();if(player.owner)renderOwnerDashboard();
- loadModeUnlocks();
 }
 function renderOwnerDashboard(){
  if(!player||!player.owner)return;
@@ -367,18 +366,29 @@ function drawCollection(){
 }
 async function sellCollectible(index){const item=items[index],qty=Number(document.getElementById("sellQty"+index).value),owned=Number(player.quantities?.[item[0]]||0);if(!Number.isInteger(qty)||qty<1||qty>owned){alert("Choose a quantity from 1 to "+owned+".");return;}if(!confirm("Sell "+qty+" × "+item[0]+"?"))return;try{const {data,error}=await supabaseClient.rpc("linket_sell_collectibles",{p_collectible_id:item[0],p_quantity:qty});if(error)throw error;const r=Array.isArray(data)?data[0]:data;await refreshSavedGame();drawCollection();alert("Sold for "+Number(r.tokens_earned).toLocaleString()+" tokens!");}catch(e){alert(e.message||"Sale failed.");}}
 
-async function openPack(cost){
+async function openPack(cost,packIndex){
+ const input=document.getElementById("packQty"+packIndex),qty=Number(input?.value||1);
+ if(!Number.isInteger(qty)||qty<1){alert("Choose at least 1 pack.");return;}
+ if(qty>1000){alert("You can open up to 1,000 packs in one purchase. You can buy again as often as you like.");return;}
+ if(Number(player.tokens)<cost*qty){alert("You need "+(cost*qty).toLocaleString()+" tokens for "+qty+" packs.");return;}
+ let opened=0,foundCounts={};
  try{
-  const {data,error}=await supabaseClient.rpc("linket_open_pack",{p_cost:cost});
-  if(error)throw error;
-  const result=Array.isArray(data)?data[0]:data;
-  if(!result)throw new Error("The pack did not return a collectible.");
-  const found=items.find(item=>item[0]===result.collectible_id);
-  if(!found)throw new Error("Unknown collectible returned by the database.");
-  await refreshSavedGame();
-  drawCollection();renderOwnerDashboard();
-  alert("You found "+found[1]+" "+found[0]+"!\nRarity: "+found[2]+"\nYour progress has been saved.");
- }catch(e){alert(e.message||"Could not open pack.");}
+  for(let i=0;i<qty;i++){
+   const {data,error}=await supabaseClient.rpc("linket_open_pack",{p_cost:cost});
+   if(error)throw error;
+   const result=Array.isArray(data)?data[0]:data;
+   if(!result)throw new Error("The pack did not return a collectible.");
+   const found=items.find(item=>item[0]===result.collectible_id);
+   if(!found)throw new Error("Unknown collectible returned by the database.");
+   foundCounts[found[0]]=(foundCounts[found[0]]||0)+1;opened++;
+  }
+  await refreshSavedGame();drawCollection();renderOwnerDashboard();
+  const summary=Object.entries(foundCounts).map(([name,count])=>name+" ×"+count).join("\\n");
+  alert("Opened "+opened+" pack(s)!\\n"+summary+"\\nYour collection and tokens are saved.");
+ }catch(e){
+  if(opened){await refreshSavedGame();drawCollection();alert("Opened "+opened+" pack(s) before this error: "+(e.message||"Purchase failed."));}
+  else alert(e.message||"Could not open pack.");
+ }
 }
 
 let modeTimer=null, modeState=null;
@@ -391,24 +401,25 @@ async function modeWin(message){
  try{const {data,error}=await supabaseClient.rpc("linket_answer_question",{p_question:0,p_answer:2});if(error)throw error;const r=Array.isArray(data)?data[0]:data;if(!r)throw new Error("No reward result.");player.tokens=Number(r.tokens)||player.tokens;profile.tokens=player.tokens;update();modeNote(message+" +25 tokens earned!");}
  catch(e){modeNote(message+" Your game was won, but the token reward could not be saved: "+e.message);}
 }
-async function loadModeUnlocks(){if(!session)return;try{const {data,error}=await supabaseClient.rpc("linket_get_mode_unlocks");if(error)throw error;(data||[]).forEach(x=>{modeUnlocks[x.mode_key]=Number(x.unlocked_level)||1;});}catch(e){console.warn(e.message);}}
+async function loadModeUnlocks(){if(!session)return;try{const {data,error}=await supabaseClient.rpc("linket_get_mode_unlocks");if(error)throw error;(data||[]).forEach(x=>{modeUnlocks[x.mode_key]=Number(x.unlocked_level)||1;});draw();}catch(e){console.warn("Could not load saved quiz progress: "+e.message);}}
 async function unlockMode(key){const level=modeUnlocks[key]||1;if(level>=3)return;const q=modeQuestions[key][level-1];const answer=prompt(q[0]+"\\n0: "+q[1][0]+"\\n1: "+q[1][1]+"\\n2: "+q[1][2]+"\\nEnter 0, 1, or 2");if(answer===null)return;const n=Number(answer);if(!Number.isInteger(n)||n<0||n>2){alert("Enter 0, 1, or 2.");return;}try{const {data,error}=await supabaseClient.rpc("linket_answer_mode_question",{p_mode_key:key,p_answer:n});if(error)throw error;modeUnlocks[key]=Number(data)||level;alert("Correct! Level "+modeUnlocks[key]+" unlocked.");draw();}catch(e){alert(e.message||"Not quite—try again.");}}
 function startMode(id){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}if(id===0)startTower();if(id===1)startGold();if(id===2)startCafe();if(id===3)startFactory();}
 function startTower(){
- modeState={finished:false,wave:0,hp:5,kills:0,towers:[],enemies:[],tick:0};const st=modeState;
- modeShell("🛡️ Tower Defense","Place up to 5 towers on the grid. Start the wave and let your towers stop 10 monsters before they reach your base.",'<span>🏰 Base: <b id="tdHp">5</b></span><span>👾 Stopped: <b id="tdKills">0</b>/10</span><span>🗼 Towers: <b id="tdTowers">0</b>/5</span>','<div class="game-board" id="tdBoard" style="grid-template-columns:repeat(5,1fr)"></div><button onclick="towerStartWave()">▶ Start wave</button>');
+ const level=modeUnlocks.tower||1,goal=10+(level-1)*5;
+ modeState={finished:false,level,goal,wave:0,hp:5,kills:0,towers:[],enemies:[],tick:0};const st=modeState;
+ modeShell("🛡️ Tower Defense — Stage "+level,"Place up to 5 towers. Stop "+goal+" monsters before they reach your base. Higher stages bring more enemies.",'<span>🏰 Base: <b id="tdHp">5</b></span><span>👾 Stopped: <b id="tdKills">0</b>/'+goal+'</span><span>🗼 Towers: <b id="tdTowers">0</b>/5</span>','<div class="game-board" id="tdBoard" style="grid-template-columns:repeat(5,1fr)"></div><button onclick="towerStartWave()">▶ Start wave</button>');
  const board=document.getElementById("tdBoard");for(let i=0;i<25;i++){const b=document.createElement("button");b.className="game-cell";b.textContent="·";b.onclick=()=>towerPlace(i);board.appendChild(b);}
 }
 function towerPlace(i){const s=modeState;if(!s||s.finished||s.towers.length>=5||s.enemies.length||s.wave>0)return;const b=document.getElementById("tdBoard").children[i];if(b.textContent==="🗼")return;s.towers.push(i);b.textContent="🗼";document.getElementById("tdTowers").textContent=s.towers.length;}
-function towerStartWave(){const s=modeState;if(!s||s.finished)return;if(s.towers.length<2){modeNote("Place at least 2 towers first.");return;}if(s.wave>0)return;s.wave=1;modeNote("The monsters are coming!");modeTimer=setInterval(()=>{if(!modeState||modeState.finished)return;const st=modeState;st.tick++;if(st.tick%3===0&&st.enemies.length<10-st.kills){st.enemies.push({pos:0,hp:2});}st.enemies.forEach(e=>{if(e.hp>0&&st.towers.some(t=>Math.abs(Math.floor(t/5)-Math.floor(e.pos/5))+Math.abs(t%5-e.pos%5)<=2))e.hp--;if(e.hp<=0&&!e.dead){e.dead=true;st.kills=(st.kills||0)+1;}});st.enemies.forEach(e=>{if(e.hp>0)e.pos++;});st.enemies=st.enemies.filter(e=>{if(e.pos>=25){st.hp--;document.getElementById("tdHp").textContent=st.hp;return false;}return e.hp>0;});const cells=document.getElementById("tdBoard").children;for(let i=0;i<25;i++)cells[i].textContent=st.towers.includes(i)?"🗼":"·";st.enemies.forEach(e=>{if(e.pos<25)cells[e.pos].textContent="👾";});document.getElementById("tdKills").textContent=st.kills||0;if(st.kills>=10){modeWin("Wave defeated!");}else if(st.hp<=0){st.finished=true;clearInterval(modeTimer);modeTimer=null;modeNote("Your base was overrun. Close and try a new layout.");}},650);}
-function startGold(){modeState={finished:false,turns:12,gold:0,traps:0,revealed:[]};modeShell("💰 Gold Quest","You have 12 picks. Find 5 gold nuggets before you run out. Some tiles contain traps!",'<span>💰 Gold: <b id="gGold">0</b>/5</span><span>⛏️ Picks: <b id="gTurns">12</b></span><span>💥 Traps: <b id="gTraps">0</b></span>','<div class="game-board" id="goldBoard" style="grid-template-columns:repeat(4,1fr)"></div>');const board=document.getElementById("goldBoard");for(let i=0;i<16;i++){const b=document.createElement("button");b.className="game-cell";b.textContent="❔";b.onclick=()=>goldPick(i,b);board.appendChild(b);}}
-function goldPick(i,b){const s=modeState;if(!s||s.finished||s.revealed.includes(i))return;s.revealed.push(i);s.turns--;const roll=(i*17+s.revealed.length*13+Math.floor(Math.random()*9))%5;if(roll===0){s.traps++;b.textContent="💥";}else if(roll<=2){s.gold++;b.textContent="💰";}else b.textContent="🪨";b.disabled=true;document.getElementById("gGold").textContent=s.gold;document.getElementById("gTurns").textContent=s.turns;document.getElementById("gTraps").textContent=s.traps;if(s.gold>=5)modeWin("You struck gold!");else if(s.turns===0){s.finished=true;modeNote("Mining trip over! You found "+s.gold+" gold.");}}
+function towerStartWave(){const s=modeState;if(!s||s.finished)return;if(s.towers.length<2){modeNote("Place at least 2 towers first.");return;}if(s.wave>0)return;s.wave=1;modeNote("The monsters are coming!");modeTimer=setInterval(()=>{if(!modeState||modeState.finished)return;const st=modeState;st.tick++;if(st.tick%3===0&&st.enemies.length<st.goal-st.kills){st.enemies.push({pos:0,hp:2});}st.enemies.forEach(e=>{if(e.hp>0&&st.towers.some(t=>Math.abs(Math.floor(t/5)-Math.floor(e.pos/5))+Math.abs(t%5-e.pos%5)<=2))e.hp--;if(e.hp<=0&&!e.dead){e.dead=true;st.kills=(st.kills||0)+1;}});st.enemies.forEach(e=>{if(e.hp>0)e.pos++;});st.enemies=st.enemies.filter(e=>{if(e.pos>=25){st.hp--;document.getElementById("tdHp").textContent=st.hp;return false;}return e.hp>0;});const cells=document.getElementById("tdBoard").children;for(let i=0;i<25;i++)cells[i].textContent=st.towers.includes(i)?"🗼":"·";st.enemies.forEach(e=>{if(e.pos<25)cells[e.pos].textContent="👾";});document.getElementById("tdKills").textContent=st.kills||0;if(st.kills>=st.goal){modeWin("Stage "+st.level+" cleared!");}else if(st.hp<=0){st.finished=true;clearInterval(modeTimer);modeTimer=null;modeNote("Your base was overrun. Close and try a new layout.");}},650);}
+function startGold(){const level=modeUnlocks.gold||1,goal=5+(level-1),turns=12-(level-1)*2;modeState={finished:false,level,goal,turns,gold:0,traps:0,revealed:[]};modeShell("💰 Gold Quest — Stage "+level,"Find "+goal+" gold nuggets in "+turns+" picks. Higher stages give you fewer picks!",'<span>💰 Gold: <b id="gGold">0</b>/'+goal+'</span><span>⛏️ Picks: <b id="gTurns">'+turns+'</b></span><span>💥 Traps: <b id="gTraps">0</b></span>','<div class="game-board" id="goldBoard" style="grid-template-columns:repeat(4,1fr)"></div>');const board=document.getElementById("goldBoard");for(let i=0;i<16;i++){const b=document.createElement("button");b.className="game-cell";b.textContent="❔";b.onclick=()=>goldPick(i,b);board.appendChild(b);}}
+function goldPick(i,b){const s=modeState;if(!s||s.finished||s.revealed.includes(i))return;s.revealed.push(i);s.turns--;const roll=(i*17+s.revealed.length*13+Math.floor(Math.random()*9))%5;if(roll===0){s.traps++;b.textContent="💥";}else if(roll<=2){s.gold++;b.textContent="💰";}else b.textContent="🪨";b.disabled=true;document.getElementById("gGold").textContent=s.gold;document.getElementById("gTurns").textContent=s.turns;document.getElementById("gTraps").textContent=s.traps;if(s.gold>=s.goal)modeWin("Stage "+s.level+" cleared — you struck gold!");else if(s.turns===0){s.finished=true;modeNote("Mining trip over! You found "+s.gold+" gold.");}}
 const cafeOrders=[{name:"Berry smoothie",seq:["🫐","🍓","🥛"]},{name:"Honey toast",seq:["🍞","🍯","🧈"]},{name:"Fruit cup",seq:["🍎","🍌","🍇"]},{name:"Choco shake",seq:["🍫","🥛","🍦"]}];
-function startCafe(){modeState={finished:false,score:0,time:30,order:0,step:0};modeShell("☕ Cafe Rush","Serve 5 customers before the 30-second timer ends. Click the ingredients in the exact order shown.",'<span>⭐ Served: <b id="cScore">0</b>/5</span><span>⏱️ Time: <b id="cTime">30</b>s</span>','<h3 id="cOrder"></h3><div id="cRecipe" class="game-hud"></div><div id="cChoices" class="game-hud" style="margin-top:15px"></div>');cafeNext();modeTimer=setInterval(()=>{if(!modeState||modeState.finished)return;modeState.time--;document.getElementById("cTime").textContent=modeState.time;if(modeState.time<=0){modeState.finished=true;clearInterval(modeTimer);modeTimer=null;modeNote("Time is up! You served "+modeState.score+" customers.");}},1000);}
-function cafeNext(){const s=modeState;if(!s||s.finished)return;if(s.order>=5){modeWin("Cafe champion! All 5 customers served.");return;}const order=cafeOrders[Math.floor(Math.random()*cafeOrders.length)];s.current=order;s.step=0;document.getElementById("cOrder").textContent="Order "+(s.order+1)+": "+order.name;document.getElementById("cRecipe").innerHTML=order.seq.map((x,i)=>'<span>'+(i+1)+". "+x+'</span>').join("");document.getElementById("cChoices").innerHTML=["🍓","🫐","🥛","🍞","🍯","🧈","🍎","🍌","🍇","🍫","🍦"].map(x=>'<button class="game-choice" onclick="cafeChoose(\''+x+'\')">'+x+'</button>').join("");}
+function startCafe(){const level=modeUnlocks.cafe||1,target=5+(level-1)*2,time=30-(level-1)*5;modeState={finished:false,level,target,score:0,time,order:0,step:0};modeShell("☕ Cafe Rush — Stage "+level,"Serve "+target+" customers before the "+time+"-second timer ends. Higher stages are faster!",'<span>⭐ Served: <b id="cScore">0</b>/'+target+'</span><span>⏱️ Time: <b id="cTime">'+time+'</b>s</span>','<h3 id="cOrder"></h3><div id="cRecipe" class="game-hud"></div><div id="cChoices" class="game-hud" style="margin-top:15px"></div>');cafeNext();modeTimer=setInterval(()=>{if(!modeState||modeState.finished)return;modeState.time--;document.getElementById("cTime").textContent=modeState.time;if(modeState.time<=0){modeState.finished=true;clearInterval(modeTimer);modeTimer=null;modeNote("Time is up! You served "+modeState.score+" customers.");}},1000);}
+function cafeNext(){const s=modeState;if(!s||s.finished)return;if(s.order>=s.target){modeWin("Cafe champion! Stage "+s.level+" complete.");return;}const order=cafeOrders[Math.floor(Math.random()*cafeOrders.length)];s.current=order;s.step=0;document.getElementById("cOrder").textContent="Order "+(s.order+1)+": "+order.name;document.getElementById("cRecipe").innerHTML=order.seq.map((x,i)=>'<span>'+(i+1)+". "+x+'</span>').join("");document.getElementById("cChoices").innerHTML=["🍓","🫐","🥛","🍞","🍯","🧈","🍎","🍌","🍇","🍫","🍦"].map(x=>'<button class="game-choice" onclick="cafeChoose(\''+x+'\')">'+x+'</button>').join("");}
 function cafeChoose(x){const s=modeState;if(!s||s.finished)return;if(x!==s.current.seq[s.step]){modeNote("Oops! Wrong ingredient. Start this order again.");s.step=0;return;}s.step++;if(s.step===s.current.seq.length){s.score++;s.order++;document.getElementById("cScore").textContent=s.score;modeNote("Perfect order!");setTimeout(()=>{if(modeState===s)cafeNext();},450);}}
-function startFactory(){modeState={finished:false,score:0,left:15,target:null};modeShell("🏭 Factory Sort","A product is requested. Click matching items as they move down the conveyor. Score 10 matches out of 15 items.",'<span>📦 Sorted: <b id="fScore">0</b>/10</span><span>🎛️ Items left: <b id="fLeft">15</b></span>','<h3 id="fTarget"></h3><div id="fBelt" class="game-hud" style="justify-content:center;flex-wrap:wrap"></div>');factoryNext();}
-function factoryNext(){const s=modeState;if(!s||s.finished)return;if(s.left<=0){if(s.score>=10)modeWin("Factory shift complete!");else{ s.finished=true;modeNote("Shift ended. You sorted "+s.score+" correctly. Try again!");}return;}const types=["🐢","🐝","🐰","🤖"];s.target=types[Math.floor(Math.random()*types.length)];document.getElementById("fTarget").textContent="Sort this product: "+s.target;document.getElementById("fLeft").textContent=s.left;const belt=document.getElementById("fBelt");belt.innerHTML="";for(let i=0;i<4;i++){const x=(Math.random()<0.7?s.target:types[Math.floor(Math.random()*types.length)]);const b=document.createElement("button");b.className="game-cell";b.textContent=x;b.onclick=()=>factoryPick(x);belt.appendChild(b);}}
+function startFactory(){const level=modeUnlocks.factory||1,target=10+(level-1)*2;modeState={finished:false,level,score:0,left:15,target:null,goal:target};modeShell("🏭 Factory Sort — Stage "+level,"Sort at least "+target+" matching items out of 15. Higher stages require more accuracy.",'<span>📦 Sorted: <b id="fScore">0</b>/'+target+'</span><span>🎛️ Items left: <b id="fLeft">15</b></span>','<h3 id="fTarget"></h3><div id="fBelt" class="game-hud" style="justify-content:center;flex-wrap:wrap"></div>');factoryNext();}
+function factoryNext(){const s=modeState;if(!s||s.finished)return;if(s.left<=0){if(s.score>=s.goal)modeWin("Factory Stage "+s.level+" complete!");else{ s.finished=true;modeNote("Shift ended. You sorted "+s.score+" correctly. Try again!");}return;}const types=["🐢","🐝","🐰","🤖"];s.target=types[Math.floor(Math.random()*types.length)];document.getElementById("fTarget").textContent="Sort this product: "+s.target;document.getElementById("fLeft").textContent=s.left;const belt=document.getElementById("fBelt");belt.innerHTML="";for(let i=0;i<4;i++){const x=(Math.random()<0.7?s.target:types[Math.floor(Math.random()*types.length)]);const b=document.createElement("button");b.className="game-cell";b.textContent=x;b.onclick=()=>factoryPick(x);belt.appendChild(b);}}
 function factoryPick(x){const s=modeState;if(!s||s.finished)return;if(x===s.target){s.score++;modeNote("Correct item sorted!");}else modeNote("Wrong item! Keep the line moving.");s.left--;document.getElementById("fScore").textContent=s.score;factoryNext();}
 (async function restoreSession(){
  try{
