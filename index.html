@@ -201,9 +201,12 @@ function draw(){
 }
 function renderOwnerDashboard(){
  if(!player||!player.owner)return;
- document.getElementById("ownerName").textContent=player.name;
- document.getElementById("ownerTokens").textContent=Number(player.tokens).toLocaleString();
- document.getElementById("ownerCollectibles").textContent=player.owned.length;
+ const name=document.getElementById("ownerName");
+ const tokenCount=document.getElementById("ownerTokens");
+ const collectibleCount=document.getElementById("ownerCollectibles");
+ if(name)name.textContent=player.name;
+ if(tokenCount)tokenCount.textContent=Number(player.tokens).toLocaleString();
+ if(collectibleCount)collectibleCount.textContent=player.owned.length;
 }
 function ownerMessage(message){const el=document.getElementById("ownerStatus");if(el)el.textContent=message||"";}
 function ownerEscape(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
@@ -390,7 +393,7 @@ function startCafe(){modeState={finished:false,score:0,time:30,order:0,step:0};m
 function cafeNext(){const s=modeState;if(!s||s.finished)return;if(s.order>=5){modeWin("Cafe champion! All 5 customers served.");return;}const order=cafeOrders[Math.floor(Math.random()*cafeOrders.length)];s.current=order;s.step=0;document.getElementById("cOrder").textContent="Order "+(s.order+1)+": "+order.name;document.getElementById("cRecipe").innerHTML=order.seq.map((x,i)=>'<span>'+(i+1)+". "+x+'</span>').join("");document.getElementById("cChoices").innerHTML=["🍓","🫐","🥛","🍞","🍯","🧈","🍎","🍌","🍇","🍫","🍦"].map(x=>'<button class="game-choice" onclick="cafeChoose(\''+x+'\')">'+x+'</button>').join("");}
 function cafeChoose(x){const s=modeState;if(!s||s.finished)return;if(x!==s.current.seq[s.step]){modeNote("Oops! Wrong ingredient. Start this order again.");s.step=0;return;}s.step++;if(s.step===s.current.seq.length){s.score++;s.order++;document.getElementById("cScore").textContent=s.score;modeNote("Perfect order!");setTimeout(()=>{if(modeState===s)cafeNext();},450);}}
 function startFactory(){modeState={finished:false,score:0,left:15,target:null};modeShell("🏭 Factory Sort","A product is requested. Click matching items as they move down the conveyor. Score 10 matches out of 15 items.",'<span>📦 Sorted: <b id="fScore">0</b>/10</span><span>🎛️ Items left: <b id="fLeft">15</b></span>','<h3 id="fTarget"></h3><div id="fBelt" class="game-hud" style="justify-content:center;flex-wrap:wrap"></div>');factoryNext();}
-function factoryNext(){const s=modeState;if(!s||s.finished)return;if(s.left<=0){if(s.score>=10)modeWin("Factory shift complete!");else{ s.finished=true;modeNote("Shift ended. You sorted "+s.score+" correctly. Try again!");}return;}const types=["🐢","🐝","🐰","🤖"];s.target=types[Math.floor(Math.random()*types.length)];document.getElementById("fTarget").textContent="Sort this product: "+s.target;document.getElementById("fLeft").textContent=s.left;const belt=document.getElementById("fBelt");belt.innerHTML="";for(let i=0;i<4;i++){const x=types[Math.floor(Math.random()*types.length)];const b=document.createElement("button");b.className="game-cell";b.textContent=x;b.onclick=()=>factoryPick(x);belt.appendChild(b);}}
+function factoryNext(){const s=modeState;if(!s||s.finished)return;if(s.left<=0){if(s.score>=10)modeWin("Factory shift complete!");else{ s.finished=true;modeNote("Shift ended. You sorted "+s.score+" correctly. Try again!");}return;}const types=["🐢","🐝","🐰","🤖"];s.target=types[Math.floor(Math.random()*types.length)];document.getElementById("fTarget").textContent="Sort this product: "+s.target;document.getElementById("fLeft").textContent=s.left;const belt=document.getElementById("fBelt");belt.innerHTML="";for(let i=0;i<4;i++){const x=(Math.random()<0.7?s.target:types[Math.floor(Math.random()*types.length)]);const b=document.createElement("button");b.className="game-cell";b.textContent=x;b.onclick=()=>factoryPick(x);belt.appendChild(b);}}
 function factoryPick(x){const s=modeState;if(!s||s.finished)return;if(x===s.target){s.score++;modeNote("Correct item sorted!");}else modeNote("Wrong item! Keep the line moving.");s.left--;document.getElementById("fScore").textContent=s.score;factoryNext();}
 (async function restoreSession(){
  try{
