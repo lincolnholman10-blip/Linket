@@ -48,6 +48,7 @@ input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}
 <input id="email" type="email" placeholder="Email address">
 <input id="password" type="password" placeholder="Password">
  <button onclick="login()">Enter Linket</button>
+ <button onclick="createAccount()">Create Account</button>
  <p class="small">Prototype accounts are saved in this browser. Do not use a real password.</p>
  <p id="error"></p>
 </div>
@@ -154,38 +155,6 @@ function save(){
  update();
 }
 
-function login(){
- let name=document.getElementById("username").value.trim();
- let pass=document.getElementById("password").value;
- if(!name||!pass){document.getElementById("error").textContent="Enter both fields.";return;}
-
- if(accounts[name]){
-  if(accounts[name].password!==pass){
-   document.getElementById("error").textContent="Incorrect password.";
-   return;
-  }
-  player=accounts[name];
- }else{
-  const owner=name.toLowerCase()==="owner";
-  player={
-   name,password:pass,
-   owner,
-   tokens:owner?1000000:250,
-   owned:owner?items.filter(x=>x[2]==="Mythical").map(x=>x[0]):["Happy Turtle"]
-  };
- }
- if(player.owner){
-  player.tokens=1000000;
-  items.filter(x=>x[2]==="Mythical").forEach(x=>{
-   if(!player.owned.includes(x[0]))player.owned.push(x[0]);
-  });
- }
- save();
- document.getElementById("login").style.display="none";
- document.getElementById("game").style.display="block";
- document.getElementById("ownerTab").style.display=player.owner?"inline-block":"none";
- draw();
-}
 
 function logout(){
  player=null;
