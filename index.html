@@ -26,10 +26,10 @@
 <div id="game" class="hidden">
 <section class="hero"><h2>YOUR GAME • YOUR COLLECTION</h2><h1>Play big.<br>Collect everything.</h1><p>Answer questions, open awesome packs, and build your ultimate collection!</p><button onclick="tab('modes')">▶ Play Linket</button><div id="announcementBoard" class="card hidden" style="margin-top:18px;text-align:left"><h2>📣 Linket News</h2><div id="announcementList"></div></div></section>
 <nav class="tabs">
-<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('locker',this)">📚 Collection</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
+<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('index',this)">🏅 Collectible Index</button><button onclick="tab('locker',this)">📚 Collection</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
 </nav>
 <section id="modes" class="panel active"><h1>Game Modes</h1><div class="grid" id="modeGrid"></div></section>
-<section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits or daily purchase cap! Choose how many packs to open each time. Buy again whenever you have enough tokens.</p><div class="grid" id="packGrid"></div></section>
+<section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits or daily purchase cap! Choose how many packs to open each time. Buy again whenever you have enough tokens.</p><div class="grid" id="packGrid"></div></section><section id="index" class="panel"><h1>🏅 Collectible Index</h1><p>Explore every collectible in Linket, organized by rarity.</p><div id="collectibleIndex"></div></section>
 <section id="locker" class="panel"><h1>📚 Your Collection</h1><p id="count"></p><div class="collection-toolbar"><input id="collectionSearch" type="search" placeholder="🔎 Search collectibles..." oninput="drawCollection()"><select id="collectionRarity" onchange="drawCollection()"><option value="all">All rarities</option><option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythical</option></select><select id="collectionSort" onchange="drawCollection()"><option value="rarity">Sort: Rarity</option><option value="name">Sort: Name</option><option value="quantity">Sort: Quantity owned</option><option value="newest">Sort: Collected first</option></select></div><div id="collectionStats" class="collection-stats"></div><div class="grid" id="collection"></div></section>
 <section id="ownerDashboard" class="panel">
 <h1>👑 Owner Dashboard</h1><p class="small">Private owner controls. Player changes are saved directly to Supabase.</p>
@@ -204,13 +204,21 @@ function tab(id,btn){
  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
  if(btn)btn.classList.add("active");
 }
+function renderCollectibleIndex(){
+ const rarityOrder=["Common","Rare","Epic","Legendary","Mythical"];
+ const rarityColors={Common:"#a8b2c7",Rare:"#55a9ff",Epic:"#bd79ff",Legendary:"#ffbd4a",Mythical:"#ff65bd"};
+ document.getElementById("collectibleIndex").innerHTML=rarityOrder.map(rarity=>{
+  const group=items.filter(item=>item[2]===rarity);
+  return '<div style="margin:20px 0"><h2 style="color:'+rarityColors[rarity]+'">'+rarity+' <span class="small">('+group.length+')</span></h2><div class="grid">'+group.map(item=>'<div class="card" style="border:2px solid '+rarityColors[rarity]+'"><div class="emoji">'+item[1]+'</div><h3>'+item[0]+'</h3><span class="rarity" style="color:'+rarityColors[rarity]+'">'+rarity+'</span></div>').join("")+'</div></div>';
+ }).join("");
+}
 function draw(){
  document.getElementById("modeGrid").innerHTML=modes.map((m,i)=>{
   const key=modeKeys[i],level=modeUnlocks[key]||1;
   return '<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small">'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><p><b>Unlocked stage: '+level+'/3</b></p><button onclick="startMode('+i+')">Play Stage '+level+'</button>'+(level<3?'<button class="secondary" onclick="unlockMode(\''+key+'\')">🧠 Answer a question to unlock Stage '+(level+1)+'</button>':'<p>🏆 All stages unlocked!</p>')+'</div>';
  }).join("");
  document.getElementById("packGrid").innerHTML=packs.map((p,i)=>'<div class="card"><div class="emoji">'+p[0]+'</div><h2>'+p[1]+'</h2><p>'+p[2]+' tokens each</p><p class="small">'+["Happy Turtle · Bouncy Bunny · Robot Buddy · Frost Wolf · Golden Owl · Starwing","Tiny Bee · Bouncy Bunny · Robot Buddy · Crystal Cat · Lumi Fox","Robot Buddy · Frost Wolf · Crystal Cat · Galaxy Dragon · Starwing"][i]+'</p><p class="small">Mythical chance: 0.5% per eligible drop</p><label for="packQty'+i+'">Number of packs</label><input id="packQty'+i+'" type="number" min="1" step="1" value="1"><button onclick="openPack('+p[2]+','+i+')">Buy &amp; Open Packs</button></div>').join("");
- drawCollection();update();if(player.owner)renderOwnerDashboard();
+ renderCollectibleIndex();drawCollection();update();if(player.owner)renderOwnerDashboard();
 }
 function renderOwnerDashboard(){
  if(!player||!player.owner)return;
