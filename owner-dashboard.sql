@@ -11,6 +11,37 @@ CREATE TABLE IF NOT EXISTS public.linket_owner_activity (
 ALTER TABLE public.linket_owner_activity ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.linket_owner_activity FROM PUBLIC, anon, authenticated;
 
+CREATE OR REPLACE FUNCTION public.linket_log_token_activity()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+BEGIN
+  IF NEW.tokens IS DISTINCT FROM OLD.tokens THEN
+    INSERT INTO public.linket_owner_activity(actor_id,target_id,action,details)
+    VALUES(auth.uid(),NEW.id,'tokens_changed',
+      jsonb_build_object('old_balance',OLD.tokens,'new_balance',NEW.tokens,'change',NEW.tokens-OLD.tokens));
+  END IF;
+  RETURN NEW;
+END; $;
+
+DROP TRIGGER IF EXISTS linket_log_token_activity_trigger ON public.profiles;
+CREATE TRIGGER linket_log_token_activity_trigger
+AFTER UPDATE OF tokens ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.linket_log_token_activity();
+
+CREATE OR REPLACE FUNCTION public.linket_log_collectible_activity()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+BEGIN
+  INSERT INTO public.linket_owner_activity(actor_id,target_id,action,details)
+  VALUES(auth.uid(),NEW.user_id,
+    CASE WHEN TG_OP='INSERT' THEN 'collectible_added' ELSE 'collectible_quantity_changed' END,
+    jsonb_build_object('collectible',NEW.collectible_id,'quantity',NEW.quantity));
+  RETURN NEW;
+END; $;
+
+DROP TRIGGER IF EXISTS linket_log_collectible_activity_trigger ON public.owned_collectibles;
+CREATE TRIGGER linket_log_collectible_activity_trigger
+AFTER INSERT OR UPDATE OF quantity ON public.owned_collectibles
+FOR EACH ROW EXECUTE FUNCTION public.linket_log_collectible_activity();
+
 CREATE OR REPLACE FUNCTION public.linket_owner_list_players()
 RETURNS TABLE(
   player_id uuid,
@@ -51,8 +82,6 @@ BEGIN
   RETURNING p.tokens INTO v_balance;
   IF NOT FOUND THEN RAISE EXCEPTION 'Player not found or adjustment would make tokens negative.'; END IF;
 
-  INSERT INTO public.linket_owner_activity(actor_id,target_id,action,details)
-  VALUES(v_actor,p_user_id,'token_adjustment',jsonb_build_object('amount',p_amount,'new_balance',v_balance));
   RETURN v_balance;
 END; $$;
 
@@ -75,8 +104,6 @@ BEGIN
   RETURNING quantity INTO v_new_quantity;
   IF NOT FOUND THEN RAISE EXCEPTION 'Player not found.'; END IF;
 
-  INSERT INTO public.linket_owner_activity(actor_id,target_id,action,details)
-  VALUES(v_actor,p_user_id,'collectible_granted',jsonb_build_object('collectible',p_collectible_id,'quantity_added',p_quantity,'new_quantity',v_new_quantity));
   RETURN v_new_quantity;
 END; $$;
 
