@@ -20,7 +20,7 @@ BEGIN
       jsonb_build_object('old_balance',OLD.tokens,'new_balance',NEW.tokens,'change',NEW.tokens-OLD.tokens));
   END IF;
   RETURN NEW;
-END; $;
+END; $$;
 
 DROP TRIGGER IF EXISTS linket_log_token_activity_trigger ON public.profiles;
 CREATE TRIGGER linket_log_token_activity_trigger
@@ -35,7 +35,7 @@ BEGIN
     CASE WHEN TG_OP='INSERT' THEN 'collectible_added' ELSE 'collectible_quantity_changed' END,
     jsonb_build_object('collectible',NEW.collectible_id,'quantity',NEW.quantity));
   RETURN NEW;
-END; $;
+END; $$;
 
 DROP TRIGGER IF EXISTS linket_log_collectible_activity_trigger ON public.owned_collectibles;
 CREATE TRIGGER linket_log_collectible_activity_trigger
