@@ -203,7 +203,10 @@ function tab(id,btn){
  if(btn)btn.classList.add("active");
 }
 function draw(){
- document.getElementById("modeGrid").innerHTML=modes.map((m,i)=>'<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small">'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><button onclick="startMode('+i+')">Play</button></div>').join("");
+ document.getElementById("modeGrid").innerHTML=modes.map((m,i)=>{
+  const key=modeKeys[i],level=modeUnlocks[key]||1;
+  return '<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small>'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><p><b>Quiz level: '+level+'/3</b></p><button onclick="startMode('+i+')">Play</button>'+(level<3?'<button class="secondary" onclick="unlockMode(\''+key+'\')">🧠 Answer a question to unlock Level '+(level+1)+'</button>':'<p>🏆 All quiz levels complete!</p>')+'</div>';
+ }).join("");
  document.getElementById("packGrid").innerHTML=packs.map(p=>'<div class="card"><div class="emoji">'+p[0]+'</div><h2>'+p[1]+'</h2><p>'+p[2]+' tokens</p><button onclick="openPack('+p[2]+')">Open Pack</button></div>').join("");
  drawCollection();update();if(player.owner)renderOwnerDashboard();
  loadModeUnlocks();
