@@ -52,6 +52,14 @@
 <label for="ownerCollectibleQuantity">Quantity</label><input id="ownerCollectibleQuantity" type="number" min="1" max="1000" value="1">
 <button onclick="ownerGrantCollectible()">Grant collectible</button></div>
 </div>
+<div class="card owner-section"><h2>🛠️ Admin controls</h2>
+<label for="adminNewUsername">Change selected player's username</label><input id="adminNewUsername" maxlength="24" placeholder="New username">
+<button onclick="adminRenamePlayer()">Save username</button>
+<div class="owner-actions"><button class="secondary" onclick="adminSetBan(true)">🚫 Ban selected player</button><button class="secondary" onclick="adminSetBan(false)">✅ Unban selected player</button><button style="background:#ff7676" onclick="adminDeletePlayer()">🗑️ Delete selected account</button></div>
+<p class="small">Banning blocks the account from signing in. Deleting permanently removes its Supabase authentication account and linked game data.</p></div>
+<div class="card owner-section"><h2>📣 Announcements</h2><label for="adminAnnouncementTitle">Announcement title</label><input id="adminAnnouncementTitle" maxlength="100" placeholder="Announcement title">
+<label for="adminAnnouncementMessage">Message</label><textarea id="adminAnnouncementMessage" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="Message for all Linket players"></textarea>
+<button onclick="adminPublishAnnouncement()">Publish announcement</button></div>
 <div class="card owner-section"><h2>🧾 Recent owner activity</h2><div id="ownerActivity" class="activity-list">Loading activity…</div></div>
 </section>
 <button onclick="logout()">Log out</button>
