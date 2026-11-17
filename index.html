@@ -108,6 +108,16 @@ input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}
 </main>
 
 <script>
+ <script>
+const SUPABASE_URL = "https://tmylakvunjgqjlowpchm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_qPWcSsYETyddNCGK4DvABg_QcRtcHDr";
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const items=[
 const items=[
  ["Happy Turtle","🐢","Common"],
  ["Tiny Bee","🐝","Common"],
@@ -325,7 +335,7 @@ function play(){
   alert("Not quite! Try again!");
  }
 }
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </script>
 </body>
 </html>
