@@ -12,7 +12,7 @@ ALTER TABLE public.linket_owner_activity ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.linket_owner_activity FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.linket_log_token_activity()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 BEGIN
   IF NEW.tokens IS DISTINCT FROM OLD.tokens THEN
     INSERT INTO public.linket_owner_activity(actor_id,target_id,action,details)
@@ -28,7 +28,7 @@ AFTER UPDATE OF tokens ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.linket_log_token_activity();
 
 CREATE OR REPLACE FUNCTION public.linket_log_collectible_activity()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 BEGIN
   INSERT INTO public.linket_owner_activity(actor_id,target_id,action,details)
   VALUES(auth.uid(),NEW.user_id,
