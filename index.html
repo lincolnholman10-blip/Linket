@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,307 +5,181 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Linket Ultimate Edition</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#182344;color:white;font-family:Arial,sans-serif}
-header{padding:20px 5%;background:#111a36;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-.logo{font-size:34px;font-weight:900}.logo span{color:#ff589e}
-.tokens{background:#293b69;padding:15px 22px;border-radius:30px;color:#ffd166;font-weight:bold}
-main{max-width:1150px;margin:auto;padding:25px}
-.hero{padding:45px;background:linear-gradient(120deg,#60439e,#146b83);border-radius:35px;margin:15px 0 25px}
-.hero h1{font-size:48px;margin:10px 0}
-button{border:0;border-radius:13px;padding:14px 20px;font-weight:bold;cursor:pointer;background:#ff589e;color:#201633;margin:4px}
-button:hover{filter:brightness(1.12)}
-.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
-.tabs button{background:#30416f;color:white}
-.tabs button.active{background:#ff589e;color:#201633}
-.panel{display:none}.panel.active{display:block}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}
-.card{background:#29385f;padding:20px;border-radius:18px;text-align:center}
-.emoji{font-size:45px}
-.rarity{font-size:12px;font-weight:bold;padding:6px 12px;border-radius:20px;display:inline-block}
-.Common{background:#dce3ed;color:#39445b}
-.Rare{background:#6fcaff;color:#143b68}
-.Epic{background:#bd8bff;color:#35135c}
-.Legendary{background:#ffd166;color:#674500}
-.Mythical{background:#ff72cf;color:#65104c}
-input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}
-.login{max-width:400px;margin:60px auto;background:#29385f;padding:28px;border-radius:20px}
-.small{color:#c3cbe2;font-size:13px}
+*{box-sizing:border-box}body{margin:0;background:#182344;color:white;font-family:Arial,sans-serif}header{padding:20px 5%;background:#111a36;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.logo{font-size:34px;font-weight:900}.logo span{color:#ff589e}.tokens{background:#293b69;padding:15px 22px;border-radius:30px;color:#ffd166;font-weight:bold}main{max-width:1150px;margin:auto;padding:25px}.hero{padding:45px;background:linear-gradient(120deg,#60439e,#146b83);border-radius:35px;margin:15px 0 25px}.hero h1{font-size:48px;margin:10px 0}button{border:0;border-radius:13px;padding:14px 20px;font-weight:bold;cursor:pointer;background:#ff589e;color:#201633;margin:4px}button:hover{filter:brightness(1.12)}button:disabled{opacity:.55;cursor:wait}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}.tabs button{background:#30416f;color:white}.tabs button.active{background:#ff589e;color:#201633}.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}.card{background:#29385f;padding:20px;border-radius:18px;text-align:center}.emoji{font-size:45px}.rarity{font-size:12px;font-weight:bold;padding:6px 12px;border-radius:20px;display:inline-block}.Common{background:#dce3ed;color:#39445b}.Rare{background:#6fcaff;color:#143b68}.Epic{background:#bd8bff;color:#35135c}.Legendary{background:#ffd166;color:#674500}.Mythical{background:#ff72cf;color:#65104c}input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}.login{max-width:400px;margin:60px auto;background:#29385f;padding:28px;border-radius:20px}.small{color:#c3cbe2;font-size:13px}#error{white-space:pre-wrap;color:#ffd166;line-height:1.4}.hidden{display:none!important}
 </style>
 </head>
 <body>
-<header>
- <div class="logo">✨ Link<span>et</span></div>
- <div class="tokens">🪙 Tokens: <span id="tokens">0</span></div>
-</header>
-
+<header><div class="logo">✨ Link<span>et</span></div><div class="tokens">🪙 Tokens: <span id="tokens">0</span></div></header>
 <main>
 <div id="login" class="login">
- <h1>Welcome to Linket!</h1>
- <p>Create your player account.</p>
- <input id="username" placeholder="Username">
-<input id="email" type="email" placeholder="Email address">
-<input id="password" type="password" placeholder="Password">
- <button onclick="login()">Enter Linket</button>
- <button onclick="createAccount()">Create Account</button>
- <p class="small">Prototype accounts are saved in this browser. Do not use a real password.</p>
- <p id="error"></p>
+<h1>Welcome to Linket!</h1><p>Sign in or create your player account.</p>
+<input id="username" autocomplete="username" placeholder="Username (needed for new accounts)">
+<input id="email" type="email" autocomplete="email" placeholder="Email address">
+<input id="password" type="password" autocomplete="current-password" placeholder="Password">
+<button id="loginButton" type="button" onclick="login()">Enter Linket</button>
+<button id="createButton" type="button" onclick="createAccount()">Create Account</button>
+<p class="small">New accounts may need to confirm their email before signing in.</p><p id="error" role="status" aria-live="polite"></p>
 </div>
-
-<div id="game" style="display:none">
- <section class="hero">
-  <h2>YOUR GAME • YOUR COLLECTION</h2>
-  <h1>Play big.<br>Collect everything.</h1>
-  <p>Answer questions, open awesome packs, and build your ultimate collection!</p>
-  <button onclick="tab('modes')">▶ Play Linket</button>
- </section>
-
- <nav class="tabs">
-  <button class="active" onclick="tab('modes',this)">🎮 Game Modes</button>
-  <button onclick="tab('packs',this)">🎁 Packs</button>
-  <button onclick="tab('locker',this)">📚 Collection</button>
-  <button id="ownerTab" style="display:none" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
- </nav>
-
- <section id="modes" class="panel active">
-  <h1>Game Modes</h1>
-  <div class="grid" id="modeGrid"></div>
- </section>
-
- <section id="packs" class="panel">
-  <h1>Open a pack</h1>
-  <p>No daily limits! Open as many packs as you can afford.</p>
-  <div class="grid" id="packGrid"></div>
- </section>
-
- <section id="locker" class="panel">
-  <h1>Your collection</h1>
-  <p id="count"></p>
-  <div class="grid" id="collection"></div>
- </section>
-
- <section id="ownerDashboard" class="panel">
-  <h1>👑 Owner Dashboard</h1>
-  <p class="small">Prototype controls for accounts saved in this browser.</p>
-  <div class="grid">
-   <div class="card"><div class="emoji">👥</div><h2 id="ownerUsers">0</h2><p>Local accounts</p></div>
-   <div class="card"><div class="emoji">🪙</div><h2 id="ownerTokens">0</h2><p>Total tokens</p></div>
-   <div class="card"><div class="emoji">✨</div><h2 id="ownerCollectibles">0</h2><p>Your collectibles</p></div>
-  </div>
-  <div class="card" style="margin:18px 0">
-   <h2>🛠️ Owner tools</h2>
-   <p>These controls are available while signed in to the owner account.</p>
-   <button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button>
-   <button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000 tokens</button>
-   <button onclick="ownerRefresh()">🔄 Refresh dashboard</button>
-  </div>
-  <h2>Player accounts</h2>
-  <p class="small">Use the buttons to grant tokens to a player.</p>
-  <div id="ownerAccountList" class="grid"></div>
- </section>
-
- <button onclick="logout()">Log out</button>
+<div id="game" class="hidden">
+<section class="hero"><h2>YOUR GAME • YOUR COLLECTION</h2><h1>Play big.<br>Collect everything.</h1><p>Answer questions, open awesome packs, and build your ultimate collection!</p><button onclick="tab('modes')">▶ Play Linket</button></section>
+<nav class="tabs">
+<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('locker',this)">📚 Collection</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
+</nav>
+<section id="modes" class="panel active"><h1>Game Modes</h1><div class="grid" id="modeGrid"></div></section>
+<section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits! Open as many packs as you can afford.</p><div class="grid" id="packGrid"></div></section>
+<section id="locker" class="panel"><h1>Your collection</h1><p id="count"></p><div class="grid" id="collection"></div></section>
+<section id="ownerDashboard" class="panel"><h1>👑 Owner Dashboard</h1><p class="small">Owner access is read from your protected Supabase profile.</p><div class="grid"><div class="card"><div class="emoji">👤</div><h2 id="ownerName">—</h2><p>Signed-in owner</p></div><div class="card"><div class="emoji">🪙</div><h2 id="ownerTokens">—</h2><p>Current token balance</p></div><div class="card"><div class="emoji">✨</div><h2 id="ownerCollectibles">—</h2><p>Collectibles in this browser</p></div></div><div class="card" style="margin:18px 0"><h2>🛠️ Owner tools</h2><button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button><button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000 tokens (this browser)</button></div></section>
+<button onclick="logout()">Log out</button>
 </div>
 </main>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
- <script>
+"use strict";
 const SUPABASE_URL = "https://tmylakvunjgqjlowpchm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_qPWcSsYETyddNCGK4DvABg_QcRtcHDr";
-
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-const items=[
-const items=[
- ["Happy Turtle","🐢","Common"],
- ["Tiny Bee","🐝","Common"],
- ["Bouncy Bunny","🐰","Common"],
- ["Robot Buddy","🤖","Rare"],
- ["Frost Wolf","🐺","Epic"],
- ["Golden Owl","🦉","Legendary"],
- ["Crystal Cat","🐱","Legendary"],
- ["Lumi Fox","🦊","Mythical"],
- ["Galaxy Dragon","🐉","Mythical"],
- ["Starwing","🦄","Mythical"]
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const items = [
+ ["Happy Turtle","🐢","Common"],["Tiny Bee","🐝","Common"],["Bouncy Bunny","🐰","Common"],["Robot Buddy","🤖","Rare"],["Frost Wolf","🐺","Epic"],["Golden Owl","🦉","Legendary"],["Crystal Cat","🐱","Legendary"],["Lumi Fox","🦊","Mythical"],["Galaxy Dragon","🐉","Mythical"],["Starwing","🦄","Mythical"]
 ];
+const modes = [["🛡️","Tower Defense"],["💰","Gold Quest"],["☕","Cafe"],["🏭","Factory"]];
+const packs = [["🎄","Christmas Pack",50],["🌈","Rainbow Pack",100],["🌌","Galaxy Pack",150]];
+let player = null;
+let profile = null;
+let session = null;
+let busy = false;
 
-const modes=[
- ["🛡️","Tower Defense"],
- ["💰","Gold Quest"],
- ["☕","Cafe"],
- ["🏭","Factory"]
-];
-
-const packs=[
- ["🎄","Christmas Pack",50],
- ["🌈","Rainbow Pack",100],
- ["🌌","Galaxy Pack",150]
-];
-
-let player=null;
-let accounts=JSON.parse(localStorage.getItem("linketAccounts")||"{}");
-
+function showError(message){document.getElementById("error").textContent=message||"";}
+function setBusy(value){busy=value;document.getElementById("loginButton").disabled=value;document.getElementById("createButton").disabled=value;}
+function localKey(){return "linketGame_"+session.user.id;}
+function loadLocalGame(){
+ let saved={};
+ try{saved=JSON.parse(localStorage.getItem(localKey())||"{}")||{};}catch(e){}
+ player={name:profile.username||"Player",tokens:Number(profile.tokens)||0,owned:Array.isArray(saved.owned)?saved.owned:[],owner:profile.is_owner===true};
+}
 function save(){
- accounts[player.name]=player;
- localStorage.setItem("linketAccounts",JSON.stringify(accounts));
+ try{localStorage.setItem(localKey(),JSON.stringify({owned:player.owned}));}catch(e){}
  update();
 }
-
-
-function logout(){
- player=null;
- document.getElementById("game").style.display="none";
- document.getElementById("login").style.display="block";
-}
-
 function update(){
- document.getElementById("tokens").textContent=player.tokens.toLocaleString();
+ document.getElementById("tokens").textContent=Number(player.tokens||0).toLocaleString();
  document.getElementById("count").textContent=player.owned.length+" collectibles owned";
 }
-
+function showGame(){
+ document.getElementById("login").classList.add("hidden");
+ document.getElementById("game").classList.remove("hidden");
+ document.getElementById("ownerTab").classList.toggle("hidden",!player.owner);
+ draw();
+}
+async function loadProfile(user){
+ const {data,error}=await supabaseClient.from("profiles").select("id,username,tokens,is_owner").eq("id",user.id).single();
+ if(error)throw new Error("Signed in, but Linket could not load your player profile: "+error.message);
+ profile=data;
+ loadLocalGame();
+ showGame();
+}
+async function login(){
+ if(busy)return;
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ if(!email||!password){showError("Enter your email address and password.");return;}
+ setBusy(true);showError("Signing in…");
+ try{
+  const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+  if(error)throw error;
+  session=data;
+  await loadProfile(data.user);
+  showError("");
+ }catch(e){showError(e.message||"Sign-in failed. Please try again.");}
+ finally{setBusy(false);}
+}
+async function createAccount(){
+ if(busy)return;
+ const username=document.getElementById("username").value.trim();
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ if(!username||!email||!password){showError("Enter a username, email address, and password.");return;}
+ if(username.length<3||username.length>24){showError("Your username must be between 3 and 24 characters.");return;}
+ if(password.length<8){showError("Choose a password with at least 8 characters.");return;}
+ setBusy(true);showError("Creating your account…");
+ try{
+  const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{username}}});
+  if(error)throw error;
+  if(data.session){
+   session=data;
+   await loadProfile(data.user);
+   showError("");
+  }else{
+   showError("Account request received! Check your email and click the confirmation link. Then return here and sign in.");
+  }
+ }catch(e){showError(e.message||"Account creation failed. Please try again.");}
+ finally{setBusy(false);}
+}
+async function logout(){
+ await supabaseClient.auth.signOut();
+ session=null;profile=null;player=null;
+ document.getElementById("game").classList.add("hidden");
+ document.getElementById("login").classList.remove("hidden");
+ document.getElementById("password").value="";
+ showError("You have been signed out.");
+}
 function tab(id,btn){
- if(id==="ownerDashboard" && (!player || !player.owner)){
-  alert("Owner access only.");
-  return;
- }
+ if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}
  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
  if(btn)btn.classList.add("active");
 }
-
 function draw(){
- document.getElementById("modeGrid").innerHTML=modes.map(m=>`
- <div class="card">
- <div class="emoji">${m[0]}</div>
- <h2>${m[1]}</h2>
- <button onclick="play()">Play</button>
- </div>`).join("");
-
- document.getElementById("packGrid").innerHTML=packs.map(p=>`
- <div class="card">
- <div class="emoji">${p[0]}</div>
- <h2>${p[1]}</h2>
- <p>${p[2]} tokens</p>
- <button onclick="openPack(${p[2]},'${p[1]}')">Open Pack</button>
- </div>`).join("");
-
- drawCollection();
- update();
- if(player.owner)renderOwnerDashboard();
+ document.getElementById("modeGrid").innerHTML=modes.map(m=>'<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><button onclick="play()">Play</button></div>').join("");
+ document.getElementById("packGrid").innerHTML=packs.map(p=>'<div class="card"><div class="emoji">'+p[0]+'</div><h2>'+p[1]+'</h2><p>'+p[2]+' tokens</p><button onclick="openPack('+p[2]+')">Open Pack</button></div>').join("");
+ drawCollection();update();if(player.owner)renderOwnerDashboard();
 }
-
 function renderOwnerDashboard(){
- if(!player || !player.owner)return;
- const names=Object.keys(accounts);
- document.getElementById("ownerUsers").textContent=names.length;
- document.getElementById("ownerTokens").textContent=names.reduce((sum,n)=>sum+(Number(accounts[n].tokens)||0),0).toLocaleString();
+ if(!player||!player.owner)return;
+ document.getElementById("ownerName").textContent=player.name;
+ document.getElementById("ownerTokens").textContent=Number(player.tokens).toLocaleString();
  document.getElementById("ownerCollectibles").textContent=player.owned.length;
- const list=document.getElementById("ownerAccountList");
- list.innerHTML="";
- names.forEach(name=>{
-  const account=accounts[name];
-  const card=document.createElement("div"); card.className="card";
-  const heading=document.createElement("h3"); heading.textContent=name; card.appendChild(heading);
-  const balance=document.createElement("p"); balance.textContent="🪙 "+(Number(account.tokens)||0).toLocaleString()+" tokens"; card.appendChild(balance);
-  const owned=document.createElement("p"); owned.textContent=(account.owned||[]).length+" collectibles"; card.appendChild(owned);
-  if(!account.owner){
-   const give100=document.createElement("button");
-   give100.textContent="Give 100";
-   give100.onclick=()=>grantTokens(name,100);
-   card.appendChild(give100);
-   const give1000=document.createElement("button");
-   give1000.textContent="Give 1,000";
-   give1000.onclick=()=>grantTokens(name,1000);
-   card.appendChild(give1000);
-  }
-  list.appendChild(card);
- });
 }
-
-function grantTokens(name,amount){
- if(!player || !player.owner || !accounts[name] || accounts[name].owner)return;
- const safeAmount=Math.max(0,Math.min(1000000,Math.floor(Number(amount)||0)));
- if(!safeAmount)return;
- accounts[name].tokens=(Number(accounts[name].tokens)||0)+safeAmount;
- localStorage.setItem("linketAccounts",JSON.stringify(accounts));
- renderOwnerDashboard();
- alert("Added "+safeAmount.toLocaleString()+" tokens to "+name+".");
-}
-
 function ownerUnlockAll(){
- if(!player || !player.owner)return;
- player.owned=items.map(item=>item[0]);
- save();
- drawCollection();
- renderOwnerDashboard();
- alert("Every Linket collectible has been added to your locker!");
+ if(!player||!player.owner)return;
+ player.owned=items.map(item=>item[0]);save();drawCollection();renderOwnerDashboard();
+ alert("Every Linket collectible has been added to your collection in this browser.");
 }
-
 function ownerRestoreTokens(){
- if(!player || !player.owner)return;
- player.tokens=1000000;
- save();
- renderOwnerDashboard();
- alert("Your balance is back to 1,000,000 tokens!");
+ if(!player||!player.owner)return;
+ player.tokens=1000000;update();renderOwnerDashboard();
+ alert("The game balance is restored to 1,000,000 for this session. Database balance has not been changed.");
 }
-
-function ownerRefresh(){
- if(!player || !player.owner)return;
- accounts=JSON.parse(localStorage.getItem("linketAccounts")||"{}");
- renderOwnerDashboard();
-}
-
 function drawCollection(){
  document.getElementById("collection").innerHTML=items.map(x=>{
- let owned=player.owned.includes(x[0]);
- return `<div class="card">
- <div class="emoji">${owned?x[1]:"❔"}</div>
- <h3>${owned?x[0]:"???"}</h3>
- <span class="rarity ${x[2]}">${x[2]}</span>
- <p>${owned?"Owned":"Not collected"}</p>
- </div>`;
+ const owned=player.owned.includes(x[0]);
+ return '<div class="card"><div class="emoji">'+(owned?x[1]:"❔")+'</div><h3>'+(owned?x[0]:"???")+'</h3><span class="rarity '+x[2]+'">'+x[2]+'</span><p>'+(owned?"Owned":"Not collected")+'</p></div>';
  }).join("");
 }
-
-function openPack(cost,name){
- if(!player.owner&&player.tokens<cost){
-  alert("Not enough tokens! Play games to earn more.");
-  return;
- }
- let available=items.filter(x=>!player.owned.includes(x[0]));
+function openPack(cost){
+ if(!player.owner&&player.tokens<cost){alert("Not enough tokens! Play games to earn more.");return;}
+ const available=items.filter(x=>!player.owned.includes(x[0]));
  if(!available.length){alert("You collected everything!");return;}
- let found=available[Math.floor(Math.random()*available.length)];
+ const found=available[Math.floor(Math.random()*available.length)];
  if(!player.owner)player.tokens-=cost;
- player.owned.push(found[0]);
- save();
- drawCollection();
+ player.owned.push(found[0]);save();drawCollection();
  alert("You found "+found[1]+" "+found[0]+"!\nRarity: "+found[2]);
 }
-
 function play(){
- let questions=[
-  ["What is 8 × 7?",["54","56","64"],1],
-  ["Which planet is the Red Planet?",["Mars","Venus","Earth"],0],
-  ["How many sides does a hexagon have?",["5","6","8"],1],
-  ["What is 100 divided by 4?",["20","25","40"],1]
- ];
- let q=questions[Math.floor(Math.random()*questions.length)];
- let answer=prompt(q[0]+"\n1. "+q[1][0]+"\n2. "+q[1][1]+"\n3. "+q[1][2]);
+ const questions=[["What is 8 × 7?",["54","56","64"],1],["Which planet is the Red Planet?",["Mars","Venus","Earth"],0],["How many sides does a hexagon have?",["5","6","8"],1],["What is 100 divided by 4?",["20","25","40"],1]];
+ const q=questions[Math.floor(Math.random()*questions.length)];
+ const answer=prompt(q[0]+"\n1. "+q[1][0]+"\n2. "+q[1][1]+"\n3. "+q[1][2]);
  if(answer===null)return;
- if(Number(answer)-1===q[2]){
-  player.tokens+=25;
-  save();
-  alert("Correct! You earned 25 tokens! 🎉");
- }else{
-  alert("Not quite! Try again!");
- }
+ if(Number(answer)-1===q[2]){player.tokens+=25;update();if(player.owner)renderOwnerDashboard();alert("Correct! You earned 25 tokens! 🎉");}
+ else alert("Not quite! Try again!");
 }
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+(async function restoreSession(){
+ try{
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error)throw error;
+  if(data.session){session=data.session;await loadProfile(session.user);}
+ }catch(e){showError("Could not restore your session: "+e.message);}
+})();
 </script>
 </body>
 </html>
-
