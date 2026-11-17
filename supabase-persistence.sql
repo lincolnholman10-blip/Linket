@@ -224,3 +224,46 @@ CREATE POLICY "Players can leave Linket rooms"
   ON public.linket_live_room_players FOR DELETE TO authenticated
   USING (user_id = auth.uid());
 GRANT DELETE ON public.linket_live_room_players TO authenticated;
+
+ 
+-- Collectible avatars: a player may only equip a collectible they currently own.
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS avatar_collectible text;
+
+CREATE OR REPLACE FUNCTION public.linket_set_avatar(p_collectible_id text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'You must be signed in.';
+  END IF;
+
+  IF p_collectible_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1
+    FROM public.owned_collectibles oc
+    WHERE oc.user_id = v_user_id
+      AND oc.collectible_id = p_collectible_id
+      AND oc.quantity > 0
+  ) THEN
+    RAISE EXCEPTION 'You can only choose a collectible you own.';
+  END IF;
+
+  UPDATE public.profiles
+  SET avatar_collectible = p_collectible_id
+  WHERE id = v_user_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Player profile not found.';
+  END IF;
+
+  RETURN p_collectible_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.linket_set_avatar(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.linket_set_avatar(text) TO authenticated;
