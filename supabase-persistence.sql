@@ -32,10 +32,10 @@ BEGIN
   END IF;
 
   IF p_answer = v_correct_answer THEN
-    UPDATE public.profiles
-      SET tokens = tokens + 25
-      WHERE id = v_user_id
-      RETURNING profiles.tokens INTO v_tokens;
+    UPDATE public.profiles AS p
+      SET tokens = p.tokens + 25
+      WHERE p.id = v_user_id
+      RETURNING p.tokens INTO v_tokens;
     IF NOT FOUND THEN
       RAISE EXCEPTION 'Player profile not found.';
     END IF;
