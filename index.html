@@ -233,6 +233,45 @@ async function loadOwnerDashboard(){
   ownerMessage("Dashboard updated just now.");
  }catch(e){ownerMessage("Could not load owner dashboard: "+(e.message||e));}
 }
+
+async function loadAnnouncements(){
+ if(!session)return;
+ try{
+  const {data,error}=await supabaseClient.from("linket_announcements").select("id,title,message,created_at").order("created_at",{ascending:false}).limit(5);
+  if(error)throw error;
+  const board=document.getElementById("announcementBoard"),list=document.getElementById("announcementList");
+  if(!data||!data.length){board.classList.add("hidden");return;}
+  board.classList.remove("hidden");
+  list.innerHTML=data.map(a=>'<div class="activity-item"><strong>'+ownerEscape(a.title)+'</strong><p>'+ownerEscape(a.message)+'</p><small>'+new Date(a.created_at).toLocaleString()+'</small></div>').join("");
+ }catch(e){console.warn("Announcements unavailable:",e.message);}
+}
+async function adminRenamePlayer(){
+ const id=document.getElementById("ownerTarget").value,name=document.getElementById("adminNewUsername").value.trim();
+ if(!id||!name){ownerMessage("Select a player and enter a new username.");return;}
+ try{const {data,error}=await supabaseClient.rpc("linket_owner_rename_player",{p_user_id:id,p_username:name});if(error)throw error;ownerMessage("Username changed to "+data+".");document.getElementById("adminNewUsername").value="";await loadOwnerDashboard();}
+ catch(e){ownerMessage("Could not change username: "+e.message);}
+}
+async function adminSetBan(banned){
+ const id=document.getElementById("ownerTarget").value,p=ownerPlayers.find(x=>x.player_id===id);
+ if(!p){ownerMessage("Select a player first.");return;}if(p.is_owner){ownerMessage("The owner account cannot be banned.");return;}
+ if(!confirm((banned?"Ban ":"Unban ")+p.username+"?"))return;
+ try{const {error}=await supabaseClient.rpc("linket_owner_set_banned",{p_user_id:id,p_banned:banned});if(error)throw error;ownerMessage(p.username+(banned?" has been banned.":" has been unbanned."));await loadOwnerDashboard();}
+ catch(e){ownerMessage("Could not update ban status: "+e.message);}
+}
+async function adminDeletePlayer(){
+ const id=document.getElementById("ownerTarget").value,p=ownerPlayers.find(x=>x.player_id===id);
+ if(!p){ownerMessage("Select a player first.");return;}if(p.is_owner){ownerMessage("The owner account cannot be deleted here.");return;}
+ if(!confirm("PERMANENTLY DELETE "+p.username+"'s account and all saved game data? This cannot be undone."))return;
+ try{const {error}=await supabaseClient.rpc("linket_owner_delete_player",{p_user_id:id});if(error)throw error;ownerMessage(p.username+"'s account and linked game data were deleted.");await loadOwnerDashboard();}
+ catch(e){ownerMessage("Could not delete account: "+e.message);}
+}
+async function adminPublishAnnouncement(){
+ const title=document.getElementById("adminAnnouncementTitle").value.trim(),message=document.getElementById("adminAnnouncementMessage").value.trim();
+ if(!title||!message){ownerMessage("Enter an announcement title and message.");return;}
+ try{const {error}=await supabaseClient.rpc("linket_owner_publish_announcement",{p_title:title,p_message:message});if(error)throw error;document.getElementById("adminAnnouncementTitle").value="";document.getElementById("adminAnnouncementMessage").value="";ownerMessage("Announcement published to all players!");await loadAnnouncements();}
+ catch(e){ownerMessage("Could not publish announcement: "+e.message);}
+}
+
 function selectOwnerPlayer(id){
  document.getElementById("ownerTarget").value=id;
  document.getElementById("ownerCollectibleTarget").value=id;
