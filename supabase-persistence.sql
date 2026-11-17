@@ -65,52 +65,40 @@ DECLARE
   v_is_owner boolean;
   v_collectible text;
 BEGIN
-  IF v_user_id IS NULL THEN
-    RAISE EXCEPTION 'You must be signed in.';
-  END IF;
-  IF p_cost NOT IN (50, 100, 150) THEN
-    RAISE EXCEPTION 'Invalid pack price.';
-  END IF;
-
-  SELECT p.tokens, p.is_owner
-    INTO v_tokens, v_is_owner
-    FROM public.profiles p
-    WHERE p.id = v_user_id
-    FOR UPDATE;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'Player profile not found.';
-  END IF;
-
+  IF v_user_id IS NULL THEN RAISE EXCEPTION 'You must be signed in.'; END IF;
+  IF p_cost NOT IN (50, 100, 150) THEN RAISE EXCEPTION 'Invalid pack price.'; END IF;
+  SELECT p.tokens, p.is_owner INTO v_tokens, v_is_owner
+  FROM public.profiles p WHERE p.id = v_user_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Player profile not found.'; END IF;
   IF NOT COALESCE(v_is_owner, false) THEN
-    IF v_tokens < p_cost THEN
-      RAISE EXCEPTION 'Not enough tokens.';
-    END IF;
-    UPDATE public.profiles p
-      SET tokens = p.tokens - p_cost
-      WHERE p.id = v_user_id
-      RETURNING p.tokens INTO v_tokens;
+    IF v_tokens < p_cost THEN RAISE EXCEPTION 'Not enough tokens.'; END IF;
+    UPDATE public.profiles p SET tokens = p.tokens - p_cost
+    WHERE p.id = v_user_id RETURNING p.tokens INTO v_tokens;
   END IF;
 
-  SELECT catalog.collectible
-    INTO v_collectible
-    FROM (VALUES
-      ('Happy Turtle'), ('Tiny Bee'), ('Bouncy Bunny'),
-      ('Robot Buddy'), ('Frost Wolf'), ('Golden Owl'),
-      ('Crystal Cat'), ('Lumi Fox'), ('Galaxy Dragon'), ('Starwing')
-    ) AS catalog(collectible)
-    ORDER BY random()
-    LIMIT 1;
+  -- Weighted rarity chances within each pack: Common 70%, Rare 20%,
+  -- Epic 7%, Legendary 2.5%, Mythical 0.5%.
+  SELECT pool.collectible INTO v_collectible
+  FROM (VALUES
+    (50, 'Happy Turtle', 700), (50, 'Bouncy Bunny', 700),
+    (50, 'Robot Buddy', 200), (50, 'Frost Wolf', 70),
+    (50, 'Golden Owl', 25), (50, 'Starwing', 5),
+    (100, 'Tiny Bee', 700), (100, 'Bouncy Bunny', 700),
+    (100, 'Robot Buddy', 200), (100, 'Crystal Cat', 25),
+    (100, 'Lumi Fox', 5),
+    (150, 'Robot Buddy', 200), (150, 'Frost Wolf', 70),
+    (150, 'Crystal Cat', 25), (150, 'Galaxy Dragon', 5),
+    (150, 'Starwing', 5)
+  ) AS pool(pack_cost, collectible, weight)
+  WHERE pool.pack_cost = p_cost
+  ORDER BY -ln(greatest(random(), 0.0000000001)) / pool.weight
+  LIMIT 1;
 
-  IF v_collectible IS NULL THEN
-    RAISE EXCEPTION 'You collected everything!';
-  END IF;
-
+  IF v_collectible IS NULL THEN RAISE EXCEPTION 'No collectibles are configured for this pack.'; END IF;
   INSERT INTO public.owned_collectibles(user_id, collectible_id, quantity)
   VALUES (v_user_id, v_collectible, 1)
   ON CONFLICT (user_id, collectible_id)
   DO UPDATE SET quantity = public.owned_collectibles.quantity + 1;
-
   RETURN QUERY SELECT v_collectible, v_tokens;
 END;
 $linket$;
