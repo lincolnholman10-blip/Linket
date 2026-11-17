@@ -137,7 +137,7 @@ function showGame(){
  draw();loadModeUnlocks();
 }
 async function loadProfile(user){
- const {data,error}=await supabaseClient.from("profiles").select("id,username,tokens,is_owner,is_banned").eq("id",user.id).single();
+ const {data,error}=await supabaseClient.from("profiles").select("id,username,tokens,is_owner,is_banned,avatar_collectible").eq("id",user.id).single();
  if(error)throw new Error("Signed in, but Linket could not load your player profile: "+error.message);
  profile=data;
  if(profile.is_banned){await supabaseClient.auth.signOut();throw new Error("This Linket account has been banned. Contact the game owner if you believe this is a mistake.");}
@@ -205,7 +205,21 @@ function accountSafe(value){
 function renderAccount(){
  if(!session||!session.user||!profile||!player)return;
  const rows=[["Username",profile.username||player.name],["Email",session.user.email||"Unavailable"],["Token balance",Number(player.tokens||profile.tokens||0).toLocaleString()],["Account type",profile.is_owner?"Owner":"Player"],["Joined",session.user.created_at?new Date(session.user.created_at).toLocaleDateString():"Unavailable"]];
- document.getElementById("accountDetails").innerHTML=rows.map(function(row){return '<div class="card" style="text-align:left"><div class="small">'+row[0]+'</div><h3 style="overflow-wrap:anywhere">'+accountSafe(row[1])+'</h3></div>';}).join("");
+ const owned=items.filter(function(item){return Number(player.quantities?.[item[0]]||0)>0;});
+ const current=profile.avatar_collectible||"";
+ const options='<option value="">Default avatar</option>'+owned.map(function(item){return '<option value="'+accountSafe(item[0])+'" '+(current===item[0]?'selected':'')+'>'+item[1]+' '+accountSafe(item[0])+' ('+item[2]+')</option>';}).join("");
+ const avatar=items.find(function(item){return item[0]===current;});
+ document.getElementById("accountDetails").innerHTML='<div class="card" style="text-align:center"><div class="small">Your avatar</div><div style="font-size:3.5rem;margin:8px">'+(avatar?avatar[1]:"👤")+'</div><h3>'+(avatar?accountSafe(avatar[0]):"Default avatar")+'</h3><label for="avatarChoice">Choose an avatar from your collection</label><select id="avatarChoice" style="width:100%;margin:10px 0">'+options+'</select><button onclick="saveAvatar()">Save Avatar</button><p class="small">You can only choose collectibles you currently own.</p></div>'+rows.map(function(row){return '<div class="card" style="text-align:left"><div class="small">'+row[0]+'</div><h3 style="overflow-wrap:anywhere">'+accountSafe(row[1])+'</h3></div>';}).join("");
+}
+async function saveAvatar(){
+ const choice=document.getElementById("avatarChoice").value;
+ if(choice&&!Number(player.quantities?.[choice]||0)){alert("You can only use a collectible you own.");renderAccount();return;}
+ try{
+  const {error}=await supabaseClient.rpc("linket_set_avatar",{p_collectible_id:choice||null});
+  if(error)throw error;
+  profile.avatar_collectible=choice||null;renderAccount();
+  alert(choice?"Avatar saved!":"Your default avatar has been restored.");
+ }catch(error){alert("Could not save avatar: "+error.message);}
 }
 function liveRoomMessage(html){document.getElementById("liveRoomStatus").innerHTML='<div class="card">'+html+'</div>';}
 async function createLiveRoom(){
@@ -415,7 +429,7 @@ async function ownerRestoreTokens(){
 }
 async function refreshSavedGame(){
  const {data:profileData,error:profileError}=await supabaseClient.from("profiles")
-  .select("id,username,tokens,is_owner").eq("id",session.user.id).single();
+  .select("id,username,tokens,is_owner,avatar_collectible").eq("id",session.user.id).single();
  if(profileError)throw profileError;
  profile=profileData;
  const {data:rows,error}=await supabaseClient.from("owned_collectibles")
