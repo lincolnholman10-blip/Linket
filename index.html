@@ -236,7 +236,7 @@ async function createLiveRoom(){
   let room=null;
   for(let i=0;i<8&&!room;i++){
    const code=Math.random().toString(36).slice(2,8).toUpperCase().padEnd(6,"X");
-   const result=await supabaseClient.from("linket_live_rooms").insert({room_code:code,host_user_id:session.user.id}).select().single();
+   const result=await supabaseClient.from("linket_live_rooms").insert({room_code:code,host_user_id:session.user.id,game_mode:"quiz_battle"}).select().single();
    if(!result.error)room=result.data;else if(result.error.code!=="23505")throw result.error;
   }
   if(!room)throw new Error("Could not make a unique code. Please try again.");
@@ -271,7 +271,11 @@ async function refreshLiveRoom(){
   const roster='<h3>Players ('+players.length+')</h3><ul>'+players.map(function(p){return '<li>'+accountSafe(p.username)+(p.user_id===room.host_user_id?" 👑 Host":"")+'</li>';}).join("")+'</ul>';
   const leave='<button class="secondary" onclick="leaveLiveRoom()">Leave Room</button>';
   if(room.status==="waiting"){
-   liveRoomMessage(code+'<p>Share this code with friends so they can join.</p>'+roster+(isHost?'<button onclick="startLiveGame()">🎮 Start Quiz Battle</button>':'<p class="small">Waiting for the host to start the game…</p>')+leave);
+   const mode=room.game_mode||"quiz_battle";
+   const modeNames={quiz_battle:"Classic Quiz",speed_round:"Speed Round",relaxed_round:"Relaxed Round"};
+   const modeRules={quiz_battle:"15 seconds per question · 100 points for each correct answer",speed_round:"8 seconds per question · 150 points for each correct answer",relaxed_round:"30 seconds per question · 75 points for each correct answer"};
+   const modePicker=isHost?'<label for="liveGameMode"><b>Choose multiplayer game mode</b></label><select id="liveGameMode" onchange="setLiveGameMode(this.value)" style="width:100%;margin:10px 0"><option value="quiz_battle" '+(mode==="quiz_battle"?'selected':'')+'>🧠 Classic Quiz</option><option value="speed_round" '+(mode==="speed_round"?'selected':'')+'>⚡ Speed Round</option><option value="relaxed_round" '+(mode==="relaxed_round"?'selected':'')+'>🌿 Relaxed Round</option></select><p class="small">'+modeRules[mode]+'</p><button onclick="startLiveGame()">🎮 Start '+modeNames[mode]+'</button>':'<p><b>Game mode:</b> '+modeNames[mode]+'</p><p class="small">'+modeRules[mode]+'</p><p class="small">Waiting for the host to start the game…</p>';
+   liveRoomMessage(code+'<p>Share this code with friends so they can join.</p>'+roster+modePicker+leave);
    return;
   }
   const scores=room.scores||{};
@@ -282,10 +286,12 @@ async function refreshLiveRoom(){
   }
   const qIndex=Math.max(0,Math.min(4,Number(room.current_question)||0)),q=liveQuizQuestions[qIndex],answers=room.answers||{},mine=answers[session.user.id];
   const elapsed=room.question_started_at?Math.max(0,(Date.now()-new Date(room.question_started_at).getTime())/1000):0;
-  const seconds=Math.max(0,15-Math.floor(elapsed));
-  const progress='<p><b>Question '+(qIndex+1)+' of 5</b> · ⏱ '+seconds+' seconds left</p><div class="small">Answered: '+Object.keys(answers).length+' / '+players.length+'</div>';
+  const timeLimit=room.game_mode==="speed_round"?8:room.game_mode==="relaxed_round"?30:15;
+  const points=room.game_mode==="speed_round"?150:room.game_mode==="relaxed_round"?75:100;
+  const seconds=Math.max(0,timeLimit-Math.floor(elapsed));
+  const progress='<p><b>Question '+(qIndex+1)+' of 5</b> · ⏱ '+seconds+' seconds left</p><div class="small">Answered: '+Object.keys(answers).length+' / '+players.length+' · Correct answer: '+points+' points</div>';
   let question='<h2>'+accountSafe(q[0])+'</h2><div class="grid">'+q[1].map(function(option,index){return '<button '+(mine?'disabled':'')+' class="'+(mine&&Number(mine.answer)===index?'secondary':'')+'" onclick="submitLiveAnswer('+qIndex+','+index+')">'+accountSafe(option)+'</button>';}).join("")+'</div>';
-  if(mine)question+='<p>'+(mine.correct?'✅ Correct! +100 points':'❌ Not quite!')+' Your answer has been recorded.</p>';
+  if(mine)question+='<p>'+(mine.correct?'✅ Correct! +'+points+' points':'❌ Not quite!')+' Your answer has been recorded.</p>';
   const board='<h3>Live scores</h3><ol>'+ranked.map(function(p){return '<li>'+accountSafe(p.name)+' — '+p.score+' points</li>';}).join("")+'</ol>';
   const hostControl=isHost?'<button class="secondary" onclick="advanceLiveQuestion()">'+(qIndex===4?'Finish Game':'Next Question')+'</button><p class="small">The next question unlocks when everyone answers or the timer reaches zero.</p>':'<p class="small">The host will move to the next question when everyone has answered or time runs out.</p>';
   liveRoomMessage(code+progress+question+board+hostControl+leave);
@@ -294,6 +300,14 @@ async function refreshLiveRoom(){
    if(!error)await refreshLiveRoom();
   }
  }catch(error){liveRoomMessage("Could not refresh room: "+accountSafe(error.message));}
+}
+async function setLiveGameMode(mode){
+ if(!activeLiveRoom)return;
+ try{
+  const {error}=await supabaseClient.rpc("linket_live_set_mode",{p_room_id:activeLiveRoom.id,p_game_mode:mode});
+  if(error)throw error;
+  await refreshLiveRoom();
+ }catch(error){alert(error.message||"Could not change the game mode.");await refreshLiveRoom();}
 }
 async function startLiveGame(){
  if(!activeLiveRoom)return;
