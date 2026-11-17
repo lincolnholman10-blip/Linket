@@ -23,7 +23,7 @@
 <p class="small">New accounts may need to confirm their email before signing in.</p><p id="error" role="status" aria-live="polite"></p>
 </div>
 <div id="game" class="hidden">
-<section class="hero"><h2>YOUR GAME • YOUR COLLECTION</h2><h1>Play big.<br>Collect everything.</h1><p>Answer questions, open awesome packs, and build your ultimate collection!</p><button onclick="tab('modes')">▶ Play Linket</button></section>
+<section class="hero"><h2>YOUR GAME • YOUR COLLECTION</h2><h1>Play big.<br>Collect everything.</h1><p>Answer questions, open awesome packs, and build your ultimate collection!</p><button onclick="tab('modes')">▶ Play Linket</button><div id="announcementBoard" class="card hidden" style="margin-top:18px;text-align:left"><h2>📣 Linket News</h2><div id="announcementList"></div></div></section>
 <nav class="tabs">
 <button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('locker',this)">📚 Collection</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
 </nav>
@@ -127,9 +127,10 @@ function showGame(){
  draw();
 }
 async function loadProfile(user){
- const {data,error}=await supabaseClient.from("profiles").select("id,username,tokens,is_owner").eq("id",user.id).single();
+ const {data,error}=await supabaseClient.from("profiles").select("id,username,tokens,is_owner,is_banned").eq("id",user.id).single();
  if(error)throw new Error("Signed in, but Linket could not load your player profile: "+error.message);
  profile=data;
+ if(profile.is_banned){await supabaseClient.auth.signOut();throw new Error("This Linket account has been banned. Contact the game owner if you believe this is a mistake.");}
  await loadGameData();
  showGame();
 }
@@ -148,6 +149,8 @@ async function login(){
   }
   session=data;
   await loadProfile(data.user);
+  loadAnnouncements();
+  if(player.owner){if(window.linketAdminRefresh)clearInterval(window.linketAdminRefresh);window.linketAdminRefresh=setInterval(()=>{if(player&&player.owner)loadOwnerDashboard();},30000);}
   showError("");
  }catch(e){showError(e.message||"Sign-in failed. Please try again.");}
  finally{setBusy(false);}
