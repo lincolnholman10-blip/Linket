@@ -26,11 +26,11 @@
 <div id="game" class="hidden">
 <section class="hero"><h2>YOUR GAME • YOUR COLLECTION</h2><h1>Play big.<br>Collect everything.</h1><p>Answer questions, open awesome packs, and build your ultimate collection!</p><button onclick="tab('modes')">▶ Play Linket</button><div id="announcementBoard" class="card hidden" style="margin-top:18px;text-align:left"><h2>📣 Linket News</h2><div id="announcementList"></div></div></section>
 <nav class="tabs">
-<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('index',this)">🏅 Collectible Index</button><button onclick="tab('locker',this)">📚 Collection</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
+<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('index',this)">🏅 Collectible Index</button><button onclick="tab('locker',this)">📚 Collection</button><button onclick="tab('account',this)">👤 My Account</button><button onclick="tab('liveGames',this)">🌐 Live Games</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
 </nav>
 <section id="modes" class="panel active"><h1>Game Modes</h1><div class="grid" id="modeGrid"></div></section>
 <section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits or daily purchase cap! Choose how many packs to open each time. Buy again whenever you have enough tokens.</p><div class="grid" id="packGrid"></div></section><section id="index" class="panel"><h1>🏅 Collectible Index</h1><p>Explore every collectible in Linket, organized by rarity.</p><div id="collectibleIndex"></div></section>
-<section id="locker" class="panel"><h1>📚 Your Collection</h1><p id="count"></p><div class="collection-toolbar"><input id="collectionSearch" type="search" placeholder="🔎 Search collectibles..." oninput="drawCollection()"><select id="collectionRarity" onchange="drawCollection()"><option value="all">All rarities</option><option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythical</option></select><select id="collectionSort" onchange="drawCollection()"><option value="rarity">Sort: Rarity</option><option value="name">Sort: Name</option><option value="quantity">Sort: Quantity owned</option><option value="newest">Sort: Collected first</option></select></div><div id="collectionStats" class="collection-stats"></div><div class="grid" id="collection"></div></section>
+<section id="account" class="panel"><h1>👤 My Account</h1><p>Your Linket account information.</p><div id="accountDetails" class="grid"></div></section><section id="liveGames" class="panel"><h1>🌐 Live Games</h1><p>Create a room and share its code, or enter a friend&#39;s code to join their room.</p><div class="grid"><div class="card"><h2>➕ Create a Room</h2><p>Start a waiting room and invite friends.</p><button onclick="createLiveRoom()">Create Room</button></div><div class="card"><h2>🔑 Join a Room</h2><input id="liveJoinCode" maxlength="6" placeholder="Enter 6-character code" style="text-transform:uppercase"><button onclick="joinLiveRoom()">Join Room</button></div></div><div id="liveRoomStatus" style="margin-top:18px"></div></section><section id="locker" class="panel"><h1>📚 Your Collection</h1><p id="count"></p><div class="collection-toolbar"><input id="collectionSearch" type="search" placeholder="🔎 Search collectibles..." oninput="drawCollection()"><select id="collectionRarity" onchange="drawCollection()"><option value="all">All rarities</option><option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythical</option></select><select id="collectionSort" onchange="drawCollection()"><option value="rarity">Sort: Rarity</option><option value="name">Sort: Name</option><option value="quantity">Sort: Quantity owned</option><option value="newest">Sort: Collected first</option></select></div><div id="collectionStats" class="collection-stats"></div><div class="grid" id="collection"></div></section>
 <section id="ownerDashboard" class="panel">
 <h1>👑 Owner Dashboard</h1><p class="small">Private owner controls. Player changes are saved directly to Supabase.</p>
 <div class="owner-actions"><button onclick="loadOwnerDashboard()">↻ Refresh dashboard</button><button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button><button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000 tokens</button></div>
@@ -196,9 +196,67 @@ async function logout(){
  document.getElementById("password").value="";
  showError("You have been signed out.");
 }
+
+let activeLiveRoom=null;
+let liveRoomTimer=null;
+function accountSafe(value){
+ return String(value==null?"":value).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});
+}
+function renderAccount(){
+ if(!session||!session.user||!profile||!player)return;
+ const rows=[["Username",profile.username||player.name],["Email",session.user.email||"Unavailable"],["Token balance",Number(player.tokens||profile.tokens||0).toLocaleString()],["Account type",profile.is_owner?"Owner":"Player"],["Joined",session.user.created_at?new Date(session.user.created_at).toLocaleDateString():"Unavailable"]];
+ document.getElementById("accountDetails").innerHTML=rows.map(function(row){return '<div class="card" style="text-align:left"><div class="small">'+row[0]+'</div><h3 style="overflow-wrap:anywhere">'+accountSafe(row[1])+'</h3></div>';}).join("");
+}
+function liveRoomMessage(html){document.getElementById("liveRoomStatus").innerHTML='<div class="card">'+html+'</div>';}
+async function createLiveRoom(){
+ if(!session||!player)return;
+ liveRoomMessage("Creating room...");
+ try{
+  let room=null;
+  for(let i=0;i<8&&!room;i++){
+   const code=Math.random().toString(36).slice(2,8).toUpperCase().padEnd(6,"X");
+   const result=await supabaseClient.from("linket_live_rooms").insert({room_code:code,host_user_id:session.user.id}).select().single();
+   if(!result.error)room=result.data;else if(result.error.code!=="23505")throw result.error;
+  }
+  if(!room)throw new Error("Could not make a unique code. Please try again.");
+  const joined=await supabaseClient.from("linket_live_room_players").insert({room_id:room.id,user_id:session.user.id,username:profile.username||player.name});
+  if(joined.error)throw joined.error;
+  activeLiveRoom=room;await refreshLiveRoom();
+ }catch(error){liveRoomMessage("Could not create room: "+accountSafe(error.message));}
+}
+async function joinLiveRoom(){
+ if(!session||!player)return;
+ const code=(document.getElementById("liveJoinCode").value||"").trim().toUpperCase();
+ if(!/^[A-Z0-9]{6}$/.test(code)){liveRoomMessage("Please enter a 6-character room code.");return;}
+ liveRoomMessage("Finding room...");
+ try{
+  const found=await supabaseClient.from("linket_live_rooms").select("*").eq("room_code",code).eq("status","waiting").maybeSingle();
+  if(found.error)throw found.error;if(!found.data)throw new Error("No waiting room was found with that code.");
+  const joined=await supabaseClient.from("linket_live_room_players").upsert({room_id:found.data.id,user_id:session.user.id,username:profile.username||player.name},{onConflict:"room_id,user_id"});
+  if(joined.error)throw joined.error;activeLiveRoom=found.data;await refreshLiveRoom();
+ }catch(error){liveRoomMessage("Could not join room: "+accountSafe(error.message));}
+}
+async function refreshLiveRoom(){
+ if(!activeLiveRoom)return;
+ try{
+  const found=await supabaseClient.from("linket_live_rooms").select("*").eq("id",activeLiveRoom.id).maybeSingle();
+  if(found.error)throw found.error;if(!found.data){activeLiveRoom=null;liveRoomMessage("This room is no longer available.");return;}
+  const result=await supabaseClient.from("linket_live_room_players").select("username,user_id,joined_at").eq("room_id",activeLiveRoom.id).order("joined_at");
+  if(result.error)throw result.error;
+  const room=found.data,players=result.data||[];
+  liveRoomMessage('<h2>Room code</h2><div style="font-size:36px;font-weight:900;letter-spacing:7px;color:#ffd166">'+accountSafe(room.room_code)+'</div><p>Share this code with friends so they can join.</p><h3>Players ('+players.length+')</h3><ul>'+players.map(function(p){return '<li>'+accountSafe(p.username)+(p.user_id===room.host_user_id?" 👑 Host":"")+'</li>';}).join("")+'</ul><button class="secondary" onclick="refreshLiveRoom()">↻ Refresh Players</button> <button class="secondary" onclick="leaveLiveRoom()">Leave Room</button><p class="small">Room lobby is active. Everyone in the room will appear here.</p>');
+ }catch(error){liveRoomMessage("Could not refresh room: "+accountSafe(error.message));}
+}
+async function leaveLiveRoom(){
+ if(activeLiveRoom&&session)await supabaseClient.from("linket_live_room_players").delete().eq("room_id",activeLiveRoom.id).eq("user_id",session.user.id);
+ activeLiveRoom=null;liveRoomMessage("You left the room.");
+}
+
 function tab(id,btn){
  if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}
  if(id==="ownerDashboard")loadOwnerDashboard();
+ if(id==="account")renderAccount();
+ if(id==="liveGames"){if(activeLiveRoom)refreshLiveRoom();if(liveRoomTimer)clearInterval(liveRoomTimer);liveRoomTimer=setInterval(function(){if(activeLiveRoom&&document.getElementById("liveGames").classList.contains("active"))refreshLiveRoom();},4000);}else if(liveRoomTimer){clearInterval(liveRoomTimer);liveRoomTimer=null;}
  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
