@@ -218,3 +218,9 @@ CREATE POLICY "Players can rejoin Linket rooms as themselves"
 
 GRANT SELECT, INSERT ON public.linket_live_rooms TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.linket_live_room_players TO authenticated;
+
+DROP POLICY IF EXISTS "Players can leave Linket rooms" ON public.linket_live_room_players;
+CREATE POLICY "Players can leave Linket rooms"
+  ON public.linket_live_room_players FOR DELETE TO authenticated
+  USING (user_id = auth.uid());
+GRANT DELETE ON public.linket_live_room_players TO authenticated;
