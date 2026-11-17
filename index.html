@@ -382,7 +382,7 @@ async function showPackReveal(foundCounts,opened){
  const result=results[index],item=result.item;visual.className="pack-result";visual.textContent=item[1];name.textContent=item[0]+(result.amount>1?" ×"+result.amount:"");rarity.textContent=item[2];rarity.className="rarity "+item[2];rarity.classList.remove("hidden");progress.style.width=Math.round((index+1)/results.length*100)+"%";count.textContent="Collectible "+(index+1)+" of "+results.length;index++;}
  visual.className="pack-flash";visual.textContent="🎁";name.textContent="Shaking…";rarity.classList.add("hidden");progress.style.width="0%";count.textContent="Your collectibles are being revealed!";
  await new Promise(resolve=>setTimeout(resolve,850));revealNext();
- if(results.length>1){packRevealTimer=setInterval(()=>{if(index<results.length)revealNext();else{clearInterval(packRevealTimer);packRevealTimer=null;}},950);}
+ packRevealTimer=setInterval(()=>{if(index<=results.length){revealNext();}else{clearInterval(packRevealTimer);packRevealTimer=null;}},950);
 }
 async function openPack(cost,packIndex){
  const input=document.getElementById("packQty"+packIndex),qty=Number(input?.value||1);
