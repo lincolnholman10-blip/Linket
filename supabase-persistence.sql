@@ -277,6 +277,27 @@ ALTER TABLE public.linket_live_rooms
   ADD COLUMN IF NOT EXISTS scores jsonb NOT NULL DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS answers jsonb NOT NULL DEFAULT '{}'::jsonb;
 
+CREATE OR REPLACE FUNCTION public.linket_live_set_mode(p_room_id uuid,p_game_mode text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $
+DECLARE
+  v_room public.linket_live_rooms%ROWTYPE;
+BEGIN
+  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'You must be signed in.'; END IF;
+  IF p_game_mode NOT IN ('quiz_battle','speed_round','relaxed_round') THEN
+    RAISE EXCEPTION 'Choose a valid multiplayer game mode.';
+  END IF;
+  SELECT * INTO v_room FROM public.linket_live_rooms WHERE id=p_room_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Room not found.'; END IF;
+  IF v_room.host_user_id <> auth.uid() THEN RAISE EXCEPTION 'Only the host can choose the game mode.'; END IF;
+  IF v_room.status <> 'waiting' THEN RAISE EXCEPTION 'The game has already started.'; END IF;
+  UPDATE public.linket_live_rooms SET game_mode=p_game_mode WHERE id=p_room_id;
+END;
+$;
+
 CREATE OR REPLACE FUNCTION public.linket_live_start_game(p_room_id uuid)
 RETURNS void
 LANGUAGE plpgsql
@@ -292,10 +313,13 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'Room not found.'; END IF;
   IF v_room.host_user_id <> auth.uid() THEN RAISE EXCEPTION 'Only the host can start the game.'; END IF;
   IF v_room.status <> 'waiting' THEN RAISE EXCEPTION 'This room has already started.'; END IF;
+  IF COALESCE(v_room.game_mode,'quiz_battle') NOT IN ('quiz_battle','speed_round','relaxed_round') THEN
+    RAISE EXCEPTION 'Choose a valid multiplayer game mode.';
+  END IF;
   SELECT count(*) INTO v_count FROM public.linket_live_room_players WHERE room_id=p_room_id;
   IF v_count < 2 THEN RAISE EXCEPTION 'At least 2 players are needed to start.'; END IF;
   UPDATE public.linket_live_rooms
-  SET status='playing', game_mode='quiz_battle', current_question=0,
+  SET status='playing', game_mode=COALESCE(game_mode,'quiz_battle'), current_question=0,
       question_started_at=now(), scores='{}'::jsonb, answers='{}'::jsonb
   WHERE id=p_room_id;
 END;
@@ -322,14 +346,17 @@ BEGIN
   END IF;
   IF p_question <> v_room.current_question OR p_question NOT BETWEEN 0 AND 4 THEN RAISE EXCEPTION 'That question is no longer active.'; END IF;
   IF p_answer NOT BETWEEN 0 AND 2 THEN RAISE EXCEPTION 'Invalid answer.'; END IF;
-  IF v_room.question_started_at < now() - interval '20 seconds' THEN RAISE EXCEPTION 'Time is up for this question.'; END IF;
+  IF v_room.question_started_at < now() - make_interval(secs => CASE v_room.game_mode WHEN 'speed_round' THEN 8 WHEN 'relaxed_round' THEN 30 ELSE 15 END) THEN
+    RAISE EXCEPTION 'Time is up for this question.';
+  END IF;
   IF v_room.answers ? v_user THEN RAISE EXCEPTION 'You already answered this question.'; END IF;
   v_correct := CASE p_question
     WHEN 0 THEN 0 WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 0 WHEN 4 THEN 1
   END;
   v_scores := v_room.scores;
   IF p_answer=v_correct THEN
-    v_scores := jsonb_set(v_scores,ARRAY[v_user],to_jsonb(COALESCE((v_scores->>v_user)::integer,0)+100),true);
+    v_scores := jsonb_set(v_scores,ARRAY[v_user],to_jsonb(COALESCE((v_scores->>v_user)::integer,0)+
+      CASE v_room.game_mode WHEN 'speed_round' THEN 150 WHEN 'relaxed_round' THEN 75 ELSE 100 END),true);
   ELSE
     IF NOT (v_scores ? v_user) THEN v_scores := jsonb_set(v_scores,ARRAY[v_user],'0'::jsonb,true); END IF;
   END IF;
@@ -356,7 +383,8 @@ BEGIN
   IF v_room.host_user_id <> auth.uid() THEN RAISE EXCEPTION 'Only the host can advance the game.'; END IF;
   SELECT count(*) INTO v_players FROM public.linket_live_room_players WHERE room_id=p_room_id;
   SELECT count(*) INTO v_answered FROM jsonb_object_keys(v_room.answers);
-  IF v_answered < v_players AND v_room.question_started_at > now()-interval '15 seconds' THEN
+  IF v_answered < v_players AND v_room.question_started_at >
+    now()-make_interval(secs => CASE v_room.game_mode WHEN 'speed_round' THEN 8 WHEN 'relaxed_round' THEN 30 ELSE 15 END) THEN
     RAISE EXCEPTION 'Wait for everyone to answer or for the timer to finish.';
   END IF;
   IF v_room.current_question >= 4 THEN
@@ -370,6 +398,8 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.linket_live_set_mode(uuid,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.linket_live_set_mode(uuid,text) TO authenticated;
 REVOKE ALL ON FUNCTION public.linket_live_start_game(uuid) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.linket_live_submit_answer(uuid,integer,integer) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.linket_live_advance_question(uuid) FROM PUBLIC;
