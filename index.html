@@ -106,7 +106,7 @@ async function createAccount(){
  if(password.length<8){showError("Choose a password with at least 8 characters.");return;}
  setBusy(true);showError("Creating your account…");
  try{
-  const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{username}}});
+  const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:"https://lincolnholman10-blip.github.io/Linket/",data:{username}}});
   if(error)throw error;
   if(data.session && data.user.email_confirmed_at){
    session=data;
