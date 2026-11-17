@@ -82,6 +82,13 @@ const items = [
 ];
 const modes = [["🛡️","Tower Defense"],["💰","Gold Quest"],["☕","Cafe"],["🏭","Factory"]];
 const packs = [["🎄","Christmas Pack",50],["🌈","Rainbow Pack",100],["🌌","Galaxy Pack",150]];
+const liveQuizQuestions=[
+ ["What is the main goal of tower defense?",["Protect the base","Bake a cake","Paint a car"],0],
+ ["Which tool is used to dig for gold?",["Brush","Pickaxe","Spoon"],1],
+ ["What should you do before serving a cafe order?",["Ignore the order","Hide the food","Check the recipe"],2],
+ ["Quality control in a factory helps find…",["Defective products","Customers","Decorations"],0],
+ ["What do players collect in Linket?",["Tickets","Collectibles","Cars"],1]
+];
 let player = null;
 let profile = null;
 let session = null;
@@ -254,12 +261,54 @@ async function refreshLiveRoom(){
  if(!activeLiveRoom)return;
  try{
   const found=await supabaseClient.from("linket_live_rooms").select("*").eq("id",activeLiveRoom.id).maybeSingle();
-  if(found.error)throw found.error;if(!found.data){activeLiveRoom=null;liveRoomMessage("This room is no longer available.");return;}
+  if(found.error)throw found.error;
+  if(!found.data){activeLiveRoom=null;liveRoomMessage("This room is no longer available.");return;}
   const result=await supabaseClient.from("linket_live_room_players").select("username,user_id,joined_at").eq("room_id",activeLiveRoom.id).order("joined_at");
   if(result.error)throw result.error;
-  const room=found.data,players=result.data||[];
-  liveRoomMessage('<h2>Room code</h2><div style="font-size:36px;font-weight:900;letter-spacing:7px;color:#ffd166">'+accountSafe(room.room_code)+'</div><p>Share this code with friends so they can join.</p><h3>Players ('+players.length+')</h3><ul>'+players.map(function(p){return '<li>'+accountSafe(p.username)+(p.user_id===room.host_user_id?" 👑 Host":"")+'</li>';}).join("")+'</ul><button class="secondary" onclick="refreshLiveRoom()">↻ Refresh Players</button> <button class="secondary" onclick="leaveLiveRoom()">Leave Room</button><p class="small">Room lobby is active. Everyone in the room will appear here.</p>');
+  const room=found.data,players=result.data||[],isHost=room.host_user_id===session.user.id;
+  activeLiveRoom=room;
+  const code='<h2>Room code</h2><div style="font-size:36px;font-weight:900;letter-spacing:7px;color:#ffd166">'+accountSafe(room.room_code)+'</div>';
+  const roster='<h3>Players ('+players.length+')</h3><ul>'+players.map(function(p){return '<li>'+accountSafe(p.username)+(p.user_id===room.host_user_id?" 👑 Host":"")+'</li>';}).join("")+'</ul>';
+  const leave='<button class="secondary" onclick="leaveLiveRoom()">Leave Room</button>';
+  if(room.status==="waiting"){
+   liveRoomMessage(code+'<p>Share this code with friends so they can join.</p>'+roster+(isHost?'<button onclick="startLiveGame()">🎮 Start Quiz Battle</button>':'<p class="small">Waiting for the host to start the game…</p>')+leave);
+   return;
+  }
+  const scores=room.scores||{};
+  const ranked=players.map(function(p){return {name:p.username,id:p.user_id,score:Number(scores[p.user_id]||0)};}).sort(function(a,b){return b.score-a.score;});
+  if(room.status==="finished"){
+   liveRoomMessage(code+'<h2>🏆 Quiz Battle Results</h2><ol>'+ranked.map(function(p){return '<li>'+accountSafe(p.name)+' — <b>'+p.score+' points</b></li>';}).join("")+'</ol><p>The game is finished!</p>'+leave);
+   return;
+  }
+  const qIndex=Math.max(0,Math.min(4,Number(room.current_question)||0)),q=liveQuizQuestions[qIndex],answers=room.answers||{},mine=answers[session.user.id];
+  const elapsed=room.question_started_at?Math.max(0,(Date.now()-new Date(room.question_started_at).getTime())/1000):0;
+  const seconds=Math.max(0,15-Math.floor(elapsed));
+  const progress='<p><b>Question '+(qIndex+1)+' of 5</b> · ⏱ '+seconds+' seconds left</p><div class="small">Answered: '+Object.keys(answers).length+' / '+players.length+'</div>';
+  let question='<h2>'+accountSafe(q[0])+'</h2><div class="grid">'+q[1].map(function(option,index){return '<button '+(mine?'disabled':'')+' class="'+(mine&&Number(mine.answer)===index?'secondary':'')+'" onclick="submitLiveAnswer('+qIndex+','+index+')">'+accountSafe(option)+'</button>';}).join("")+'</div>';
+  if(mine)question+='<p>'+(mine.correct?'✅ Correct! +100 points':'❌ Not quite!')+' Your answer has been recorded.</p>';
+  const board='<h3>Live scores</h3><ol>'+ranked.map(function(p){return '<li>'+accountSafe(p.name)+' — '+p.score+' points</li>';}).join("")+'</ol>';
+  const hostControl=isHost?'<button class="secondary" onclick="advanceLiveQuestion()">'+(qIndex===4?'Finish Game':'Next Question')+'</button><p class="small">The next question unlocks when everyone answers or the timer reaches zero.</p>':'<p class="small">The host will move to the next question when everyone has answered or time runs out.</p>';
+  liveRoomMessage(code+progress+question+board+hostControl+leave);
+  if(isHost&&(seconds===0||Object.keys(answers).length>=players.length)){
+   const {error}=await supabaseClient.rpc("linket_live_advance_question",{p_room_id:room.id});
+   if(!error)await refreshLiveRoom();
+  }
  }catch(error){liveRoomMessage("Could not refresh room: "+accountSafe(error.message));}
+}
+async function startLiveGame(){
+ if(!activeLiveRoom)return;
+ try{const {error}=await supabaseClient.rpc("linket_live_start_game",{p_room_id:activeLiveRoom.id});if(error)throw error;await refreshLiveRoom();}
+ catch(error){alert(error.message||"Could not start the game.");}
+}
+async function submitLiveAnswer(question,answer){
+ if(!activeLiveRoom)return;
+ try{const {data,error}=await supabaseClient.rpc("linket_live_submit_answer",{p_room_id:activeLiveRoom.id,p_question:question,p_answer:answer});if(error)throw error;await refreshLiveRoom();}
+ catch(error){alert(error.message||"Your answer could not be submitted.");}
+}
+async function advanceLiveQuestion(){
+ if(!activeLiveRoom)return;
+ try{const {error}=await supabaseClient.rpc("linket_live_advance_question",{p_room_id:activeLiveRoom.id});if(error)throw error;await refreshLiveRoom();}
+ catch(error){alert(error.message||"The next question is not ready yet.");}
 }
 async function leaveLiveRoom(){
  if(activeLiveRoom&&session)await supabaseClient.from("linket_live_room_players").delete().eq("room_id",activeLiveRoom.id).eq("user_id",session.user.id);
@@ -270,7 +319,7 @@ function tab(id,btn){
  if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}
  if(id==="ownerDashboard")loadOwnerDashboard();
  if(id==="account")renderAccount();
- if(id==="liveGames"){if(activeLiveRoom)refreshLiveRoom();if(liveRoomTimer)clearInterval(liveRoomTimer);liveRoomTimer=setInterval(function(){if(activeLiveRoom&&document.getElementById("liveGames").classList.contains("active"))refreshLiveRoom();},4000);}else if(liveRoomTimer){clearInterval(liveRoomTimer);liveRoomTimer=null;}
+ if(id==="liveGames"){if(activeLiveRoom)refreshLiveRoom();if(liveRoomTimer)clearInterval(liveRoomTimer);liveRoomTimer=setInterval(function(){if(activeLiveRoom&&document.getElementById("liveGames").classList.contains("active"))refreshLiveRoom();},2000);}else if(liveRoomTimer){clearInterval(liveRoomTimer);liveRoomTimer=null;}
  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
