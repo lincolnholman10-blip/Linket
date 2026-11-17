@@ -91,10 +91,13 @@ BEGIN
   IF p_user_id=auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE id=p_user_id AND is_owner=true) THEN
     RAISE EXCEPTION 'You cannot delete the owner account.';
   END IF;
-  DELETE FROM auth.users WHERE id=p_user_id;
-  IF NOT FOUND THEN RAISE EXCEPTION 'Player account not found.'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM auth.users WHERE id=p_user_id) THEN
+    RAISE EXCEPTION 'Player account not found.';
+  END IF;
   INSERT INTO public.linket_owner_activity(actor_id,target_id,action,details)
-  VALUES(auth.uid(),p_user_id,'player_deleted','{}'::jsonb);
+  VALUES(auth.uid(),p_user_id,'player_deleted',
+    jsonb_build_object('deleted_user_id',p_user_id));
+  DELETE FROM auth.users WHERE id=p_user_id;
   RETURN true;
 END; $$;
 
