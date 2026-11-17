@@ -169,3 +169,52 @@ GRANT EXECUTE ON FUNCTION public.linket_answer_question(integer, integer) TO aut
 GRANT EXECUTE ON FUNCTION public.linket_open_pack(integer) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.linket_owner_unlock_all() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.linket_owner_restore_tokens() TO authenticated;
+
+
+-- Live multiplayer room lobby
+CREATE TABLE IF NOT EXISTS public.linket_live_rooms (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_code text NOT NULL UNIQUE CHECK (room_code ~ '^[A-Z0-9]{6}$'),
+  host_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  status text NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting', 'playing', 'finished')),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.linket_live_room_players (
+  room_id uuid NOT NULL REFERENCES public.linket_live_rooms(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  username text NOT NULL,
+  joined_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (room_id, user_id)
+);
+
+ALTER TABLE public.linket_live_rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.linket_live_room_players ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Signed-in users can view waiting Linket rooms" ON public.linket_live_rooms;
+CREATE POLICY "Signed-in users can view waiting Linket rooms"
+  ON public.linket_live_rooms FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Players can create their own Linket rooms" ON public.linket_live_rooms;
+CREATE POLICY "Players can create their own Linket rooms"
+  ON public.linket_live_rooms FOR INSERT TO authenticated
+  WITH CHECK (host_user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Signed-in users can view Linket room players" ON public.linket_live_room_players;
+CREATE POLICY "Signed-in users can view Linket room players"
+  ON public.linket_live_room_players FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Players can join Linket rooms as themselves" ON public.linket_live_room_players;
+CREATE POLICY "Players can join Linket rooms as themselves"
+  ON public.linket_live_room_players FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid() AND EXISTS (
+    SELECT 1 FROM public.linket_live_rooms r WHERE r.id = room_id
+  ));
+
+DROP POLICY IF EXISTS "Players can rejoin Linket rooms as themselves" ON public.linket_live_room_players;
+CREATE POLICY "Players can rejoin Linket rooms as themselves"
+  ON public.linket_live_room_players FOR UPDATE TO authenticated
+  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+GRANT SELECT, INSERT ON public.linket_live_rooms TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.linket_live_room_players TO authenticated;
