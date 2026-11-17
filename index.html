@@ -63,6 +63,7 @@ input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}
   <button class="active" onclick="tab('modes',this)">🎮 Game Modes</button>
   <button onclick="tab('packs',this)">🎁 Packs</button>
   <button onclick="tab('locker',this)">📚 Collection</button>
+  <button id="ownerTab" style="display:none" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
  </nav>
 
  <section id="modes" class="panel active">
@@ -80,6 +81,18 @@ input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}
   <h1>Your collection</h1>
   <p id="count"></p>
   <div class="grid" id="collection"></div>
+ </section>
+
+ <section id="ownerDashboard" class="panel">
+  <h1>👑 Owner Dashboard</h1>
+  <p class="small">Prototype controls for accounts saved in this browser.</p>
+  <div class="grid">
+   <div class="card"><div class="emoji">👥</div><h2 id="ownerUsers">0</h2><p>Local accounts</p></div>
+   <div class="card"><div class="emoji">🪙</div><h2 id="ownerTokens">0</h2><p>Total tokens</p></div>
+   <div class="card"><div class="emoji">✨</div><h2 id="ownerCollectibles">0</h2><p>Your collectibles</p></div>
+  </div>
+  <h2>Player accounts</h2>
+  <div id="ownerAccountList" class="grid"></div>
  </section>
 
  <button onclick="logout()">Log out</button>
@@ -151,6 +164,7 @@ function login(){
  save();
  document.getElementById("login").style.display="none";
  document.getElementById("game").style.display="block";
+ document.getElementById("ownerTab").style.display=player.owner?"inline-block":"none";
  draw();
 }
 
@@ -190,6 +204,34 @@ function draw(){
 
  drawCollection();
  update();
+ if(player.owner)renderOwnerDashboard();
+}
+
+function renderOwnerDashboard(){
+ if(!player || !player.owner)return;
+ const names=Object.keys(accounts);
+ document.getElementById("ownerUsers").textContent=names.length;
+ document.getElementById("ownerTokens").textContent=names.reduce((sum,n)=>sum+(Number(accounts[n].tokens)||0),0).toLocaleString();
+ document.getElementById("ownerCollectibles").textContent=player.owned.length;
+ const list=document.getElementById("ownerAccountList");
+ list.innerHTML="";
+ names.forEach(name=>{
+  const account=accounts[name];
+  const card=document.createElement("div"); card.className="card";
+  const heading=document.createElement("h3"); heading.textContent=name; card.appendChild(heading);
+  const balance=document.createElement("p"); balance.textContent="🪙 "+(Number(account.tokens)||0).toLocaleString()+" tokens"; card.appendChild(balance);
+  const owned=document.createElement("p"); owned.textContent=(account.owned||[]).length+" collectibles"; card.appendChild(owned);
+  if(!account.owner){const btn=document.createElement("button"); btn.textContent="Give 100 tokens"; btn.onclick=()=>grantTokens(name); card.appendChild(btn);}
+  list.appendChild(card);
+ });
+}
+
+function grantTokens(name){
+ if(!player || !player.owner || !accounts[name] || accounts[name].owner)return;
+ accounts[name].tokens=(Number(accounts[name].tokens)||0)+100;
+ localStorage.setItem("linketAccounts",JSON.stringify(accounts));
+ renderOwnerDashboard();
+ alert("Added 100 tokens to "+name+".");
 }
 
 function drawCollection(){
