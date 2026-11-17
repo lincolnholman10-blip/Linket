@@ -57,7 +57,7 @@ RETURNS TABLE(collectible_id text, tokens bigint)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $linket$
 #variable_conflict use_column
 DECLARE
   v_user_id uuid := auth.uid();
@@ -118,8 +118,7 @@ BEGIN
 
   RETURN QUERY SELECT v_collectible, v_tokens;
 END;
-$$;
-
+$linket$;
 CREATE OR REPLACE FUNCTION public.linket_owner_unlock_all()
 RETURNS integer
 LANGUAGE plpgsql
