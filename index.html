@@ -69,7 +69,9 @@ const packs = [["🎄","Christmas Pack",50],["🌈","Rainbow Pack",100],["🌌",
 let player = null;
 let profile = null;
 let session = null;
-let busy = false;\nlet ownerPlayers = [];\n
+let busy = false;
+let ownerPlayers = [];
+
 
 function showError(message){document.getElementById("error").textContent=message||"";}
 function setBusy(value){busy=value;document.getElementById("loginButton").disabled=value;document.getElementById("createButton").disabled=value;}
@@ -168,7 +170,8 @@ async function logout(){
  showError("You have been signed out.");
 }
 function tab(id,btn){
- if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}\n if(id==="ownerDashboard")loadOwnerDashboard();
+ if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}
+ if(id==="ownerDashboard")loadOwnerDashboard();
  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
