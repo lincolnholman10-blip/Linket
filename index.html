@@ -6,7 +6,9 @@
 <title>Linket Ultimate Edition</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#182344;color:white;font-family:Arial,sans-serif}header{padding:20px 5%;background:#111a36;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.logo{font-size:34px;font-weight:900}.logo span{color:#ff589e}.tokens{background:#293b69;padding:15px 22px;border-radius:30px;color:#ffd166;font-weight:bold}main{max-width:1150px;margin:auto;padding:25px}.hero{padding:45px;background:linear-gradient(120deg,#60439e,#146b83);border-radius:35px;margin:15px 0 25px}.hero h1{font-size:48px;margin:10px 0}button{border:0;border-radius:13px;padding:14px 20px;font-weight:bold;cursor:pointer;background:#ff589e;color:#201633;margin:4px}button:hover{filter:brightness(1.12)}button:disabled{opacity:.55;cursor:wait}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}.tabs button{background:#30416f;color:white}.tabs button.active{background:#ff589e;color:#201633}.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px}.card{background:#29385f;padding:20px;border-radius:18px;text-align:center}.emoji{font-size:45px}.rarity{font-size:12px;font-weight:bold;padding:6px 12px;border-radius:20px;display:inline-block}.Common{background:#dce3ed;color:#39445b}.Rare{background:#6fcaff;color:#143b68}.Epic{background:#bd8bff;color:#35135c}.Legendary{background:#ffd166;color:#674500}.Mythical{background:#ff72cf;color:#65104c}input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}.login{max-width:400px;margin:60px auto;background:#29385f;padding:28px;border-radius:20px}.small{color:#c3cbe2;font-size:13px}#error{white-space:pre-wrap;color:#ffd166;line-height:1.4}.hidden{display:none!important}
-.owner-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.owner-stats{margin:16px 0}.owner-section{margin:18px 0;text-align:left}.owner-section h2{margin-top:0}.owner-tools-grid{align-items:stretch}.owner-section label{display:block;text-align:left;margin-top:10px;color:#dce4ff;font-size:13px}.owner-select{width:100%;padding:13px;border:0;border-radius:10px;margin:8px 0;background:#fff;color:#182344}.owner-table{width:100%;border-collapse:collapse;min-width:650px;text-align:left}.owner-table th,.owner-table td{padding:11px;border-bottom:1px solid #526187}.table-wrap{overflow-x:auto}.owner-table button{padding:8px 12px;margin:0}.secondary{background:#526187;color:white}.activity-list{display:grid;gap:8px}.activity-item{background:#202f53;border-radius:10px;padding:12px;font-size:13px}.activity-item small{display:block;color:#bdc8e4;margin-top:5px}@media(max-width:600px){.owner-section{padding:14px}.owner-table{font-size:12px}}\n</style>
+.owner-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.owner-stats{margin:16px 0}.owner-section{margin:18px 0;text-align:left}.owner-section h2{margin-top:0}.owner-tools-grid{align-items:stretch}.owner-section label{display:block;text-align:left;margin-top:10px;color:#dce4ff;font-size:13px}.owner-select{width:100%;padding:13px;border:0;border-radius:10px;margin:8px 0;background:#fff;color:#182344}.owner-table{width:100%;border-collapse:collapse;min-width:650px;text-align:left}.owner-table th,.owner-table td{padding:11px;border-bottom:1px solid #526187}.table-wrap{overflow-x:auto}.owner-table button{padding:8px 12px;margin:0}.secondary{background:#526187;color:white}.activity-list{display:grid;gap:8px}.activity-item{background:#202f53;border-radius:10px;padding:12px;font-size:13px}.activity-item small{display:block;color:#bdc8e4;margin-top:5px}
+.game-modal{position:fixed;inset:0;background:#0b1228ee;z-index:20;display:none;align-items:center;justify-content:center;padding:16px}.game-modal.open{display:flex}.game-box{width:min(760px,100%);max-height:92vh;overflow:auto;background:#202f53;border:1px solid #526187;border-radius:22px;padding:22px;box-shadow:0 20px 70px #0009}.game-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.game-board{display:grid;gap:7px;margin:18px auto;max-width:440px}.game-cell{min-height:58px;background:#344878;color:white;border-radius:10px;font-size:24px;margin:0;padding:8px}.game-hud{display:flex;gap:10px;flex-wrap:wrap}.game-hud span{background:#14213f;padding:9px 13px;border-radius:10px}.game-choice{background:#435b91;color:white}.game-note{min-height:24px;color:#ffd166}.game-progress{height:12px;background:#101a34;border-radius:9px;overflow:hidden;margin:10px 0}.game-progress i{display:block;height:100%;background:#ff589e;width:0}
+@media(max-width:600px){.owner-section{padding:14px}.owner-table{font-size:12px}.game-box{padding:15px}.game-cell{min-height:48px}}\n</style>
 </head>
 <body>
 <header><div class="logo">✨ Link<span>et</span></div><div class="tokens">🪙 Tokens: <span id="tokens">0</span></div></header>
@@ -55,6 +57,10 @@
 <button onclick="logout()">Log out</button>
 </div>
 </main>
+<div id="gameModal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="gameTitle">
+ <div class="game-box"><div class="game-top"><h2 id="gameTitle">Game</h2><button class="secondary" onclick="closeMode()">✕ Close</button></div>
+ <p id="gameInstructions" class="small"></p><div class="game-hud" id="gameHud"></div><div id="gamePlayArea"></div><p id="gameNote" class="game-note" aria-live="polite"></p></div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
@@ -178,7 +184,7 @@ function tab(id,btn){
  if(btn)btn.classList.add("active");
 }
 function draw(){
- document.getElementById("modeGrid").innerHTML=modes.map(m=>'<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><button onclick="play()">Play</button></div>').join("");
+ document.getElementById("modeGrid").innerHTML=modes.map((m,i)=>'<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small">'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><button onclick="startMode('+i+')">Play</button></div>').join("");
  document.getElementById("packGrid").innerHTML=packs.map(p=>'<div class="card"><div class="emoji">'+p[0]+'</div><h2>'+p[1]+'</h2><p>'+p[2]+' tokens</p><button onclick="openPack('+p[2]+')">Open Pack</button></div>').join("");
  drawCollection();update();if(player.owner)renderOwnerDashboard();
 }
@@ -308,25 +314,34 @@ async function openPack(cost){
   alert("You found "+found[1]+" "+found[0]+"!\nRarity: "+found[2]+"\nYour progress has been saved.");
  }catch(e){alert(e.message||"Could not open pack.");}
 }
-async function play(){
- const questions=[["What is 8 × 7?",["54","56","64"],1],["Which planet is the Red Planet?",["Mars","Venus","Earth"],0],["How many sides does a hexagon have?",["5","6","8"],1],["What is 100 divided by 4?",["20","25","40"],1]];
- const questionIndex=Math.floor(Math.random()*questions.length);
- const q=questions[questionIndex];
- const answer=prompt(q[0]+"\n1. "+q[1][0]+"\n2. "+q[1][1]+"\n3. "+q[1][2]);
- if(answer===null)return;
- const selected=Number(answer);
- if(!Number.isInteger(selected)||selected<1||selected>3){alert("Enter 1, 2, or 3.");return;}
- try{
-  const {data,error}=await supabaseClient.rpc("linket_answer_question",{p_question:questionIndex,p_answer:selected});
-  if(error)throw error;
-  const result=Array.isArray(data)?data[0]:data;
-  if(!result)throw new Error("The game did not return a result.");
-  player.tokens=Number(result.tokens)||0;profile.tokens=player.tokens;
-  update();renderOwnerDashboard();
-  if(result.correct)alert("Correct! You earned 25 tokens! 🎉 Your balance has been saved.");
-  else alert("Not quite! Try again!");
- }catch(e){alert("Could not save your game result: "+e.message);}
+
+let modeTimer=null, modeState=null;
+function closeMode(){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}document.getElementById("gameModal").classList.remove("open");modeState=null;}
+function modeShell(title,instructions,hud,html){document.getElementById("gameTitle").textContent=title;document.getElementById("gameInstructions").textContent=instructions;document.getElementById("gameHud").innerHTML=hud;document.getElementById("gamePlayArea").innerHTML=html;document.getElementById("gameNote").textContent="";document.getElementById("gameModal").classList.add("open");}
+function modeNote(t){document.getElementById("gameNote").textContent=t;}
+async function modeWin(message){
+ if(!modeState||modeState.finished)return;modeState.finished=true;if(modeTimer){clearInterval(modeTimer);modeTimer=null;}
+ modeNote(message+" Saving your 25-token victory reward…");
+ try{const {data,error}=await supabaseClient.rpc("linket_answer_question",{p_question:0,p_answer:2});if(error)throw error;const r=Array.isArray(data)?data[0]:data;if(!r)throw new Error("No reward result.");player.tokens=Number(r.tokens)||player.tokens;profile.tokens=player.tokens;update();modeNote(message+" +25 tokens earned!");}
+ catch(e){modeNote(message+" Your game was won, but the token reward could not be saved: "+e.message);}
 }
+function startMode(id){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}if(id===0)startTower();if(id===1)startGold();if(id===2)startCafe();if(id===3)startFactory();}
+function startTower(){
+ modeState={finished:false,wave:0,hp:5,towers:[],enemies:[],tick:0};const st=modeState;
+ modeShell("🛡️ Tower Defense","Place up to 5 towers on the grid. Start the wave and let your towers stop 10 monsters before they reach your base.",'<span>🏰 Base: <b id="tdHp">5</b></span><span>👾 Stopped: <b id="tdKills">0</b>/10</span><span>🗼 Towers: <b id="tdTowers">0</b>/5</span>','<div class="game-board" id="tdBoard" style="grid-template-columns:repeat(5,1fr)"></div><button onclick="towerStartWave()">▶ Start wave</button>');
+ const board=document.getElementById("tdBoard");for(let i=0;i<25;i++){const b=document.createElement("button");b.className="game-cell";b.textContent="·";b.onclick=()=>towerPlace(i);board.appendChild(b);}
+}
+function towerPlace(i){const s=modeState;if(!s||s.finished||s.towers.length>=5||s.enemies.length||s.wave>0)return;const b=document.getElementById("tdBoard").children[i];if(b.textContent==="🗼")return;s.towers.push(i);b.textContent="🗼";document.getElementById("tdTowers").textContent=s.towers.length;}
+function towerStartWave(){const s=modeState;if(!s||s.finished)return;if(s.towers.length<2){modeNote("Place at least 2 towers first.");return;}if(s.wave>0)return;s.wave=1;modeNote("The monsters are coming!");modeTimer=setInterval(()=>{if(!modeState||modeState.finished)return;const st=modeState;st.tick++;if(st.tick%3===0&&st.enemies.length<10-st.kills){st.enemies.push({pos:0,hp:2});}st.enemies.forEach(e=>{if(e.hp>0&&st.towers.some(t=>Math.abs(Math.floor(t/5)-Math.floor(e.pos/5))+Math.abs(t%5-e.pos%5)<=2))e.hp--;if(e.hp<=0&&!e.dead){e.dead=true;st.kills=(st.kills||0)+1;}});st.enemies.forEach(e=>{if(e.hp>0)e.pos++;});st.enemies=st.enemies.filter(e=>{if(e.pos>=25){st.hp--;document.getElementById("tdHp").textContent=st.hp;return false;}return e.hp>0;});const cells=document.getElementById("tdBoard").children;for(let i=0;i<25;i++)cells[i].textContent=st.towers.includes(i)?"🗼":"·";st.enemies.forEach(e=>{if(e.pos<25)cells[e.pos].textContent="👾";});document.getElementById("tdKills").textContent=st.kills||0;if(st.kills>=10){modeWin("Wave defeated!");}else if(st.hp<=0){st.finished=true;clearInterval(modeTimer);modeTimer=null;modeNote("Your base was overrun. Close and try a new layout.");}},650);}
+function startGold(){modeState={finished:false,turns:12,gold:0,traps:0,revealed:[]};modeShell("💰 Gold Quest","You have 12 picks. Find 5 gold nuggets before you run out. Some tiles contain traps!",'<span>💰 Gold: <b id="gGold">0</b>/5</span><span>⛏️ Picks: <b id="gTurns">12</b></span><span>💥 Traps: <b id="gTraps">0</b></span>','<div class="game-board" id="goldBoard" style="grid-template-columns:repeat(4,1fr)"></div>');const board=document.getElementById("goldBoard");for(let i=0;i<16;i++){const b=document.createElement("button");b.className="game-cell";b.textContent="❔";b.onclick=()=>goldPick(i,b);board.appendChild(b);}}
+function goldPick(i,b){const s=modeState;if(!s||s.finished||s.revealed.includes(i))return;s.revealed.push(i);s.turns--;const roll=(i*17+s.revealed.length*13+Math.floor(Math.random()*9))%5;if(roll===0){s.traps++;b.textContent="💥";}else if(roll<=2){s.gold++;b.textContent="💰";}else b.textContent="🪨";b.disabled=true;document.getElementById("gGold").textContent=s.gold;document.getElementById("gTurns").textContent=s.turns;document.getElementById("gTraps").textContent=s.traps;if(s.gold>=5)modeWin("You struck gold!");else if(s.turns===0){s.finished=true;modeNote("Mining trip over! You found "+s.gold+" gold.");}}
+const cafeOrders=[{name:"Berry smoothie",seq:["🫐","🍓","🥛"]},{name:"Honey toast",seq:["🍞","🍯","🧈"]},{name:"Fruit cup",seq:["🍎","🍌","🍇"]},{name:"Choco shake",seq:["🍫","🥛","🍦"]}];
+function startCafe(){modeState={finished:false,score:0,time:30,order:0,step:0};modeShell("☕ Cafe Rush","Serve 5 customers before the 30-second timer ends. Click the ingredients in the exact order shown.",'<span>⭐ Served: <b id="cScore">0</b>/5</span><span>⏱️ Time: <b id="cTime">30</b>s</span>','<h3 id="cOrder"></h3><div id="cRecipe" class="game-hud"></div><div id="cChoices" class="game-hud" style="margin-top:15px"></div>');cafeNext();modeTimer=setInterval(()=>{if(!modeState||modeState.finished)return;modeState.time--;document.getElementById("cTime").textContent=modeState.time;if(modeState.time<=0){modeState.finished=true;clearInterval(modeTimer);modeTimer=null;modeNote("Time is up! You served "+modeState.score+" customers.");}},1000);}
+function cafeNext(){const s=modeState;if(!s||s.finished)return;if(s.order>=5){modeWin("Cafe champion! All 5 customers served.");return;}const order=cafeOrders[Math.floor(Math.random()*cafeOrders.length)];s.current=order;s.step=0;document.getElementById("cOrder").textContent="Order "+(s.order+1)+": "+order.name;document.getElementById("cRecipe").innerHTML=order.seq.map((x,i)=>'<span>'+(i+1)+". "+x+'</span>').join("");document.getElementById("cChoices").innerHTML=["🍓","🫐","🥛","🍞","🍯","🧈","🍎","🍌","🍇","🍫","🍦"].map(x=>'<button class="game-choice" onclick="cafeChoose(\''+x+'\')">'+x+'</button>').join("");}
+function cafeChoose(x){const s=modeState;if(!s||s.finished)return;if(x!==s.current.seq[s.step]){modeNote("Oops! Wrong ingredient. Start this order again.");s.step=0;return;}s.step++;if(s.step===s.current.seq.length){s.score++;s.order++;document.getElementById("cScore").textContent=s.score;modeNote("Perfect order!");setTimeout(()=>{if(modeState===s)cafeNext();},450);}}
+function startFactory(){modeState={finished:false,score:0,left:15,target:null};modeShell("🏭 Factory Sort","A product is requested. Click matching items as they move down the conveyor. Score 10 matches out of 15 items.",'<span>📦 Sorted: <b id="fScore">0</b>/10</span><span>🎛️ Items left: <b id="fLeft">15</b></span>','<h3 id="fTarget"></h3><div id="fBelt" class="game-hud" style="justify-content:center;flex-wrap:wrap"></div>');factoryNext();}
+function factoryNext(){const s=modeState;if(!s||s.finished)return;if(s.left<=0){if(s.score>=10)modeWin("Factory shift complete!");else{ s.finished=true;modeNote("Shift ended. You sorted "+s.score+" correctly. Try again!");}return;}const types=["🐢","🐝","🐰","🤖"];s.target=types[Math.floor(Math.random()*types.length)];document.getElementById("fTarget").textContent="Sort this product: "+s.target;document.getElementById("fLeft").textContent=s.left;const belt=document.getElementById("fBelt");belt.innerHTML="";for(let i=0;i<4;i++){const x=types[Math.floor(Math.random()*types.length)];const b=document.createElement("button");b.className="game-cell";b.textContent=x;b.onclick=()=>factoryPick(x);belt.appendChild(b);}}
+function factoryPick(x){const s=modeState;if(!s||s.finished)return;if(x===s.target){s.score++;modeNote("Correct item sorted!");}else modeNote("Wrong item! Keep the line moving.");s.left--;document.getElementById("fScore").textContent=s.score;factoryNext();}
 (async function restoreSession(){
  try{
   const {data,error}=await supabaseClient.auth.getSession();
