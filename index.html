@@ -228,7 +228,7 @@ async function loadOwnerDashboard(){
   document.getElementById("ownerCollectibleTotal").textContent=collectibleTotal.toLocaleString();
   document.getElementById("ownerName").textContent=player.name;
   const body=document.getElementById("ownerPlayersBody");
-  body.innerHTML=ownerPlayers.length?ownerPlayers.map(p=>'<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':'Player')+'</td><td><button onclick="selectOwnerPlayer(\''+p.player_id+'\')">Manage</button></td></tr>').join(""):'<tr><td colspan="5">No player accounts found.</td></tr>';
+  body.innerHTML=ownerPlayers.length?ownerPlayers.map(p=>'<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(p.is_banned?'Banned':'Player'))+'</td><td><button onclick="selectOwnerPlayer(\''+p.player_id+'\')">Manage</button></td></tr>').join(""):'<tr><td colspan="5">No player accounts found.</td></tr>';
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
   const collectibleSelect=document.getElementById("ownerCollectibleChoice");
