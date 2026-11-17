@@ -57,7 +57,8 @@ RETURNS TABLE(collectible_id text, tokens bigint)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $
+#variable_conflict use_column
 DECLARE
   v_user_id uuid := auth.uid();
   v_tokens bigint;
