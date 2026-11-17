@@ -380,7 +380,7 @@ async function modeWin(message){
 }
 function startMode(id){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}if(id===0)startTower();if(id===1)startGold();if(id===2)startCafe();if(id===3)startFactory();}
 function startTower(){
- modeState={finished:false,wave:0,hp:5,towers:[],enemies:[],tick:0};const st=modeState;
+ modeState={finished:false,wave:0,hp:5,kills:0,towers:[],enemies:[],tick:0};const st=modeState;
  modeShell("🛡️ Tower Defense","Place up to 5 towers on the grid. Start the wave and let your towers stop 10 monsters before they reach your base.",'<span>🏰 Base: <b id="tdHp">5</b></span><span>👾 Stopped: <b id="tdKills">0</b>/10</span><span>🗼 Towers: <b id="tdTowers">0</b>/5</span>','<div class="game-board" id="tdBoard" style="grid-template-columns:repeat(5,1fr)"></div><button onclick="towerStartWave()">▶ Start wave</button>');
  const board=document.getElementById("tdBoard");for(let i=0;i<25;i++){const b=document.createElement("button");b.className="game-cell";b.textContent="·";b.onclick=()=>towerPlace(i);board.appendChild(b);}
 }
