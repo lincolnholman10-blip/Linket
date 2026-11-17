@@ -267,3 +267,112 @@ $$;
 
 REVOKE ALL ON FUNCTION public.linket_set_avatar(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.linket_set_avatar(text) TO authenticated;
+
+
+-- Shared multiplayer Quiz Battle state and secure room actions.
+ALTER TABLE public.linket_live_rooms
+  ADD COLUMN IF NOT EXISTS game_mode text,
+  ADD COLUMN IF NOT EXISTS current_question integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS question_started_at timestamptz,
+  ADD COLUMN IF NOT EXISTS scores jsonb NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS answers jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+CREATE OR REPLACE FUNCTION public.linket_live_start_game(p_room_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_room public.linket_live_rooms%ROWTYPE;
+  v_count integer;
+BEGIN
+  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'You must be signed in.'; END IF;
+  SELECT * INTO v_room FROM public.linket_live_rooms WHERE id=p_room_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Room not found.'; END IF;
+  IF v_room.host_user_id <> auth.uid() THEN RAISE EXCEPTION 'Only the host can start the game.'; END IF;
+  IF v_room.status <> 'waiting' THEN RAISE EXCEPTION 'This room has already started.'; END IF;
+  SELECT count(*) INTO v_count FROM public.linket_live_room_players WHERE room_id=p_room_id;
+  IF v_count < 2 THEN RAISE EXCEPTION 'At least 2 players are needed to start.'; END IF;
+  UPDATE public.linket_live_rooms
+  SET status='playing', game_mode='quiz_battle', current_question=0,
+      question_started_at=now(), scores='{}'::jsonb, answers='{}'::jsonb
+  WHERE id=p_room_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.linket_live_submit_answer(p_room_id uuid,p_question integer,p_answer integer)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_room public.linket_live_rooms%ROWTYPE;
+  v_correct integer;
+  v_user text := auth.uid()::text;
+  v_scores jsonb;
+  v_answers jsonb;
+BEGIN
+  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'You must be signed in.'; END IF;
+  SELECT * INTO v_room FROM public.linket_live_rooms WHERE id=p_room_id FOR UPDATE;
+  IF NOT FOUND OR v_room.status <> 'playing' THEN RAISE EXCEPTION 'This game is not active.'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.linket_live_room_players WHERE room_id=p_room_id AND user_id=auth.uid()) THEN
+    RAISE EXCEPTION 'You are not in this room.';
+  END IF;
+  IF p_question <> v_room.current_question OR p_question NOT BETWEEN 0 AND 4 THEN RAISE EXCEPTION 'That question is no longer active.'; END IF;
+  IF p_answer NOT BETWEEN 0 AND 2 THEN RAISE EXCEPTION 'Invalid answer.'; END IF;
+  IF v_room.question_started_at < now() - interval '20 seconds' THEN RAISE EXCEPTION 'Time is up for this question.'; END IF;
+  IF v_room.answers ? v_user THEN RAISE EXCEPTION 'You already answered this question.'; END IF;
+  v_correct := CASE p_question
+    WHEN 0 THEN 0 WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 0 WHEN 4 THEN 1
+  END;
+  v_scores := v_room.scores;
+  IF p_answer=v_correct THEN
+    v_scores := jsonb_set(v_scores,ARRAY[v_user],to_jsonb(COALESCE((v_scores->>v_user)::integer,0)+100),true);
+  ELSE
+    IF NOT (v_scores ? v_user) THEN v_scores := jsonb_set(v_scores,ARRAY[v_user],'0'::jsonb,true); END IF;
+  END IF;
+  v_answers := jsonb_set(v_room.answers,ARRAY[v_user],jsonb_build_object('answer',p_answer,'correct',p_answer=v_correct),true);
+  UPDATE public.linket_live_rooms SET scores=v_scores,answers=v_answers WHERE id=p_room_id;
+  RETURN jsonb_build_object('correct',p_answer=v_correct,'score',COALESCE((v_scores->>v_user)::integer,0));
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.linket_live_advance_question(p_room_id uuid)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_room public.linket_live_rooms%ROWTYPE;
+  v_players integer;
+  v_answered integer;
+BEGIN
+  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'You must be signed in.'; END IF;
+  SELECT * INTO v_room FROM public.linket_live_rooms WHERE id=p_room_id FOR UPDATE;
+  IF NOT FOUND OR v_room.status <> 'playing' THEN RAISE EXCEPTION 'This game is not active.'; END IF;
+  IF v_room.host_user_id <> auth.uid() THEN RAISE EXCEPTION 'Only the host can advance the game.'; END IF;
+  SELECT count(*) INTO v_players FROM public.linket_live_room_players WHERE room_id=p_room_id;
+  SELECT count(*) INTO v_answered FROM jsonb_object_keys(v_room.answers);
+  IF v_answered < v_players AND v_room.question_started_at > now()-interval '15 seconds' THEN
+    RAISE EXCEPTION 'Wait for everyone to answer or for the timer to finish.';
+  END IF;
+  IF v_room.current_question >= 4 THEN
+    UPDATE public.linket_live_rooms SET status='finished' WHERE id=p_room_id;
+    RETURN 'finished';
+  END IF;
+  UPDATE public.linket_live_rooms
+  SET current_question=current_question+1,question_started_at=now(),answers='{}'::jsonb
+  WHERE id=p_room_id;
+  RETURN 'next';
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.linket_live_start_game(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.linket_live_submit_answer(uuid,integer,integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.linket_live_advance_question(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.linket_live_start_game(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.linket_live_submit_answer(uuid,integer,integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.linket_live_advance_question(uuid) TO authenticated;
