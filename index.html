@@ -91,7 +91,15 @@ input{padding:13px;border-radius:10px;border:0;width:100%;margin:8px 0}
    <div class="card"><div class="emoji">🪙</div><h2 id="ownerTokens">0</h2><p>Total tokens</p></div>
    <div class="card"><div class="emoji">✨</div><h2 id="ownerCollectibles">0</h2><p>Your collectibles</p></div>
   </div>
+  <div class="card" style="margin:18px 0">
+   <h2>🛠️ Owner tools</h2>
+   <p>These controls are available while signed in to the owner account.</p>
+   <button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button>
+   <button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000 tokens</button>
+   <button onclick="ownerRefresh()">🔄 Refresh dashboard</button>
+  </div>
   <h2>Player accounts</h2>
+  <p class="small">Use the buttons to grant tokens to a player.</p>
   <div id="ownerAccountList" class="grid"></div>
  </section>
 
@@ -180,6 +188,10 @@ function update(){
 }
 
 function tab(id,btn){
+ if(id==="ownerDashboard" && (!player || !player.owner)){
+  alert("Owner access only.");
+  return;
+ }
  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
@@ -221,17 +233,51 @@ function renderOwnerDashboard(){
   const heading=document.createElement("h3"); heading.textContent=name; card.appendChild(heading);
   const balance=document.createElement("p"); balance.textContent="🪙 "+(Number(account.tokens)||0).toLocaleString()+" tokens"; card.appendChild(balance);
   const owned=document.createElement("p"); owned.textContent=(account.owned||[]).length+" collectibles"; card.appendChild(owned);
-  if(!account.owner){const btn=document.createElement("button"); btn.textContent="Give 100 tokens"; btn.onclick=()=>grantTokens(name); card.appendChild(btn);}
+  if(!account.owner){
+   const give100=document.createElement("button");
+   give100.textContent="Give 100";
+   give100.onclick=()=>grantTokens(name,100);
+   card.appendChild(give100);
+   const give1000=document.createElement("button");
+   give1000.textContent="Give 1,000";
+   give1000.onclick=()=>grantTokens(name,1000);
+   card.appendChild(give1000);
+  }
   list.appendChild(card);
  });
 }
 
-function grantTokens(name){
+function grantTokens(name,amount){
  if(!player || !player.owner || !accounts[name] || accounts[name].owner)return;
- accounts[name].tokens=(Number(accounts[name].tokens)||0)+100;
+ const safeAmount=Math.max(0,Math.min(1000000,Math.floor(Number(amount)||0)));
+ if(!safeAmount)return;
+ accounts[name].tokens=(Number(accounts[name].tokens)||0)+safeAmount;
  localStorage.setItem("linketAccounts",JSON.stringify(accounts));
  renderOwnerDashboard();
- alert("Added 100 tokens to "+name+".");
+ alert("Added "+safeAmount.toLocaleString()+" tokens to "+name+".");
+}
+
+function ownerUnlockAll(){
+ if(!player || !player.owner)return;
+ player.owned=items.map(item=>item[0]);
+ save();
+ drawCollection();
+ renderOwnerDashboard();
+ alert("Every Linket collectible has been added to your locker!");
+}
+
+function ownerRestoreTokens(){
+ if(!player || !player.owner)return;
+ player.tokens=1000000;
+ save();
+ renderOwnerDashboard();
+ alert("Your balance is back to 1,000,000 tokens!");
+}
+
+function ownerRefresh(){
+ if(!player || !player.owner)return;
+ accounts=JSON.parse(localStorage.getItem("linketAccounts")||"{}");
+ renderOwnerDashboard();
 }
 
 function drawCollection(){
