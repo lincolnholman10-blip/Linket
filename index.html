@@ -150,10 +150,13 @@ const SUPABASE_URL = "https://tmylakvunjgqjlowpchm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_qPWcSsYETyddNCGK4DvABg_QcRtcHDr";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const items = [
- ["Happy Turtle","🐢","Common"],["Tiny Bee","🐝","Common"],["Bouncy Bunny","🐰","Common"],["Robot Buddy","🤖","Rare"],["Frost Wolf","🐺","Epic"],["Golden Owl","🦉","Legendary"],["Crystal Cat","🐱","Legendary"],["Lumi Fox","🦊","Mythical"],["Galaxy Dragon","🐉","Mythical"],["Starwing","🦄","Mythical"]
+ ["Happy Turtle","🐢","Common"],["Tiny Bee","🐝","Common"],["Bouncy Bunny","🐰","Common"],["Robot Buddy","🤖","Rare"],["Frost Wolf","🐺","Epic"],["Golden Owl","🦉","Legendary"],["Crystal Cat","🐱","Legendary"],["Lumi Fox","🦊","Mythical"],["Galaxy Dragon","🐉","Mythical"],["Starwing","🦄","Mythical"],
+ ["Seashell Snail","🐌","Common"],["Surfer Seal","🦭","Common"],["Crab Pal","🦀","Rare"],["Coral Turtle","🐢","Epic"],["Pearl Dolphin","🐬","Legendary"],["Tidal Phoenix","🦅","Mythical"],
+ ["Moon Moth","🦋","Common"],["Astro Pup","🐕‍🦺","Common"],["Comet Cat","🐈","Rare"],["Nebula Fox","🦊","Epic"],["Solar Dragon","🐲","Legendary"],["Void Unicorn","🦄","Mythical"],
+ ["Puppy Pal","🐶","Common"],["Corgi Buddy","🐕","Common"],["Dalmatian Dash","🐾","Rare"],["Shiba Star","🐕","Epic"],["Golden Retriever","🦮","Legendary"],["Cosmic Wolf","🐺","Mythical"]
 ];
 const modes = [["🛡️","Tower Defense"],["💰","Gold Quest"],["☕","Cafe"],["🏭","Factory"]];
-const packs = [["🎄","Christmas Pack",50],["🌈","Rainbow Pack",100],["🌌","Galaxy Pack",150]];
+const packs = [["🎄","Christmas Pack",50],["🌈","Rainbow Pack",100],["🌌","Galaxy Pack",150],["🏖️","Beach Pack",75],["🚀","Space Pack",125],["🐶","Dog Pack",175]];
 const liveQuizQuestions=[
  ["What is the main goal of tower defense?",["Protect the base","Bake a cake","Paint a car"],0],
  ["Which tool is used to dig for gold?",["Brush","Pickaxe","Spoon"],1],
@@ -652,6 +655,15 @@ const packContents = [
  [
   ["Robot Buddy",76.0787],["Frost Wolf",21.7368],["Crystal Cat",2.1737],
   ["Galaxy Dragon",0.0054],["Starwing",0.0054]
+ ],
+ [
+  ["Seashell Snail",35],["Surfer Seal",35],["Crab Pal",20],["Coral Turtle",7],["Pearl Dolphin",2.95],["Tidal Phoenix",0.05]
+ ],
+ [
+  ["Moon Moth",35],["Astro Pup",35],["Comet Cat",20],["Nebula Fox",7],["Solar Dragon",2.95],["Void Unicorn",0.05]
+ ],
+ [
+  ["Puppy Pal",35],["Corgi Buddy",35],["Dalmatian Dash",20],["Shiba Star",7],["Golden Retriever",2.95],["Cosmic Wolf",0.05]
  ]
 ];
 function renderPackContents(index){
