@@ -407,13 +407,14 @@ async function refreshLiveRoom(){
     {id:"relaxed_round",icon:"🌿",name:"Relaxed Round",tag:"Take your time",rule:"30 seconds per question · 75 points"}
    ];
    const selectedMode=modeChoices.find(function(x){return x.id===mode;})||modeChoices[0];
+   const modulePicker=isHost?'<div class="card" style="text-align:left"><h3>🧩 Question module</h3><select id="liveModuleChoice" onchange="chooseRoomModule(this.value)" style="width:100%"><option value="">Built-in Linket questions</option>'+liveModuleCache.map(function(m){return '<option value="'+m.id+'" '+(room.module_id===m.id?'selected':'')+'>'+moduleSafe(m.title)+'</option>';}).join("")+'</select><p class="small">Choose one module for everyone in this room.</p></div>':'';
    const modePicker=isHost?
     '<h2 style="text-align:center">🎮 Pick your game adventure!</h2><div class="live-mode-grid">'+modeChoices.map(function(choice){
      const selected=mode===choice.id;
      return '<button type="button" class="live-mode-card '+(selected?'selected':'')+'" '+(selected?'aria-pressed="true"':'aria-pressed="false"')+' onclick="setLiveGameMode(\''+choice.id+'\')" '+(liveModeSaving?'disabled':'')+'><span class="mode-icon">'+choice.icon+'</span><span class="mode-title">'+choice.name+'</span><span class="mode-rule">'+choice.tag+'<br>'+choice.rule+'</span><span class="mode-selected">'+(selected?'✓ Selected':'Tap to choose')+'</span></button>';
     }).join("")+'</div><p class="small" style="text-align:center">Your friends will see the mode you choose.</p><button onclick="startLiveGame()">🚀 Start '+selectedMode.name+'</button>'
     :'<div class="card"><h2>'+selectedMode.icon+' '+selectedMode.name+'</h2><p>'+selectedMode.tag+'</p><p class="small">'+selectedMode.rule+'</p><p class="small">Waiting for the host to start the game…</p></div>';
-   liveRoomMessage('<div class="live-room-screen">'+code+avatarPicker+modePicker+roster+leave+'</div>');
+   liveRoomMessage('<div class="live-room-screen">'+code+avatarPicker+modulePicker+modePicker+roster+leave+'</div>');
    return;
   }
   const scores=room.scores||{};
@@ -422,18 +423,19 @@ async function refreshLiveRoom(){
    liveRoomMessage('<div class="live-room-screen">'+code+roster+'<h2>🏆 Quiz Battle Results</h2><ol>'+ranked.map(function(p){return '<li>'+accountSafe(p.name)+' — <b>'+p.score+' points</b></li>';}).join("")+'</ol><p>The game is finished!</p>'+leave+'</div>');
    return;
   }
-  const qIndex=Math.max(0,Math.min(4,Number(room.current_question)||0)),q=liveQuizQuestions[qIndex],answers=room.answers||{},mine=answers[session.user.id];
+  const questions=Array.isArray(room.module_questions)&&room.module_questions.length?room.module_questions:liveQuizQuestions.map(function(q){return {question:q[0],options:q[1],answer:q[2]};});
+  const qIndex=Math.max(0,Math.min(questions.length-1,Number(room.current_question)||0)),q=questions[qIndex],answers=room.answers||{},mine=answers[session.user.id];
   const elapsed=room.question_started_at?Math.max(0,(Date.now()-new Date(room.question_started_at).getTime())/1000):0;
   const timeLimit=room.game_mode==="speed_round"?8:room.game_mode==="relaxed_round"?30:15;
   const points=room.game_mode==="speed_round"?150:room.game_mode==="relaxed_round"?75:100;
   const seconds=Math.max(0,timeLimit-Math.floor(elapsed));
-  const progress='<p><b>Question '+(qIndex+1)+' of 5</b> · ⏱ '+seconds+' seconds left</p><div class="small">Answered: '+Object.keys(answers).length+' / '+players.length+' · Correct answer: '+points+' points</div>';
-  let question='<h2>'+accountSafe(q[0])+'</h2><div class="grid">'+q[1].map(function(option,index){return '<button '+(mine?'disabled':'')+' class="'+(mine&&Number(mine.answer)===index?'secondary':'')+'" onclick="submitLiveAnswer('+qIndex+','+index+')">'+accountSafe(option)+'</button>';}).join("")+'</div>';
+  const progress='<p><b>Question '+(qIndex+1)+' of '+questions.length+'</b> · ⏱ '+seconds+' seconds left</p><div class="small">Answered: '+Object.keys(answers).length+' / '+players.length+' · Correct answer: '+points+' points</div>';
+  let question='<h2>'+accountSafe(q.question||q[0])+'</h2><div class="grid">'+(q.options||q[1]).map(function(option,index){return '<button '+(mine?'disabled':'')+' class="'+(mine&&Number(mine.answer)===index?'secondary':'')+'" onclick="submitLiveAnswer('+qIndex+','+index+')">'+accountSafe(option)+'</button>';}).join("")+'</div>';
   if(mine)question+='<p>'+(mine.correct?'✅ Correct! +'+points+' points':'❌ Not quite!')+' Your answer has been recorded.</p>';
   const board='<h3>Live scores</h3><ol>'+ranked.map(function(p){return '<li>'+accountSafe(p.name)+' — '+p.score+' points</li>';}).join("")+'</ol>';
-  const hostControl=isHost?'<button class="secondary" onclick="advanceLiveQuestion()">'+(qIndex===4?'Finish Game':'Next Question')+'</button><p class="small">The next question unlocks when everyone answers or the timer reaches zero.</p>':'<p class="small">The host will move to the next question when everyone has answered or time runs out.</p>';
+  const hostControl=isHost?'<button class="secondary" onclick="advanceLiveQuestion()">'+(qIndex===questions.length-1?'Finish Game':'Next Question')+'</button><p class="small">The next question unlocks when everyone answers or the timer reaches zero.</p>':'<p class="small">The host will move to the next question when everyone has answered or time runs out.</p>';
   liveRoomMessage('<div class="live-room-screen">'+code+roster+progress+question+board+hostControl+leave+'</div>');
-  if(isHost&&(seconds===0||Object.keys(answers).length>=players.length)){
+  if(isHost&&!room.module_id&&(seconds===0||Object.keys(answers).length>=players.length)){
    const {error}=await supabaseClient.rpc("linket_live_advance_question",{p_room_id:room.id});
    if(!error)await refreshLiveRoom();
   }
@@ -461,16 +463,19 @@ async function setLiveGameMode(mode){
 }
 async function startLiveGame(){
  if(!activeLiveRoom)return;
+ if(activeLiveRoom.module_id){try{const {error}=await supabaseClient.rpc("linket_module_live_start",{p_room_id:activeLiveRoom.id});if(error)throw error;await refreshLiveRoom();}catch(e){alert(e.message);}return;}
  try{const {error}=await supabaseClient.rpc("linket_live_start_game",{p_room_id:activeLiveRoom.id});if(error)throw error;await refreshLiveRoom();}
  catch(error){alert(error.message||"Could not start the game.");}
 }
 async function submitLiveAnswer(question,answer){
  if(!activeLiveRoom)return;
+ if(activeLiveRoom.module_id){try{const {error}=await supabaseClient.rpc("linket_module_live_answer",{p_room_id:activeLiveRoom.id,p_question:question,p_answer:answer});if(error)throw error;await refreshLiveRoom();}catch(e){alert(e.message);}return;}
  try{const {data,error}=await supabaseClient.rpc("linket_live_submit_answer",{p_room_id:activeLiveRoom.id,p_question:question,p_answer:answer});if(error)throw error;await refreshLiveRoom();}
  catch(error){alert(error.message||"Your answer could not be submitted.");}
 }
 async function advanceLiveQuestion(){
  if(!activeLiveRoom)return;
+ if(activeLiveRoom.module_id){try{const {error}=await supabaseClient.rpc("linket_module_live_advance",{p_room_id:activeLiveRoom.id});if(error)throw error;await refreshLiveRoom();}catch(e){alert(e.message);}return;}
  try{const {error}=await supabaseClient.rpc("linket_live_advance_question",{p_room_id:activeLiveRoom.id});if(error)throw error;await refreshLiveRoom();}
  catch(error){alert(error.message||"The next question is not ready yet.");}
 }
@@ -822,6 +827,7 @@ function answerSoloModule(n){
  document.getElementById("modulePlayArea").appendChild(next);
 }
 
+async function chooseRoomModule(id){if(!activeLiveRoom)return;try{const {error}=await supabaseClient.rpc("linket_module_live_select",{p_room_id:activeLiveRoom.id,p_module_id:id||null});if(error)throw error;await refreshLiveRoom();}catch(e){alert(e.message||"Could not select the module.");}}
 function closeMode(){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}document.getElementById("gameModal").classList.remove("open");modeState=null;}
 function modeShell(title,instructions,hud,html){document.getElementById("gameTitle").textContent=title;document.getElementById("gameInstructions").textContent=instructions;document.getElementById("gameHud").innerHTML=hud;document.getElementById("gamePlayArea").innerHTML=html;document.getElementById("gameNote").textContent="";document.getElementById("gameModal").classList.add("open");}
 function modeNote(t){document.getElementById("gameNote").textContent=t;}
