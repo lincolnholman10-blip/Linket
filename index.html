@@ -129,11 +129,22 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div id="game" class="hidden">
 <section class="hero"><h2>YOUR GAME • YOUR COLLECTION</h2><h1>Play big.<br>Collect everything.</h1><p>Answer questions, open awesome packs, and build your ultimate collection!</p><button onclick="tab('modes')">▶ Play Linket</button><div class="christmas-launch"><h2>🎄 LINKET WINTERFEST</h2><p>Play the limited-time Snowflake Scramble and earn bonus tokens!</p><button onclick="openChristmasEvent()">🎅 Enter Christmas Event</button><span class="small"> Nov 17, 2026 – Jan 5, 2027</span></div><div id="announcementBoard" class="card hidden" style="margin-top:18px;text-align:left"><h2>📣 Linket News</h2><div id="announcementList"></div></div></section>
 <nav class="tabs">
-<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('news',this)">📣 News</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('index',this)">🏅 Collectible Index</button><button onclick="tab('locker',this)">📚 Collection</button><button onclick="tab('account',this)">👤 My Account</button><button onclick="tab('liveGames',this)">🌐 Live Games</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
+<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('news',this)">📣 News</button><button onclick="tab('modules',this)">🧩 Modules</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('index',this)">🏅 Collectible Index</button><button onclick="tab('locker',this)">📚 Collection</button><button onclick="tab('account',this)">👤 My Account</button><button onclick="tab('liveGames',this)">🌐 Live Games</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
 </nav>
 <section id="modes" class="panel active"><h1>Game Modes</h1><div class="grid" id="modeGrid"></div></section>
  <section id="news" class="panel"><div class="news-heading"><div><p class="small">📯 OFFICIAL LINKET UPDATES</p><h1>📣 Linket News</h1><p>Announcements and updates from the Linket owner.</p></div><button class="secondary" onclick="loadAnnouncements()">↻ Refresh News</button></div><div id="newsFeed" class="news-feed"><div class="card">Loading announcements…</div></div></section>
 <section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits or daily purchase cap! Choose how many packs to open each time. Buy again whenever you have enough tokens.</p><div class="grid" id="packGrid"></div></section><section id="index" class="panel"><h1>🏅 Collectible Index</h1><p>Explore every collectible in Linket, organized by rarity.</p><div id="collectibleIndex"></div></section>
+<section id="modules" class="panel">
+<h1>🧩 Community Question Modules</h1><p>Create quizzes, publish them for every player, and play community modules solo or with friends.</p>
+<div class="grid"><div class="card" style="text-align:left"><h2>✨ Create a module</h2>
+<label>Module title</label><input id="moduleTitle" maxlength="60" placeholder="Space Trivia">
+<label>Description</label><input id="moduleDescription" maxlength="180" placeholder="A short description">
+<label>Question</label><textarea id="moduleQuestion" rows="2" maxlength="300" placeholder="Write your question"></textarea>
+<label>Choice 1</label><input id="moduleOption0" maxlength="100"><label>Choice 2</label><input id="moduleOption1" maxlength="100"><label>Choice 3</label><input id="moduleOption2" maxlength="100"><label>Choice 4</label><input id="moduleOption3" maxlength="100">
+<label>Correct answer</label><select id="moduleCorrect"><option value="0">Choice 1</option><option value="1">Choice 2</option><option value="2">Choice 3</option><option value="3">Choice 4</option></select>
+<button onclick="addModuleQuestion()">➕ Add question</button><p id="moduleDraftStatus" class="small">Add 1–30 questions.</p><div id="moduleDraftList"></div><button onclick="publishModule()">🌎 Publish module</button></div>
+<div class="card"><h2>🔎 Discover modules</h2><input id="moduleSearch" placeholder="Search modules..." oninput="renderModules()"><div id="moduleBrowse"></div></div></div>
+<h2>📚 My modules</h2><div id="myModules" class="grid"></div><div id="modulePlayArea" class="card hidden" style="margin-top:20px;text-align:left"></div></section>
 <section id="account" class="panel"><h1>👤 My Account</h1><p>Your Linket account information.</p><div id="accountDetails" class="grid"></div><div class="card" style="max-width:520px;margin:20px auto"><h2>👋 Leaving Linket?</h2><p class="small">You can sign out of your account here.</p><button onclick="logout()">🚪 Log out</button></div></section><section id="liveGames" class="panel"><h1>🌐 Live Games</h1><p>Create a room and share its code, or enter a friend&#39;s code to join their room.</p><div class="grid" id="liveRoomEntry"><div class="card"><h2>➕ Create a Room</h2><p>Start a waiting room and invite friends.</p><button onclick="createLiveRoom()">Create Room</button></div><div class="card"><h2>🔑 Join a Room</h2><input id="liveJoinCode" maxlength="6" placeholder="Enter 6-character code" style="text-transform:uppercase"><button onclick="joinLiveRoom()">Join Room</button></div></div><div id="liveRoomStatus" style="margin-top:18px"></div></section><section id="locker" class="panel"><h1>📚 Your Collection</h1><p id="count"></p><div class="collection-toolbar"><input id="collectionSearch" type="search" placeholder="🔎 Search collectibles..." oninput="drawCollection()"><select id="collectionRarity" onchange="drawCollection()"><option value="all">All rarities</option><option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythical</option></select><select id="collectionSort" onchange="drawCollection()"><option value="rarity">Sort: Rarity</option><option value="name">Sort: Name</option><option value="quantity">Sort: Quantity owned</option><option value="newest">Sort: Collected first</option></select></div><div id="collectionStats" class="collection-stats"></div><div class="grid" id="collection"></div></section>
 <section id="ownerDashboard" class="panel">
 <h1>👑 Owner Dashboard</h1><p class="small">Private owner controls. Player changes are saved directly to Supabase.</p>
@@ -471,7 +482,7 @@ async function leaveLiveRoom(){
 function tab(id,btn){
  if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}
  if(id==="ownerDashboard")loadOwnerDashboard();
- if(id==="account")renderAccount();if(id==="news")loadAnnouncements();
+ if(id==="account")renderAccount();if(id==="news")loadAnnouncements();if(id==="modules")loadModules();
  if(id==="liveGames"){if(activeLiveRoom)refreshLiveRoom();if(liveRoomTimer)clearInterval(liveRoomTimer);liveRoomTimer=setInterval(function(){if(activeLiveRoom&&document.getElementById("liveGames").classList.contains("active"))refreshLiveRoom();},2000);}else if(liveRoomTimer){clearInterval(liveRoomTimer);liveRoomTimer=null;}
  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
@@ -749,6 +760,68 @@ async function openPack(cost,packIndex,requestedQty){
 }
 
 let modeTimer=null, modeState=null;
+
+let moduleDraft=[],myModules=[],publicModules=[],activeSoloModule=null,soloModuleAt=0,soloModulePoints=0;
+function moduleSafe(v){return accountSafe(String(v||"")).replace(/'/g,"&#39;");}
+function addModuleQuestion(){
+ const question=document.getElementById("moduleQuestion").value.trim();
+ const options=[0,1,2,3].map(i=>document.getElementById("moduleOption"+i).value.trim());
+ const answer=Number(document.getElementById("moduleCorrect").value);
+ if(!question||options.some(x=>!x)){alert("Enter a question and all four choices.");return;}
+ if(moduleDraft.length>=30){alert("Modules can contain up to 30 questions.");return;}
+ moduleDraft.push({question,options,answer});
+ document.getElementById("moduleQuestion").value="";
+ [0,1,2,3].forEach(i=>document.getElementById("moduleOption"+i).value="");
+ renderModuleDraft();
+}
+function renderModuleDraft(){
+ document.getElementById("moduleDraftStatus").textContent=moduleDraft.length+" question(s) added";
+ document.getElementById("moduleDraftList").innerHTML=moduleDraft.map((q,i)=>'<p>'+(i+1)+'. '+moduleSafe(q.question)+' <button class="secondary" onclick="moduleDraft.splice('+i+',1);renderModuleDraft()">Remove</button></p>').join("");
+}
+async function loadModules(){
+ if(!session)return;
+ try{
+  const a=await supabaseClient.from("linket_question_modules").select("id,title,description,questions,creator_name,creator_id,is_public,created_at").eq("creator_id",session.user.id).order("created_at",{ascending:false});
+  const b=await supabaseClient.from("linket_question_modules").select("id,title,description,questions,creator_name,creator_id,is_public,created_at").eq("is_public",true).order("created_at",{ascending:false}).limit(100);
+  if(a.error)throw a.error;if(b.error)throw b.error;
+  myModules=a.data||[];publicModules=b.data||[];renderModules();renderMyModules();
+ }catch(e){document.getElementById("moduleBrowse").innerHTML='<p class="small">The Community Modules database setup is needed: '+moduleSafe(e.message)+'</p>';}
+}
+function renderModules(){
+ const term=(document.getElementById("moduleSearch")?.value||"").toLowerCase();
+ const list=publicModules.filter(m=>(m.title+" "+(m.description||"")+" "+(m.creator_name||"")).toLowerCase().includes(term));
+ document.getElementById("moduleBrowse").innerHTML=list.length?list.map(m=>'<div class="card"><h3>'+moduleSafe(m.title)+'</h3><p class="small">'+moduleSafe(m.description)+' · '+m.questions.length+' questions</p><p class="small">By '+moduleSafe(m.creator_name||"Linket player")+'</p><button onclick="playModule(\''+m.id+'\')">🎮 Play Solo</button></div>').join(""):'<p class="small">No modules found yet. Publish the first one!</p>';
+}
+function renderMyModules(){
+ document.getElementById("myModules").innerHTML=myModules.length?myModules.map(m=>'<div class="card"><h3>'+moduleSafe(m.title)+'</h3><p class="small">'+m.questions.length+' questions · Public</p><button onclick="playModule(\''+m.id+'\')">Play Solo</button></div>').join(""):'<p class="small">You have not published a module yet.</p>';
+}
+async function publishModule(){
+ const title=document.getElementById("moduleTitle").value.trim(),description=document.getElementById("moduleDescription").value.trim();
+ if(title.length<3||!moduleDraft.length){alert("Enter a title and add at least one question.");return;}
+ try{
+  const {error}=await supabaseClient.from("linket_question_modules").insert({creator_id:session.user.id,creator_name:profile.username||player.name,title,description,questions:moduleDraft,is_public:true});
+  if(error)throw error;
+  moduleDraft=[];document.getElementById("moduleTitle").value="";document.getElementById("moduleDescription").value="";renderModuleDraft();await loadModules();alert("Your module is published for all Linket players!");
+ }catch(e){alert("Could not publish: "+e.message);}
+}
+function playModule(id){
+ const m=myModules.concat(publicModules).find(x=>x.id===id);if(!m)return;
+ activeSoloModule=m;soloModuleAt=0;soloModulePoints=0;renderSoloModule();
+}
+function renderSoloModule(){
+ const m=activeSoloModule,q=m.questions[soloModuleAt],area=document.getElementById("modulePlayArea");area.classList.remove("hidden");
+ area.innerHTML='<h2>'+moduleSafe(m.title)+' · '+(soloModuleAt+1)+'/'+m.questions.length+'</h2><h3>'+moduleSafe(q.question)+'</h3><div class="grid">'+q.options.map((o,i)=>'<button onclick="answerSoloModule('+i+')">'+moduleSafe(o)+'</button>').join("")+'</div><p id="soloModuleFeedback"></p><p>Score: '+soloModulePoints+'</p>';
+}
+function answerSoloModule(n){
+ const q=activeSoloModule.questions[soloModuleAt],feedback=document.getElementById("soloModuleFeedback"),correct=n===Number(q.answer);
+ if(correct)soloModulePoints+=100;
+ feedback.textContent=correct?"Correct! +100 points":"Incorrect. Correct answer: "+q.options[q.answer];
+ document.querySelectorAll("#modulePlayArea button").forEach(b=>b.disabled=true);
+ const next=document.createElement("button");next.textContent=soloModuleAt===activeSoloModule.questions.length-1?"View Results":"Next Question";
+ next.onclick=function(){soloModuleAt++;if(soloModuleAt>=activeSoloModule.questions.length){document.getElementById("modulePlayArea").innerHTML='<h2>🏆 '+moduleSafe(activeSoloModule.title)+' complete!</h2><h3>'+soloModulePoints+' / '+(activeSoloModule.questions.length*100)+' points</h3><button onclick="document.getElementById(\'modulePlayArea\').classList.add(\'hidden\')">Close</button>';}else renderSoloModule();};
+ document.getElementById("modulePlayArea").appendChild(next);
+}
+
 function closeMode(){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}document.getElementById("gameModal").classList.remove("open");modeState=null;}
 function modeShell(title,instructions,hud,html){document.getElementById("gameTitle").textContent=title;document.getElementById("gameInstructions").textContent=instructions;document.getElementById("gameHud").innerHTML=hud;document.getElementById("gamePlayArea").innerHTML=html;document.getElementById("gameNote").textContent="";document.getElementById("gameModal").classList.add("open");}
 function modeNote(t){document.getElementById("gameNote").textContent=t;}
