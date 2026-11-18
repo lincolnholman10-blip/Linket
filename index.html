@@ -80,7 +80,39 @@ input,select,textarea{background:#eaffef;color:#102016}.owner-select{background:
  .pack-purchase-box .pack-total-panel{padding:7px;margin:6px 0}
 }
 
-.christmas-launch{margin:18px 0;padding:22px;border:1px solid #3d9b68;border-radius:20px;background:linear-gradient(120deg,#174c2c,#08130c)}.christmas-modal{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:14px;background:#020704ed}.christmas-modal.open{display:flex}.christmas-box{position:relative;width:min(650px,100%);max-height:92vh;overflow:auto;padding:22px;border:1px solid #4baf73;border-radius:22px;background:linear-gradient(145deg,#153d25,#08130c);text-align:center}.christmas-close{position:absolute;right:10px;top:10px}.snow-game{position:relative;height:280px;overflow:hidden;border:1px solid #3d9b68;border-radius:16px;background:linear-gradient(#164361,#d8f5ff);margin:15px 0}.snow-target{position:absolute;width:52px;height:52px;padding:0;margin:0;border-radius:50%;font-size:30px;background:#efffff;color:#13506a}.christmas-stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.christmas-stats span{padding:9px 13px;border-radius:10px;background:#07150c}</style>
+.christmas-launch{margin:18px 0;padding:22px;border:1px solid #3d9b68;border-radius:20px;background:linear-gradient(120deg,#174c2c,#08130c)}.christmas-modal{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:14px;background:#020704ed}.christmas-modal.open{display:flex}.christmas-box{position:relative;width:min(650px,100%);max-height:92vh;overflow:auto;padding:22px;border:1px solid #4baf73;border-radius:22px;background:linear-gradient(145deg,#153d25,#08130c);text-align:center}.christmas-close{position:absolute;right:10px;top:10px}.snow-game{position:relative;height:280px;overflow:hidden;border:1px solid #3d9b68;border-radius:16px;background:linear-gradient(#164361,#d8f5ff);margin:15px 0}.snow-target{position:absolute;width:52px;height:52px;padding:0;margin:0;border-radius:50%;font-size:30px;background:#efffff;color:#13506a}.christmas-stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.christmas-stats span{padding:9px 13px;border-radius:10px;background:#07150c} 
+/* Winterfest Christmas makeover */
+body{background:radial-gradient(ellipse at 50% -10%,#164d32 0%,#07180f 42%,#050907 100%);background-attachment:fixed}
+body:before{content:"❄     ✦       ❅        ❄          ✧       ❄       ❅";position:fixed;inset:0;z-index:0;pointer-events:none;color:#dff9ff;opacity:.13;font-size:clamp(18px,3vw,32px);line-height:2.8;word-spacing:22px;white-space:pre-wrap;text-shadow:0 0 12px #b8eaff}
+header,main{position:relative;z-index:1}
+header{background:linear-gradient(105deg,#671b28 0%,#102c1b 48%,#741d2c 100%);border-bottom:2px solid #d7b65a;box-shadow:0 6px 28px #0008}
+.logo span{color:#ffd36b}
+.tokens{background:#153b26;color:#ffe49a;border:1px solid #d7b65a}
+.hero{background:radial-gradient(circle at 85% 10%,#8a2635 0,#17472d 48%,#0b1b12 100%);border:1px solid #d7b65a;box-shadow:0 16px 42px #0009}
+button{background:linear-gradient(130deg,#b72d3d,#e2b64f);color:#fff8e8;box-shadow:0 4px 14px #8e1e3044}
+button:hover{box-shadow:0 6px 20px #d7b65a55}
+.tabs button{background:#173522;color:#f5ead1;border:1px solid #a23a43}
+.tabs button.active{background:linear-gradient(120deg,#b72d3d,#d7a844);color:#fff}
+.card,.login{background:linear-gradient(145deg,#132c1d,#0b170f);border:1px solid #426b4b;box-shadow:0 8px 24px #0007}
+.login{position:relative;overflow:hidden;border:2px solid #d7b65a;background:radial-gradient(circle at top right,#772632 0,#173c28 55%,#0b170f 100%);box-shadow:0 18px 55px #000b,0 0 28px #d7b65a22}
+.login:before{content:"🎄  ✨  ❄️  🎁  ❄️  ✨  🎄";display:block;margin:-4px 0 18px;text-align:center;font-size:21px;letter-spacing:2px}
+.login h1{color:#ffe5a2;text-shadow:0 2px 12px #d7b65a44}
+.login .small{color:#d5e9d8}
+input,select,textarea{border:1px solid #b9cdbb}
+.christmas-launch{border:1px solid #d7b65a;background:linear-gradient(120deg,#7c2431,#174b2d);box-shadow:inset 0 0 24px #0004}
+.news-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding:20px;border:1px solid #d7b65a;border-radius:18px;background:linear-gradient(110deg,#772632,#153b25)}
+.news-heading h1{margin:4px 0;color:#ffe5a2}
+.news-feed{display:grid;gap:14px}
+.news-card{display:flex;gap:16px;align-items:flex-start;padding:20px;border-radius:18px;border:1px solid #426b4b;background:linear-gradient(135deg,#142f1e,#0d1b12);box-shadow:0 8px 24px #0005}
+.news-card-icon{font-size:34px;flex:0 0 auto}
+.news-card-content{min-width:0}
+.news-card h2{margin:0 0 8px;color:#ffe5a2}
+.news-card p{white-space:normal;line-height:1.6;overflow-wrap:anywhere}
+.news-card small{color:#b9d6c0}
+.news-empty{text-align:center;padding:35px}
+@media(max-width:600px){.news-heading{align-items:stretch}.news-card{padding:14px;gap:10px}.login{margin:25px auto}}
+
+</style>
 </head>
 <body>
 <header><div class="logo">✨ Link<span>et</span></div><div class="tokens">🪙 Tokens: <span id="tokens">0</span></div></header>
@@ -97,9 +129,10 @@ input,select,textarea{background:#eaffef;color:#102016}.owner-select{background:
 <div id="game" class="hidden">
 <section class="hero"><h2>YOUR GAME • YOUR COLLECTION</h2><h1>Play big.<br>Collect everything.</h1><p>Answer questions, open awesome packs, and build your ultimate collection!</p><button onclick="tab('modes')">▶ Play Linket</button><div class="christmas-launch"><h2>🎄 LINKET WINTERFEST</h2><p>Play the limited-time Snowflake Scramble and earn bonus tokens!</p><button onclick="openChristmasEvent()">🎅 Enter Christmas Event</button><span class="small"> Nov 17, 2026 – Jan 5, 2027</span></div><div id="announcementBoard" class="card hidden" style="margin-top:18px;text-align:left"><h2>📣 Linket News</h2><div id="announcementList"></div></div></section>
 <nav class="tabs">
-<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('index',this)">🏅 Collectible Index</button><button onclick="tab('locker',this)">📚 Collection</button><button onclick="tab('account',this)">👤 My Account</button><button onclick="tab('liveGames',this)">🌐 Live Games</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
+<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('news',this)">📣 News</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('index',this)">🏅 Collectible Index</button><button onclick="tab('locker',this)">📚 Collection</button><button onclick="tab('account',this)">👤 My Account</button><button onclick="tab('liveGames',this)">🌐 Live Games</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
 </nav>
 <section id="modes" class="panel active"><h1>Game Modes</h1><div class="grid" id="modeGrid"></div></section>
+ <section id="news" class="panel"><div class="news-heading"><div><p class="small">📯 OFFICIAL LINKET UPDATES</p><h1>📣 Linket News</h1><p>Announcements and updates from the Linket owner.</p></div><button class="secondary" onclick="loadAnnouncements()">↻ Refresh News</button></div><div id="newsFeed" class="news-feed"><div class="card">Loading announcements…</div></div></section>
 <section id="packs" class="panel"><h1>Open a pack</h1><p>No daily limits or daily purchase cap! Choose how many packs to open each time. Buy again whenever you have enough tokens.</p><div class="grid" id="packGrid"></div></section><section id="index" class="panel"><h1>🏅 Collectible Index</h1><p>Explore every collectible in Linket, organized by rarity.</p><div id="collectibleIndex"></div></section>
 <section id="account" class="panel"><h1>👤 My Account</h1><p>Your Linket account information.</p><div id="accountDetails" class="grid"></div><div class="card" style="max-width:520px;margin:20px auto"><h2>👋 Leaving Linket?</h2><p class="small">You can sign out of your account here.</p><button onclick="logout()">🚪 Log out</button></div></section><section id="liveGames" class="panel"><h1>🌐 Live Games</h1><p>Create a room and share its code, or enter a friend&#39;s code to join their room.</p><div class="grid" id="liveRoomEntry"><div class="card"><h2>➕ Create a Room</h2><p>Start a waiting room and invite friends.</p><button onclick="createLiveRoom()">Create Room</button></div><div class="card"><h2>🔑 Join a Room</h2><input id="liveJoinCode" maxlength="6" placeholder="Enter 6-character code" style="text-transform:uppercase"><button onclick="joinLiveRoom()">Join Room</button></div></div><div id="liveRoomStatus" style="margin-top:18px"></div></section><section id="locker" class="panel"><h1>📚 Your Collection</h1><p id="count"></p><div class="collection-toolbar"><input id="collectionSearch" type="search" placeholder="🔎 Search collectibles..." oninput="drawCollection()"><select id="collectionRarity" onchange="drawCollection()"><option value="all">All rarities</option><option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythical</option></select><select id="collectionSort" onchange="drawCollection()"><option value="rarity">Sort: Rarity</option><option value="name">Sort: Name</option><option value="quantity">Sort: Quantity owned</option><option value="newest">Sort: Collected first</option></select></div><div id="collectionStats" class="collection-stats"></div><div class="grid" id="collection"></div></section>
 <section id="ownerDashboard" class="panel">
@@ -438,7 +471,7 @@ async function leaveLiveRoom(){
 function tab(id,btn){
  if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}
  if(id==="ownerDashboard")loadOwnerDashboard();
- if(id==="account")renderAccount();
+ if(id==="account")renderAccount();if(id==="news")loadAnnouncements();
  if(id==="liveGames"){if(activeLiveRoom)refreshLiveRoom();if(liveRoomTimer)clearInterval(liveRoomTimer);liveRoomTimer=setInterval(function(){if(activeLiveRoom&&document.getElementById("liveGames").classList.contains("active"))refreshLiveRoom();},2000);}else if(liveRoomTimer){clearInterval(liveRoomTimer);liveRoomTimer=null;}
  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
  document.getElementById(id).classList.add("active");
@@ -505,13 +538,17 @@ async function loadOwnerDashboard(){
 async function loadAnnouncements(){
  if(!session)return;
  try{
-  const {data,error}=await supabaseClient.from("linket_announcements").select("id,title,message,created_at").order("created_at",{ascending:false}).limit(5);
+  const {data,error}=await supabaseClient.from("linket_announcements").select("id,title,message,created_at").order("created_at",{ascending:false}).limit(50);
   if(error)throw error;
-  const board=document.getElementById("announcementBoard"),list=document.getElementById("announcementList");
-  if(!data||!data.length){board.classList.add("hidden");return;}
-  board.classList.remove("hidden");
-  list.innerHTML=data.map(a=>'<div class="activity-item"><strong>'+ownerEscape(a.title)+'</strong><p>'+ownerEscape(a.message)+'</p><small>'+new Date(a.created_at).toLocaleString()+'</small></div>').join("");
- }catch(e){console.warn("Announcements unavailable:",e.message);}
+  const entries=data||[];
+  const render=entries.length?entries.map(a=>'<article class="news-card"><div class="news-card-icon">🎄</div><div class="news-card-content"><h2>'+ownerEscape(a.title)+'</h2><p>'+ownerEscape(a.message).replace(/\n/g,"<br>")+'</p><small>📅 '+new Date(a.created_at).toLocaleString()+'</small></div></article>').join(""):'<div class="card news-empty"><div class="emoji">📬</div><h2>No news yet</h2><p class="small">Check back soon for Linket announcements!</p></div>';
+  const board=document.getElementById("announcementBoard"),list=document.getElementById("announcementList"),feed=document.getElementById("newsFeed");
+  if(board&&list){board.classList.toggle("hidden",!entries.length);list.innerHTML=entries.slice(0,3).map(a=>'<div class="activity-item"><strong>'+ownerEscape(a.title)+'</strong><p>'+ownerEscape(a.message).replace(/\n/g,"<br>")+'</p><small>'+new Date(a.created_at).toLocaleString()+'</small></div>').join("");}
+  if(feed)feed.innerHTML=render;
+ }catch(e){
+  const feed=document.getElementById("newsFeed");if(feed)feed.innerHTML='<div class="card">News could not load: '+ownerEscape(e.message)+'</div>';
+  console.warn("Announcements unavailable:",e.message);
+ }
 }
 async function adminRenamePlayer(){
  const id=document.getElementById("ownerTarget").value,name=document.getElementById("adminNewUsername").value.trim();
