@@ -146,7 +146,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div class="card"><div class="emoji">👑</div><h2 id="ownerName">—</h2><p>Signed-in owner</p></div>
 </div>
 <div class="card owner-section"><h2>👥 Player management</h2><p class="small">Review player accounts and select one to manage.</p>
-<div class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div></div>
+<div class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div><p id="ownerSelectedPlayer" class="small" role="status" aria-live="polite">Choose Manage beside a player to jump to their controls.</p></div>
 <div class="grid owner-tools-grid">
 <div class="card owner-section"><h2>🪙 Adjust player tokens</h2><label for="ownerTarget">Player</label><select id="ownerTarget" class="owner-select"></select>
 <label for="ownerTokenAmount">Amount</label><input id="ownerTokenAmount" type="number" min="1" max="1000000000" value="100">
@@ -578,23 +578,17 @@ async function adminPublishAnnouncement(){
 }
 
 function selectOwnerPlayer(id){
- document.getElementById("ownerTarget").value=id;
- document.getElementById("ownerCollectibleTarget").value=id;
-}
-async function ownerAdjustTokens(direction){
- if(!player||!player.owner)return;
- const target=document.getElementById("ownerTarget").value;
- const amount=Number(document.getElementById("ownerTokenAmount").value);
- if(!target||!Number.isSafeInteger(amount)||amount<1||amount>1000000000){ownerMessage("Enter a valid token amount and select a player.");return;}
- const signedAmount=direction*amount;
- if(!confirm((direction>0?"Add ":"Remove ")+amount.toLocaleString()+" tokens?"))return;
- ownerMessage("Saving token adjustment…");
- try{
-  const {data,error}=await supabaseClient.rpc("linket_owner_adjust_tokens",{p_user_id:target,p_amount:signedAmount});
-  if(error)throw error;
-  ownerMessage("Saved! New balance: "+Number(data).toLocaleString()+" tokens.");
-  await loadOwnerDashboard();
-  if(target===session.user.id){await refreshSavedGame();renderOwnerDashboard();}
+  const selected=ownerPlayers.find(p=>String(p.player_id)===String(id));
+  if(!selected){ownerMessage("That player could not be found. Refresh the dashboard and try again.");return;}
+  document.getElementById("ownerTarget").value=id;
+  document.getElementById("ownerCollectibleTarget").value=id;
+  const notice=document.getElementById("ownerSelectedPlayer");
+  if(notice)notice.textContent="✅ Selected "+selected.username+". Their account is now chosen in the token and collectible controls below.";
+  ownerMessage("Managing "+selected.username+". Choose an action in the controls below.");
+  const controls=document.querySelector(".owner-tools-grid");
+  if(controls)controls.scrollIntoView({behavior:"smooth",block:"center"});
+  const target=document.getElementById("ownerTarget");
+  if(target)target.focus({preventScroll:true});
  }catch(e){ownerMessage("Token adjustment failed: "+e.message);}
 }
 async function ownerGrantCollectible(){
