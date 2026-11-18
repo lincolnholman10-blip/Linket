@@ -56,6 +56,30 @@ input,select,textarea{background:#eaffef;color:#102016}.owner-select{background:
 .pack-total-panel span{font-size:13px;color:#b7d9c1}.pack-total-panel strong{font-size:28px;color:#8dffb5}.pack-total-panel small{color:#b7d9c1}
 .pack-confirm-btn{width:100%;padding:16px;background:linear-gradient(120deg,#39ff88,#0a9d49);color:#031309}.pack-confirm-btn:disabled{opacity:.45;cursor:not-allowed}.pack-contents{margin:14px 0;padding:13px;border:1px solid #28613c;border-radius:14px;background:#07150c;text-align:left}.pack-contents h3{margin:0 0 10px;color:#8dffb5;font-size:15px}.pack-content-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #21432d;font-size:13px}.pack-content-row:last-child{border-bottom:0}.pack-content-row .rarity{margin-left:auto;white-space:nowrap}.pack-content-row .pack-chance{min-width:64px;text-align:right;color:#8dffb5;font-size:12px;font-variant-numeric:tabular-nums}.pack-contents-note{margin:9px 0 0;color:#b7d9c1;font-size:11px}
 
+/* Compact, scroll-friendly pack purchase screen */
+.pack-purchase-modal{padding:10px;overflow-y:auto;align-items:center}
+.pack-purchase-box{width:min(390px,100%);max-height:calc(100dvh - 20px);overflow-y:auto;overscroll-behavior:contain;padding:16px 18px;border-radius:18px}
+.pack-purchase-box .mystery-pack-art{width:76px;height:88px;font-size:42px;margin:2px auto 8px}
+.pack-purchase-box .pack-card-kicker{margin:4px 0;font-size:9px}
+.pack-purchase-box h2{font-size:21px;margin:7px 0}
+.pack-purchase-box .pack-contents{margin:8px 0;padding:9px}
+.pack-purchase-box .pack-content-row{padding:4px 0;font-size:12px;gap:6px}
+.pack-purchase-box .pack-contents h3{font-size:13px;margin-bottom:6px}
+.pack-purchase-box .pack-contents-note{font-size:10px;margin-top:6px}
+.pack-purchase-box .pack-total-panel{padding:9px;margin:8px 0;gap:3px}
+.pack-purchase-box .pack-total-panel strong{font-size:22px}
+.pack-purchase-box input{font-size:18px;padding:8px;margin:5px 0}
+.pack-purchase-box label{font-size:13px}
+.pack-purchase-box .pack-confirm-btn{padding:12px}
+@media(max-height:700px){
+ .pack-purchase-modal{align-items:flex-start}
+ .pack-purchase-box{max-height:calc(100dvh - 20px);padding:12px 16px}
+ .pack-purchase-box .mystery-pack-art{width:58px;height:64px;font-size:32px;margin:0 auto 5px}
+ .pack-purchase-box .pack-contents{margin:6px 0;padding:7px}
+ .pack-purchase-box .pack-content-row{padding:3px 0}
+ .pack-purchase-box .pack-total-panel{padding:7px;margin:6px 0}
+}
+
 </style>
 </head>
 <body>
