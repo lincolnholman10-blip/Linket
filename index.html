@@ -408,7 +408,8 @@ async function refreshLiveRoom(){
     {id:"relaxed_round",icon:"🌿",name:"Relaxed Round",tag:"Take your time",rule:"30 seconds per question · 75 points"}
    ];
    const selectedMode=modeChoices.find(function(x){return x.id===mode;})||modeChoices[0];
-   const modulePicker=isHost?'<div class="card" style="text-align:left"><h3>🧩 Question module</h3><select id="liveModuleChoice" onchange="chooseRoomModule(this.value)" style="width:100%"><option value="">Built-in Linket questions</option>'+liveModuleCache.map(function(m){return '<option value="'+m.id+'" '+(room.module_id===m.id?'selected':'')+'>'+moduleSafe(m.title)+'</option>';}).join("")+'</select><p class="small">Choose one module for everyone in this room.</p></div>':'';
+   const modulePicker=isHost?'<div class="card" style="text-align:left"><h3>🧩 Choose questions</h3><p class="small">Pick one set of questions for everyone playing.</p><input id="liveModuleSearch" placeholder="Search modules..." oninput="filterLiveModuleChoices(this.value)" style="width:100%;margin-bottom:8px"><div id="liveModuleChoices" style="max-height:230px;overflow-y:auto">'+renderLiveModuleChoiceButtons(room)+'</div></div>':'';
+
    const modePicker=isHost?
     '<h2 style="text-align:center">🎮 Pick your game adventure!</h2><div class="live-mode-grid">'+modeChoices.map(function(choice){
      const selected=mode===choice.id;
@@ -827,6 +828,21 @@ function answerSoloModule(n){
  document.getElementById("modulePlayArea").appendChild(next);
 }
 
+function renderLiveModuleChoiceButtons(room){
+ const selectedId=room?.module_id||"";
+ const builtIn='<button type="button" '+(!selectedId?'':'class="secondary" ')+'style="width:100%;text-align:left;margin:4px 0;'+(!selectedId?'outline:3px solid #eab308;':'')+'" onclick="chooseRoomModule(\'\')">'+(!selectedId?'✓ ':'')+'📘 Built-in Linket questions</button>';
+ const term=(document.getElementById("liveModuleSearch")?.value||"").trim().toLowerCase();
+ const matches=liveModuleCache.filter(m=>(m.title||"").toLowerCase().includes(term));
+ const cards=matches.map(function(m){
+  const chosen=selectedId===m.id;
+  return '<button type="button" '+(chosen?'':'class="secondary" ')+'style="width:100%;text-align:left;margin:4px 0;'+(chosen?'outline:3px solid #eab308;':'')+'" onclick="chooseRoomModule(\''+m.id+'\')">'+(chosen?'✓ ':'')+'🧩 '+moduleSafe(m.title)+' <span class="small">· '+(Array.isArray(m.questions)?m.questions.length:0)+' questions</span></button>';
+ }).join("");
+ return builtIn+cards+(matches.length?"":'<p class="small">No matching modules. Try another search.</p>');
+}
+function filterLiveModuleChoices(term){
+ const box=document.getElementById("liveModuleChoices");
+ if(box&&activeLiveRoom)box.innerHTML=renderLiveModuleChoiceButtons(activeLiveRoom);
+}
 async function chooseRoomModule(id){if(!activeLiveRoom)return;try{const {error}=await supabaseClient.rpc("linket_module_live_select",{p_room_id:activeLiveRoom.id,p_module_id:id||null});if(error)throw error;await refreshLiveRoom();}catch(e){alert(e.message||"Could not select the module.");}}
 function closeMode(){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}document.getElementById("gameModal").classList.remove("open");modeState=null;}
 function modeShell(title,instructions,hud,html){document.getElementById("gameTitle").textContent=title;document.getElementById("gameInstructions").textContent=instructions;document.getElementById("gameHud").innerHTML=hud;document.getElementById("gamePlayArea").innerHTML=html;document.getElementById("gameNote").textContent="";document.getElementById("gameModal").classList.add("open");}
