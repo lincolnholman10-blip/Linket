@@ -80,14 +80,14 @@ BEGIN
   -- Epic 7%, Legendary 2.5%, Mythical 0.5%.
   SELECT pool.collectible INTO v_collectible
   FROM (VALUES
-    (50, 'Happy Turtle', 700), (50, 'Bouncy Bunny', 700),
-    (50, 'Robot Buddy', 200), (50, 'Frost Wolf', 70),
-    (50, 'Golden Owl', 25), (50, 'Starwing', 5),
-    (100, 'Tiny Bee', 700), (100, 'Bouncy Bunny', 700),
-    (100, 'Robot Buddy', 200), (100, 'Crystal Cat', 25),
-    (100, 'Lumi Fox', 5),
-    (150, 'Robot Buddy', 200), (150, 'Frost Wolf', 70),
-    (150, 'Crystal Cat', 25), (150, 'Galaxy Dragon', 5),
+    (50, 'Happy Turtle', 35000), (50, 'Bouncy Bunny', 35000),
+    (50, 'Robot Buddy', 20000), (50, 'Frost Wolf', 7000),
+    (50, 'Golden Owl', 2000), (50, 'Starwing', 70),
+    (100, 'Tiny Bee', 35000), (100, 'Bouncy Bunny', 35000),
+    (100, 'Robot Buddy', 20000), (100, 'Crystal Cat', 2000),
+    (100, 'Lumi Fox', 10),
+    (150, 'Robot Buddy', 70000), (150, 'Frost Wolf', 20000),
+    (150, 'Crystal Cat', 2000), (150, 'Galaxy Dragon', 5),
     (150, 'Starwing', 5)
   ) AS pool(pack_cost, collectible, weight)
   WHERE pool.pack_cost = p_cost
