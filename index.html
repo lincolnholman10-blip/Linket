@@ -606,7 +606,6 @@ function selectOwnerPlayer(id){
   if(controls)controls.scrollIntoView({behavior:"smooth",block:"center"});
   const target=document.getElementById("ownerTarget");
   if(target)target.focus({preventScroll:true});
- }catch(e){ownerMessage("Token adjustment failed: "+e.message);}
 }
 async function ownerGrantCollectible(){
  if(!player||!player.owner)return;
