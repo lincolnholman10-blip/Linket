@@ -406,3 +406,41 @@ REVOKE ALL ON FUNCTION public.linket_live_advance_question(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.linket_live_start_game(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.linket_live_submit_answer(uuid,integer,integer) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.linket_live_advance_question(uuid) TO authenticated;
+
+
+-- Store each player's avatar choice separately for each multiplayer room.
+ALTER TABLE public.linket_live_room_players
+  ADD COLUMN IF NOT EXISTS round_avatar text;
+
+CREATE OR REPLACE FUNCTION public.linket_live_set_round_avatar(
+  p_room_id uuid,
+  p_collectible_id text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'You must be signed in.';
+  END IF;
+  IF p_collectible_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.owned_collectibles oc
+    WHERE oc.user_id = auth.uid()
+      AND oc.collectible_id = p_collectible_id
+      AND oc.quantity > 0
+  ) THEN
+    RAISE EXCEPTION 'You can only choose a collectible you own.';
+  END IF;
+  UPDATE public.linket_live_room_players
+  SET round_avatar = p_collectible_id
+  WHERE room_id = p_room_id AND user_id = auth.uid();
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Join the room before choosing an avatar.';
+  END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.linket_live_set_round_avatar(uuid,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.linket_live_set_round_avatar(uuid,text) TO authenticated;
