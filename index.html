@@ -389,6 +389,7 @@ async function refreshLiveRoom(){
   const result=await supabaseClient.from("linket_live_room_players").select("username,user_id,joined_at,round_avatar").eq("room_id",activeLiveRoom.id).order("joined_at");
   if(result.error)throw result.error;
   const room=found.data,players=result.data||[],isHost=room.host_user_id===session.user.id;
+  if(isHost&&!liveModuleCache.length){const mods=await supabaseClient.from("linket_question_modules").select("id,title,questions").eq("is_public",true).limit(100);if(!mods.error)liveModuleCache=mods.data||[];}
   activeLiveRoom=room;
   const code='<div class="live-room-top"><div class="small">SHARE THIS ROOM CODE</div><div class="live-room-code">'+accountSafe(room.room_code)+'</div><p>Friends can enter this code to join your game.</p></div>';
    const myOwned=items.filter(function(item){return Number(player.quantities?.[item[0]]||0)>0;});
@@ -766,7 +767,7 @@ async function openPack(cost,packIndex,requestedQty){
 
 let modeTimer=null, modeState=null;
 
-let moduleDraft=[],myModules=[],publicModules=[],activeSoloModule=null,soloModuleAt=0,soloModulePoints=0;
+let moduleDraft=[],myModules=[],publicModules=[],liveModuleCache=[],activeSoloModule=null,soloModuleAt=0,soloModulePoints=0;
 function moduleSafe(v){return accountSafe(String(v||"")).replace(/'/g,"&#39;");}
 function addModuleQuestion(){
  const question=document.getElementById("moduleQuestion").value.trim();
@@ -789,7 +790,7 @@ async function loadModules(){
   const a=await supabaseClient.from("linket_question_modules").select("id,title,description,questions,creator_name,creator_id,is_public,created_at").eq("creator_id",session.user.id).order("created_at",{ascending:false});
   const b=await supabaseClient.from("linket_question_modules").select("id,title,description,questions,creator_name,creator_id,is_public,created_at").eq("is_public",true).order("created_at",{ascending:false}).limit(100);
   if(a.error)throw a.error;if(b.error)throw b.error;
-  myModules=a.data||[];publicModules=b.data||[];renderModules();renderMyModules();
+  myModules=a.data||[];publicModules=b.data||[];liveModuleCache=publicModules;renderModules();renderMyModules();
  }catch(e){document.getElementById("moduleBrowse").innerHTML='<p class="small">The Community Modules database setup is needed: '+moduleSafe(e.message)+'</p>';}
 }
 function renderModules(){
