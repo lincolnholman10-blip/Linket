@@ -282,7 +282,7 @@ RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_room public.linket_live_rooms%ROWTYPE;
 BEGIN
@@ -296,7 +296,7 @@ BEGIN
   IF v_room.status <> 'waiting' THEN RAISE EXCEPTION 'The game has already started.'; END IF;
   UPDATE public.linket_live_rooms SET game_mode=p_game_mode WHERE id=p_room_id;
 END;
-$;
+$$;
 
 CREATE OR REPLACE FUNCTION public.linket_live_start_game(p_room_id uuid)
 RETURNS void
