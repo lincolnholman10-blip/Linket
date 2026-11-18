@@ -32,6 +32,30 @@ input,select,textarea{background:#eaffef;color:#102016}.owner-select{background:
 @keyframes avatarPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 7px #39ff881c,0 0 22px #39ff8844}50%{transform:scale(1.045);box-shadow:0 0 0 10px #39ff881c,0 0 36px #39ff8877}}
 @keyframes avatarButtonGlow{to{background-position:200% 0}}
 
+
+/* Retail-style sealed mystery packs and quantity checkout */
+.mystery-pack-card{cursor:pointer;position:relative;overflow:hidden;border:1px solid #287848;background:linear-gradient(160deg,#13251a,#080e0a);transition:transform .2s,box-shadow .2s}
+.mystery-pack-card:hover{transform:translateY(-6px);box-shadow:0 12px 32px #39ff8830;border-color:#39ff88}
+.mystery-pack-wrap{position:relative;width:150px;height:190px;margin:4px auto 18px;border-radius:13px 13px 18px 18px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(110deg,#0c5a2c 0%,#27c765 18%,#075326 40%,#0d7b3d 68%,#04371d 100%);border:2px solid #7dffad;box-shadow:inset 0 0 0 4px #063b1d,0 10px 24px #0009;clip-path:polygon(0 0,100% 0,100% 94%,94% 100%,6% 100%,0 94%)}
+.mystery-pack-wrap:before,.mystery-pack-wrap:after{content:"";position:absolute;left:0;right:0;height:9px;background:repeating-linear-gradient(90deg,#baffce 0 3px,#168344 3px 6px);opacity:.9}
+.mystery-pack-wrap:before{top:5px}.mystery-pack-wrap:after{bottom:5px}
+.mystery-pack-seal{font-size:10px;letter-spacing:3px;font-weight:1000;color:#d8ffe5;text-shadow:0 2px 4px #00250f;z-index:1}
+.mystery-pack-emoji{font-size:54px;filter:drop-shadow(0 5px 5px #00250f99);z-index:1}
+.mystery-pack-label{font-size:13px;line-height:1.15;text-align:center;letter-spacing:2px;font-weight:1000;color:#f0fff4;text-shadow:0 2px 5px #003416;z-index:1}
+.mystery-pack-shine{position:absolute;inset:-40% 45% -20% -30%;transform:rotate(25deg);background:linear-gradient(90deg,transparent,#ffffff28,transparent);pointer-events:none}
+.pack-price{font-size:19px;font-weight:900;color:#8dffb5}.pack-price span{font-size:12px;color:#b7d9c1;font-weight:500}
+.pack-open-btn{width:100%;background:linear-gradient(120deg,#39ff88,#0a9d49);color:#031309}
+.pack-purchase-modal{position:fixed;inset:0;z-index:70;background:#020704ef;display:none;align-items:center;justify-content:center;padding:16px}
+.pack-purchase-modal.open{display:flex}
+.pack-purchase-box{position:relative;width:min(420px,100%);padding:26px;border-radius:24px;text-align:center;background:linear-gradient(150deg,#142c1c,#080e0a);border:1px solid #39b96b;box-shadow:0 20px 80px #000c,0 0 32px #39ff8822}
+.pack-modal-close{position:absolute;right:12px;top:12px;padding:8px 12px}
+.pack-purchase-box .mystery-pack-art{font-size:64px;width:104px;height:128px;margin:8px auto 14px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(120deg,#0c5a2c,#39ff88,#075326);border:2px solid #9dffbd;box-shadow:inset 0 0 0 4px #063b1d,0 8px 24px #0008}
+.pack-card-kicker{font-size:10px;letter-spacing:2px;color:#8dffb5;font-weight:900}
+.pack-purchase-box input{background:#eaffef;color:#102016;text-align:center;font-size:22px;font-weight:900}
+.pack-total-panel{padding:15px;margin:14px 0;border-radius:14px;background:#07150c;border:1px solid #28613c;display:grid;gap:5px}
+.pack-total-panel span{font-size:13px;color:#b7d9c1}.pack-total-panel strong{font-size:28px;color:#8dffb5}.pack-total-panel small{color:#b7d9c1}
+.pack-confirm-btn{width:100%;padding:16px;background:linear-gradient(120deg,#39ff88,#0a9d49);color:#031309}.pack-confirm-btn:disabled{opacity:.45;cursor:not-allowed}
+
 </style>
 </head>
 <body>
@@ -90,6 +114,7 @@ input,select,textarea{background:#eaffef;color:#102016}.owner-select{background:
 </div>
 </main>
 <div id="packReveal" class="pack-reveal" role="dialog" aria-modal="true" aria-labelledby="packRevealTitle"><div class="pack-reveal-box" id="packRevealBox"><h2 id="packRevealTitle">🎁 Opening your pack…</h2><div id="packRevealVisual" class="pack-flash">🎁</div><div id="packRevealName" class="pack-result-name">Something special is inside!</div><span id="packRevealRarity" class="hidden"></span><div class="pack-progress"><i id="packRevealProgress"></i></div><p id="packRevealCount" class="small"></p><button id="packRevealClose" onclick="closePackReveal()" style="display:block!important;margin:18px auto 0;min-width:150px">✕ Close</button></div></div>
+<div id="packPurchaseModal" class="pack-purchase-modal" role="dialog" aria-modal="true" aria-labelledby="packPurchaseTitle"><div class="pack-purchase-box"><button class="pack-modal-close secondary" onclick="closePackPurchase()">✕</button><div id="purchasePackArt" class="mystery-pack-art">🎁</div><p class="pack-card-kicker">MYSTERY COLLECTIBLE INSIDE</p><h2 id="packPurchaseTitle">Choose your packs</h2><p id="purchasePackUnit" class="small"></p><label for="packPurchaseQty">How many packs do you want to open?</label><input id="packPurchaseQty" type="number" min="1" max="1000" step="1" value="1" oninput="updatePackPurchaseTotal()"><div class="pack-total-panel"><span>Total cost</span><strong id="packPurchaseTotal">50 tokens</strong><small id="packPurchaseBalance"></small></div><p id="packPurchaseMessage" class="small" aria-live="polite"></p><button id="confirmPackPurchase" class="pack-confirm-btn" onclick="confirmPackPurchase()">🎁 Buy &amp; Open</button></div></div>
 <div id="gameModal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="gameTitle">
  <div class="game-box"><div class="game-top"><h2 id="gameTitle">Game</h2><button class="secondary" onclick="closeMode()">✕ Close</button></div>
  <p id="gameInstructions" class="small"></p><div class="game-hud" id="gameHud"></div><div id="gamePlayArea"></div><p id="gameNote" class="game-note" aria-live="polite"></p></div>
@@ -404,7 +429,7 @@ function draw(){
   const key=modeKeys[i],level=modeUnlocks[key]||1;
   return '<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small">'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><p><b>Unlocked stage: '+level+'/3</b></p><button onclick="startMode('+i+')">Play Stage '+level+'</button>'+(level<3?'<button class="secondary" onclick="unlockMode(\''+key+'\')">🧠 Answer a question to unlock Stage '+(level+1)+'</button>':'<p>🏆 All stages unlocked!</p>')+'</div>';
  }).join("");
- document.getElementById("packGrid").innerHTML=packs.map((p,i)=>'<div class="card"><div class="emoji">'+p[0]+'</div><h2>'+p[1]+'</h2><p>'+p[2]+' tokens each</p><p class="small">'+["Happy Turtle · Bouncy Bunny · Robot Buddy · Frost Wolf · Golden Owl · Starwing","Tiny Bee · Bouncy Bunny · Robot Buddy · Crystal Cat · Lumi Fox","Robot Buddy · Frost Wolf · Crystal Cat · Galaxy Dragon · Starwing"][i]+'</p><p class="small">Mythical chance: 0.5% per eligible drop</p><label for="packQty'+i+'">Number of packs</label><input id="packQty'+i+'" type="number" min="1" step="1" value="1"><button onclick="openPack('+p[2]+','+i+')">Buy &amp; Open Packs</button></div>').join("");
+ document.getElementById("packGrid").innerHTML=packs.map((p,i)=>'<div class="card mystery-pack-card" onclick="choosePack('+i+')"><div class="mystery-pack-wrap"><div class="mystery-pack-seal">✦ LINKET ✦</div><div class="mystery-pack-emoji">'+p[0]+'</div><div class="mystery-pack-label">MYSTERY<br>COLLECTIBLE</div><div class="mystery-pack-shine"></div></div><h2>'+p[1]+'</h2><p class="pack-price">'+p[2]+' tokens <span>per pack</span></p><p class="small">Tap to choose how many to open</p><button class="pack-open-btn" onclick="event.stopPropagation();choosePack('+i+')">✨ Choose Packs</button></div>').join("");
  renderCollectibleIndex();drawCollection();update();if(player.owner)renderOwnerDashboard();
 }
 function renderOwnerDashboard(){
@@ -579,8 +604,34 @@ async function showPackReveal(foundCounts,opened){
  await new Promise(resolve=>setTimeout(resolve,850));revealNext();
  packRevealTimer=setInterval(()=>{if(index<=results.length){revealNext();}else{clearInterval(packRevealTimer);packRevealTimer=null;}},950);
 }
-async function openPack(cost,packIndex){
- const input=document.getElementById("packQty"+packIndex),qty=Number(input?.value||1);
+let selectedPackIndex=null;
+function choosePack(index){
+ if(!player)return;
+ selectedPackIndex=index;const pack=packs[index];
+ document.getElementById("purchasePackArt").textContent=pack[0];
+ document.getElementById("packPurchaseTitle").textContent=pack[1];
+ document.getElementById("purchasePackUnit").textContent=pack[2].toLocaleString()+" tokens per mystery pack";
+ document.getElementById("packPurchaseQty").value=1;
+ document.getElementById("packPurchaseMessage").textContent="";
+ document.getElementById("packPurchaseModal").classList.add("open");updatePackPurchaseTotal();
+}
+function closePackPurchase(){document.getElementById("packPurchaseModal").classList.remove("open");selectedPackIndex=null;}
+function updatePackPurchaseTotal(){
+ if(selectedPackIndex===null)return;
+ const qty=Number(document.getElementById("packPurchaseQty").value||0),cost=packs[selectedPackIndex][2],valid=Number.isInteger(qty)&&qty>=1&&qty<=1000,total=valid?qty*cost:0,balance=Number(player?.tokens||0);
+ document.getElementById("packPurchaseTotal").textContent=valid?total.toLocaleString()+" tokens":"Enter 1–1,000 packs";
+ document.getElementById("packPurchaseBalance").textContent="Your balance: "+balance.toLocaleString()+" tokens";
+ document.getElementById("packPurchaseMessage").textContent=valid?(balance>=total?"You’ll have "+(balance-total).toLocaleString()+" tokens left.":"You need "+(total-balance).toLocaleString()+" more tokens."):"You can open between 1 and 1,000 packs at a time.";
+ document.getElementById("confirmPackPurchase").disabled=!valid||balance<total;
+}
+function confirmPackPurchase(){
+ if(selectedPackIndex===null)return;
+ const index=selectedPackIndex,cost=packs[index][2],qty=Number(document.getElementById("packPurchaseQty").value);
+ if(!Number.isInteger(qty)||qty<1||qty>1000||Number(player.tokens)<qty*cost){updatePackPurchaseTotal();return;}
+ closePackPurchase();openPack(cost,index,qty);
+}
+async function openPack(cost,packIndex,requestedQty){
+ const qty=Number(requestedQty||1);
  if(!Number.isInteger(qty)||qty<1){alert("Choose at least 1 pack.");return;}
  if(qty>1000){alert("You can open up to 1,000 packs in one purchase. You can buy again as often as you like.");return;}
  if(Number(player.tokens)<cost*qty){alert("You need "+(cost*qty).toLocaleString()+" tokens for "+qty+" packs.");return;}
