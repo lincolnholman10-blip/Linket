@@ -54,7 +54,7 @@ input,select,textarea{background:#eaffef;color:#102016}.owner-select{background:
 .pack-purchase-box input{background:#eaffef;color:#102016;text-align:center;font-size:22px;font-weight:900}
 .pack-total-panel{padding:15px;margin:14px 0;border-radius:14px;background:#07150c;border:1px solid #28613c;display:grid;gap:5px}
 .pack-total-panel span{font-size:13px;color:#b7d9c1}.pack-total-panel strong{font-size:28px;color:#8dffb5}.pack-total-panel small{color:#b7d9c1}
-.pack-confirm-btn{width:100%;padding:16px;background:linear-gradient(120deg,#39ff88,#0a9d49);color:#031309}.pack-confirm-btn:disabled{opacity:.45;cursor:not-allowed}
+.pack-confirm-btn{width:100%;padding:16px;background:linear-gradient(120deg,#39ff88,#0a9d49);color:#031309}.pack-confirm-btn:disabled{opacity:.45;cursor:not-allowed}.pack-contents{margin:14px 0;padding:13px;border:1px solid #28613c;border-radius:14px;background:#07150c;text-align:left}.pack-contents h3{margin:0 0 10px;color:#8dffb5;font-size:15px}.pack-content-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #21432d;font-size:13px}.pack-content-row:last-child{border-bottom:0}.pack-content-row .rarity{margin-left:auto;white-space:nowrap}.pack-contents-note{margin:9px 0 0;color:#b7d9c1;font-size:11px}
 
 </style>
 </head>
@@ -114,7 +114,7 @@ input,select,textarea{background:#eaffef;color:#102016}.owner-select{background:
 </div>
 </main>
 <div id="packReveal" class="pack-reveal" role="dialog" aria-modal="true" aria-labelledby="packRevealTitle"><div class="pack-reveal-box" id="packRevealBox"><h2 id="packRevealTitle">🎁 Opening your pack…</h2><div id="packRevealVisual" class="pack-flash">🎁</div><div id="packRevealName" class="pack-result-name">Something special is inside!</div><span id="packRevealRarity" class="hidden"></span><div class="pack-progress"><i id="packRevealProgress"></i></div><p id="packRevealCount" class="small"></p><button id="packRevealClose" onclick="closePackReveal()" style="display:block!important;margin:18px auto 0;min-width:150px">✕ Close</button></div></div>
-<div id="packPurchaseModal" class="pack-purchase-modal" role="dialog" aria-modal="true" aria-labelledby="packPurchaseTitle"><div class="pack-purchase-box"><button class="pack-modal-close secondary" onclick="closePackPurchase()">✕</button><div id="purchasePackArt" class="mystery-pack-art">🎁</div><p class="pack-card-kicker">MYSTERY COLLECTIBLE INSIDE</p><h2 id="packPurchaseTitle">Choose your packs</h2><p id="purchasePackUnit" class="small"></p><label for="packPurchaseQty">How many packs do you want to open?</label><input id="packPurchaseQty" type="number" min="1" max="1000" step="1" value="1" oninput="updatePackPurchaseTotal()"><div class="pack-total-panel"><span>Total cost</span><strong id="packPurchaseTotal">50 tokens</strong><small id="packPurchaseBalance"></small></div><p id="packPurchaseMessage" class="small" aria-live="polite"></p><button id="confirmPackPurchase" class="pack-confirm-btn" onclick="confirmPackPurchase()">🎁 Buy &amp; Open</button></div></div>
+<div id="packPurchaseModal" class="pack-purchase-modal" role="dialog" aria-modal="true" aria-labelledby="packPurchaseTitle"><div class="pack-purchase-box"><button class="pack-modal-close secondary" onclick="closePackPurchase()">✕</button><div id="purchasePackArt" class="mystery-pack-art">🎁</div><p class="pack-card-kicker">MYSTERY COLLECTIBLE INSIDE</p><h2 id="packPurchaseTitle">Choose your packs</h2><p id="purchasePackUnit" class="small"></p><div id="packContents" class="pack-contents"></div><label for="packPurchaseQty">How many packs do you want to open?</label><input id="packPurchaseQty" type="number" min="1" max="1000" step="1" value="1" oninput="updatePackPurchaseTotal()"><div class="pack-total-panel"><span>Total cost</span><strong id="packPurchaseTotal">50 tokens</strong><small id="packPurchaseBalance"></small></div><p id="packPurchaseMessage" class="small" aria-live="polite"></p><button id="confirmPackPurchase" class="pack-confirm-btn" onclick="confirmPackPurchase()">🎁 Buy &amp; Open</button></div></div>
 <div id="gameModal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="gameTitle">
  <div class="game-box"><div class="game-top"><h2 id="gameTitle">Game</h2><button class="secondary" onclick="closeMode()">✕ Close</button></div>
  <p id="gameInstructions" class="small"></p><div class="game-hud" id="gameHud"></div><div id="gamePlayArea"></div><p id="gameNote" class="game-note" aria-live="polite"></p></div>
@@ -612,8 +612,23 @@ function choosePack(index){
  document.getElementById("packPurchaseTitle").textContent=pack[1];
  document.getElementById("purchasePackUnit").textContent=pack[2].toLocaleString()+" tokens per mystery pack";
  document.getElementById("packPurchaseQty").value=1;
+ renderPackContents(index);
  document.getElementById("packPurchaseMessage").textContent="";
  document.getElementById("packPurchaseModal").classList.add("open");updatePackPurchaseTotal();
+}
+const packContents = [
+ ["Happy Turtle","Bouncy Bunny","Robot Buddy","Frost Wolf","Golden Owl","Starwing"],
+ ["Tiny Bee","Bouncy Bunny","Robot Buddy","Crystal Cat","Lumi Fox"],
+ ["Robot Buddy","Frost Wolf","Crystal Cat","Galaxy Dragon","Starwing"]
+];
+function renderPackContents(index){
+ const names=packContents[index]||[];
+ const rows=names.map(function(name){
+  const item=items.find(function(x){return x[0]===name;});
+  if(!item)return "";
+  return '<div class="pack-content-row"><span>'+item[1]+'</span><b>'+accountSafe(item[0])+'</b><span class="rarity '+item[2]+'">'+item[2]+'</span></div>';
+ }).join("");
+ document.getElementById("packContents").innerHTML='<h3>✨ Collectibles in this pack</h3>'+rows+'<p class="pack-contents-note">These are all the possible collectibles in this pack. Rarity shows how hard each one is to find.</p>';
 }
 function closePackPurchase(){document.getElementById("packPurchaseModal").classList.remove("open");selectedPackIndex=null;}
 function updatePackPurchaseTotal(){
