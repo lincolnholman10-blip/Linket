@@ -54,7 +54,7 @@ input,select,textarea{background:#eaffef;color:#102016}.owner-select{background:
 .pack-purchase-box input{background:#eaffef;color:#102016;text-align:center;font-size:22px;font-weight:900}
 .pack-total-panel{padding:15px;margin:14px 0;border-radius:14px;background:#07150c;border:1px solid #28613c;display:grid;gap:5px}
 .pack-total-panel span{font-size:13px;color:#b7d9c1}.pack-total-panel strong{font-size:28px;color:#8dffb5}.pack-total-panel small{color:#b7d9c1}
-.pack-confirm-btn{width:100%;padding:16px;background:linear-gradient(120deg,#39ff88,#0a9d49);color:#031309}.pack-confirm-btn:disabled{opacity:.45;cursor:not-allowed}.pack-contents{margin:14px 0;padding:13px;border:1px solid #28613c;border-radius:14px;background:#07150c;text-align:left}.pack-contents h3{margin:0 0 10px;color:#8dffb5;font-size:15px}.pack-content-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #21432d;font-size:13px}.pack-content-row:last-child{border-bottom:0}.pack-content-row .rarity{margin-left:auto;white-space:nowrap}.pack-contents-note{margin:9px 0 0;color:#b7d9c1;font-size:11px}
+.pack-confirm-btn{width:100%;padding:16px;background:linear-gradient(120deg,#39ff88,#0a9d49);color:#031309}.pack-confirm-btn:disabled{opacity:.45;cursor:not-allowed}.pack-contents{margin:14px 0;padding:13px;border:1px solid #28613c;border-radius:14px;background:#07150c;text-align:left}.pack-contents h3{margin:0 0 10px;color:#8dffb5;font-size:15px}.pack-content-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #21432d;font-size:13px}.pack-content-row:last-child{border-bottom:0}.pack-content-row .rarity{margin-left:auto;white-space:nowrap}.pack-content-row .pack-chance{min-width:64px;text-align:right;color:#8dffb5;font-size:12px;font-variant-numeric:tabular-nums}.pack-contents-note{margin:9px 0 0;color:#b7d9c1;font-size:11px}
 
 </style>
 </head>
@@ -617,18 +617,28 @@ function choosePack(index){
  document.getElementById("packPurchaseModal").classList.add("open");updatePackPurchaseTotal();
 }
 const packContents = [
- ["Happy Turtle","Bouncy Bunny","Robot Buddy","Frost Wolf","Golden Owl","Starwing"],
- ["Tiny Bee","Bouncy Bunny","Robot Buddy","Crystal Cat","Lumi Fox"],
- ["Robot Buddy","Frost Wolf","Crystal Cat","Galaxy Dragon","Starwing"]
+ [
+  ["Happy Turtle",35.3286],["Bouncy Bunny",35.3286],["Robot Buddy",20.1877],
+  ["Frost Wolf",7.0657],["Golden Owl",2.0188],["Starwing",0.0707]
+ ],
+ [
+  ["Tiny Bee",38.0393],["Bouncy Bunny",38.0393],["Robot Buddy",21.7368],
+  ["Crystal Cat",2.1737],["Lumi Fox",0.0109]
+ ],
+ [
+  ["Robot Buddy",76.0787],["Frost Wolf",21.7368],["Crystal Cat",2.1737],
+  ["Galaxy Dragon",0.0054],["Starwing",0.0054]
+ ]
 ];
 function renderPackContents(index){
- const names=packContents[index]||[];
- const rows=names.map(function(name){
-  const item=items.find(function(x){return x[0]===name;});
+ const entries=packContents[index]||[];
+ const rows=entries.map(function(entry){
+  const item=items.find(function(x){return x[0]===entry[0];});
   if(!item)return "";
-  return '<div class="pack-content-row"><span>'+item[1]+'</span><b>'+accountSafe(item[0])+'</b><span class="rarity '+item[2]+'">'+item[2]+'</span></div>';
+  const chance=entry[1]<0.01?entry[1].toFixed(4):entry[1].toFixed(2);
+  return '<div class="pack-content-row"><span>'+item[1]+'</span><b>'+accountSafe(item[0])+'</b><span class="rarity '+item[2]+'">'+item[2]+'</span><strong class="pack-chance">'+chance+'%</strong></div>';
  }).join("");
- document.getElementById("packContents").innerHTML='<h3>✨ Collectibles in this pack</h3>'+rows+'<p class="pack-contents-note">These are all the possible collectibles in this pack. Rarity shows how hard each one is to find.</p>';
+ document.getElementById("packContents").innerHTML='<h3>✨ Collectibles &amp; drop chances</h3>'+rows+'<p class="pack-contents-note">Each percentage is the chance of getting that collectible from one pack. Chances are approximate and may be rounded.</p>';
 }
 function closePackPurchase(){document.getElementById("packPurchaseModal").classList.remove("open");selectedPackIndex=null;}
 function updatePackPurchaseTotal(){
