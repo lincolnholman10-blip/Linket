@@ -23,11 +23,10 @@ BEGIN
   FROM public.profiles p WHERE p.id = v_user_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Player profile not found.'; END IF;
 
-  IF NOT COALESCE(v_is_owner, false) THEN
-    IF v_tokens < p_cost THEN RAISE EXCEPTION 'Not enough tokens.'; END IF;
-    UPDATE public.profiles p SET tokens = p.tokens - p_cost
-    WHERE p.id = v_user_id RETURNING p.tokens INTO v_tokens;
-  END IF;
+  -- All accounts, including the owner account, pay the listed pack price.
+  IF v_tokens < p_cost THEN RAISE EXCEPTION 'Not enough tokens.'; END IF;
+  UPDATE public.profiles p SET tokens = p.tokens - p_cost
+  WHERE p.id = v_user_id RETURNING p.tokens INTO v_tokens;
 
   -- Each new themed pack has 35% / 35% / 20% / 7% / 2.95% / 0.05% odds.
   SELECT pool.collectible INTO v_collectible
