@@ -122,7 +122,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 <input id="username" autocomplete="username" placeholder="Username (needed for new accounts)">
 <input id="email" type="email" autocomplete="email" placeholder="Email address">
 <input id="password" type="password" autocomplete="current-password" placeholder="Password">
-<button id="loginButton" type="button" onclick="login()">Enter Linket</button>
+<button id="loginButton" type="button" onclick="linketLogin()">Enter Linket</button>
 <button id="createButton" type="button" onclick="createAccount()">Create Account</button>
 <p class="small">New accounts may need to confirm their email before signing in.</p><p id="error" role="status" aria-live="polite"></p>
 </div>
@@ -272,7 +272,7 @@ async function loadProfile(user){
  await loadGameData();
  showGame();
 }
-async function login(){
+async function linketLogin(){
  if(busy)return;
  const email=document.getElementById("email").value.trim();
  const password=document.getElementById("password").value;
