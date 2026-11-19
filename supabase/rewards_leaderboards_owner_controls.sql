@@ -2,8 +2,8 @@
 create table if not exists public.linket_daily_claims (
   user_id uuid primary key references auth.users(id) on delete cascade,
   last_claim_date date not null,
-  streak integer not null default 1 check (streak > 0),
-  total_claims bigint not null default 1 check (total_claims > 0),
+  streak integer not null default 0 check (streak >= 0),
+  total_claims bigint not null default 0 check (total_claims >= 0),
   updated_at timestamptz not null default now()
 );
 
@@ -81,7 +81,7 @@ begin
     return;
   end if;
   insert into public.linket_daily_claims(user_id,last_claim_date,streak,total_claims)
-    values(v_user,v_today,1,1) on conflict(user_id) do nothing;
+    values(v_user,v_today-1,0,0) on conflict(user_id) do nothing;
   select last_claim_date,streak,total_claims into v_last,v_streak,v_total
     from public.linket_daily_claims where user_id=v_user for update;
   if v_last=v_today then
