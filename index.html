@@ -234,6 +234,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 <h1>👑 Owner Dashboard</h1><p class="small">Private owner controls. Player changes are saved directly to Supabase.</p>
 <div class="owner-actions"><button onclick="loadOwnerDashboard()">↻ Refresh dashboard</button><button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button><button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000 tokens</button></div>
 <p id="ownerStatus" class="small" role="status" aria-live="polite"></p>
+<div class="card owner-section"><h2>📊 Game overview</h2><div class="grid owner-stats"><div class="card"><div class="emoji">📈</div><h3 id="ownerAverageTokens">—</h3><p>Average tokens per player</p></div><div class="card"><div class="emoji">🏆</div><h3 id="ownerTopPlayer">—</h3><p>Top token holder</p></div><div class="card"><div class="emoji">🎒</div><h3 id="ownerAverageCollectibles">—</h3><p>Average collectibles per player</p></div><div class="card"><div class="emoji">🚫</div><h3 id="ownerBannedCount">—</h3><p>Banned accounts</p></div></div><p class="small">Calculated from live player records.</p></div>
 <div class="grid owner-stats">
 <div class="card"><div class="emoji">👥</div><h2 id="ownerPlayerCount">—</h2><p>Total players</p></div>
 <div class="card"><div class="emoji">🪙</div><h2 id="ownerTokenTotal">—</h2><p>Tokens across all players</p></div>
@@ -241,7 +242,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div class="card"><div class="emoji">👑</div><h2 id="ownerName">—</h2><p>Signed-in owner</p></div>
 </div>
 <div class="card owner-section"><h2>👥 Player management</h2><p class="small">Review player accounts and select one to manage.</p>
-<div class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div><p id="ownerSelectedPlayer" class="small" role="status" aria-live="polite">Choose Manage beside a player to jump to their controls.</p></div>
+<label for="ownerPlayerSearch">🔎 Search players</label><input id="ownerPlayerSearch" type="search" placeholder="Search by username or account status" oninput="renderOwnerPlayerRows()"><div class="owner-actions"><button class="secondary" onclick="filterOwnerPlayers('all')">All players</button><button class="secondary" onclick="filterOwnerPlayers('active')">Active</button><button class="secondary" onclick="filterOwnerPlayers('banned')">Banned</button></div><div class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div><p id="ownerSelectedPlayer" class="small" role="status" aria-live="polite">Choose Manage beside a player to jump to their controls.</p></div>
 <div class="grid owner-tools-grid">
 <div class="card owner-section"><h2>🪙 Adjust player tokens</h2><label for="ownerTarget">Player</label><select id="ownerTarget" class="owner-select"></select>
 <label for="ownerTokenAmount">Amount</label><input id="ownerTokenAmount" type="number" min="1" max="1000000000" value="100">
@@ -260,7 +261,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div class="card owner-section"><h2>📣 Announcements</h2><label for="adminAnnouncementTitle">Announcement title</label><input id="adminAnnouncementTitle" maxlength="100" placeholder="Announcement title">
 <label for="adminAnnouncementMessage">Message</label><textarea id="adminAnnouncementMessage" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="Message for all Linket players"></textarea>
 <button onclick="adminPublishAnnouncement()">Publish announcement</button></div>
-<div class="card owner-section"><h2>🧾 Recent owner activity</h2><div id="ownerActivity" class="activity-list">Loading activity…</div></div>
+<div class="card owner-section"><h2>🎨 Collectible catalog</h2><p class="small">Browse the collectibles built into Linket, grouped by rarity. This is a live catalog preview; editing pack contents and drop rates requires a database-backed catalog editor.</p><div id="ownerCollectibleCatalog" class="grid"></div></div><div class="card owner-section"><h2>🎉 Live events</h2><p class="small">Publish event announcements to all players. Include the event dates, rules, and rewards in the details.</p><label for="adminEventTitle">Event title</label><input id="adminEventTitle" maxlength="100" placeholder="Weekend Token Boost"><label for="adminEventDetails">Event details and dates</label><textarea id="adminEventDetails" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="What is happening, when it starts and ends, and what players can earn…"></textarea><button onclick="adminPublishEvent()">📣 Announce event</button></div><div class="card owner-section"><h2>🧾 Recent owner activity</h2><div id="ownerActivity" class="activity-list">Loading activity…</div></div>
 </section>
 
 </div>
@@ -664,6 +665,30 @@ function renderOwnerDashboard(){
  if(tokenCount)tokenCount.textContent=Number(player.tokens).toLocaleString();
  if(collectibleCount)collectibleCount.textContent=player.owned.length;
 }
+let ownerPlayerFilter="all";
+function filterOwnerPlayers(filter){ownerPlayerFilter=filter;renderOwnerPlayerRows();}
+function renderOwnerPlayerRows(){
+ const body=document.getElementById("ownerPlayersBody");if(!body)return;
+ const term=(document.getElementById("ownerPlayerSearch")?.value||"").trim().toLowerCase();
+ const rows=ownerPlayers.filter(p=>{
+  const banned=!!p.is_banned;
+  if(ownerPlayerFilter==="active"&&banned)return false;
+  if(ownerPlayerFilter==="banned"&&!banned)return false;
+  return String(p.username||"").toLowerCase().includes(term)||(banned?"banned":"active").includes(term);
+ });
+ body.innerHTML=rows.length?rows.map(p=>'<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(p.is_banned?'Banned':'Player'))+'</td><td><button onclick="selectOwnerPlayer(\''+p.player_id+'\')">Manage</button></td></tr>').join(""):'<tr><td colspan="5">No players match this search.</td></tr>';
+}
+async function adminPublishEvent(){
+ const title=document.getElementById("adminEventTitle").value.trim(),message=document.getElementById("adminEventDetails").value.trim();
+ if(!title||!message){ownerMessage("Enter an event title and details first.");return;}
+ if(!confirm("Publish this event announcement to all Linket players?"))return;
+ try{
+  const {error}=await supabaseClient.rpc("linket_owner_publish_announcement",{p_title:"EVENT: "+title,p_message:message});
+  if(error)throw error;
+  document.getElementById("adminEventTitle").value="";document.getElementById("adminEventDetails").value="";
+  ownerMessage("Event announcement published!");await loadAnnouncements();await loadOwnerDashboard();
+ }catch(e){ownerMessage("Could not publish event announcement: "+e.message);}
+}
 function ownerMessage(message){const el=document.getElementById("ownerStatus");if(el)el.textContent=message||"";}
 function ownerEscape(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
 async function loadOwnerDashboard(){
@@ -683,8 +708,17 @@ async function loadOwnerDashboard(){
   document.getElementById("ownerTokenTotal").textContent=tokenTotal.toLocaleString();
   document.getElementById("ownerCollectibleTotal").textContent=collectibleTotal.toLocaleString();
   document.getElementById("ownerName").textContent=player.name;
-  const body=document.getElementById("ownerPlayersBody");
-  body.innerHTML=ownerPlayers.length?ownerPlayers.map(p=>'<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(p.is_banned?'Banned':'Player'))+'</td><td><button onclick="selectOwnerPlayer(\''+p.player_id+'\')">Manage</button></td></tr>').join(""):'<tr><td colspan="5">No player accounts found.</td></tr>';
+  renderOwnerPlayerRows();
+  const averageTokens=ownerPlayers.length?Math.round(tokenTotal/ownerPlayers.length):0;
+  const averageCollectibles=ownerPlayers.length?(collectibleTotal/ownerPlayers.length).toFixed(1):"0";
+  const topPlayer=[...ownerPlayers].sort((a,b)=>Number(b.tokens||0)-Number(a.tokens||0))[0];
+  document.getElementById("ownerAverageTokens").textContent=averageTokens.toLocaleString();
+  document.getElementById("ownerAverageCollectibles").textContent=averageCollectibles;
+  document.getElementById("ownerTopPlayer").textContent=topPlayer?topPlayer.username:"—";
+  document.getElementById("ownerBannedCount").textContent=ownerPlayers.filter(p=>p.is_banned).length.toLocaleString();
+  const catalog=document.getElementById("ownerCollectibleCatalog");
+  if(catalog)catalog.innerHTML=items.map(i=>'<div class="card collection-card"><div class="emoji">'+i[1]+'</div><strong>'+ownerEscape(i[0])+'</strong><p><span class="rarity '+i[2]+'">'+i[2]+'</span></p></div>').join("");
+
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
   const collectibleSelect=document.getElementById("ownerCollectibleChoice");
