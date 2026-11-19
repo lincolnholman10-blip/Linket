@@ -351,6 +351,24 @@ function showGame(){
  document.getElementById("ownerTab").classList.toggle("hidden",!player.owner);
  draw();loadModeUnlocks();
 }
+async function sendOwnerGiftNotification(userId,title,message){
+ const {error}=await supabaseClient.rpc("linket_owner_send_gift_notification",{
+  p_user_id:userId,p_title:title,p_message:message
+ });
+ if(error)throw error;
+}
+async function loadGiftNotifications(){
+ if(!session)return;
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_player_take_gift_notifications");
+  if(error)throw error;
+  (data||[]).forEach(n=>{
+   alert("🎁 "+n.title+"\n\n"+n.message);
+  });
+ }catch(e){
+  console.warn("Gift notifications could not load:",e.message||e);
+ }
+}
 async function loadProfile(user){
  const {data,error}=await supabaseClient.from("profiles").select("id,username,tokens,is_owner,is_banned,avatar_collectible").eq("id",user.id).single();
  if(error)throw new Error("Signed in, but Linket could not load your player profile: "+error.message);
@@ -358,6 +376,7 @@ async function loadProfile(user){
  if(profile.is_banned){await supabaseClient.auth.signOut();throw new Error("This Linket account has been banned. Contact the game owner if you believe this is a mistake.");}
  await loadGameData();
  showGame();
+ await loadGiftNotifications();
 }
 async function linketLogin(){
  if(busy)return;
@@ -821,6 +840,13 @@ async function ownerAdjustTokens(direction){
    p_user_id:target,p_amount:amount,p_direction:direction>0?1:-1
   });
   if(error)throw error;
+  if(direction>0 && target!==session.user.id){
+   try{
+    await sendOwnerGiftNotification(target,"🎁 You received tokens!","The Linket owner gave you "+amount.toLocaleString()+" tokens!");
+   }catch(notificationError){
+    console.warn("Tokens were granted, but the gift message could not be sent:",notificationError.message||notificationError);
+   }
+  }
   if(target===session.user.id){
    await refreshSavedGame();
    drawCollection();
@@ -856,6 +882,13 @@ async function ownerGrantCollectible(){
  try{
   const {data,error}=await supabaseClient.rpc("linket_owner_grant_collectible",{p_user_id:target,p_collectible_id:collectible,p_quantity:quantity});
   if(error)throw error;
+  if(target!==session.user.id){
+   try{
+    await sendOwnerGiftNotification(target,"🎁 You received a collectible!","The Linket owner gave you "+quantity+" × "+collectible+"!");
+   }catch(notificationError){
+    console.warn("Collectible was granted, but the gift message could not be sent:",notificationError.message||notificationError);
+   }
+  }
   ownerMessage("Granted! That player now owns "+data+" of this collectible.");
   await loadOwnerDashboard();
   if(target===session.user.id){await refreshSavedGame();drawCollection();renderOwnerDashboard();}
