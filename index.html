@@ -138,14 +138,14 @@ input,select,textarea{border:1px solid #b9cdbb}
 /* Detailed collectible character artwork */
 .collectible-art{display:grid;place-items:center;width:100%;aspect-ratio:1/1;max-width:150px;margin:0 auto 12px;border-radius:18px;overflow:hidden;background:radial-gradient(circle at 50% 30%,#294b37,#0a160e 72%);border:1px solid #3c8055;box-shadow:inset 0 0 24px #39ff8818,0 8px 18px #0006}
 .collectible-art svg{display:block;width:100%;height:100%;filter:drop-shadow(0 7px 8px #0008)}
-.collection-card .collectible-art{max-width:170px}
+.collection-card .collectible-art{width:min(100%,210px);max-width:210px;aspect-ratio:1/1;margin:0 auto 14px;border-radius:24px}
 .trade-item-option .collectible-art{width:58px;min-width:58px;height:58px;aspect-ratio:1;border-radius:12px;margin:0;border-color:#3c8055}
 .pack-result .collectible-art{width:150px;height:150px;max-width:45vw;margin:0 auto}
 .pack-result .collectible-art svg{width:100%;height:100%}
 
 
 /* Real-time 3D collectible viewer */
-.collectible-art.linket-3d-stage{position:relative;display:block;width:100%;aspect-ratio:1/1;max-width:170px;margin:0 auto 12px;overflow:hidden;border:0;border-radius:22px;background:radial-gradient(ellipse at 50% 38%,#344d82 0%,#18284c 55%,#0b142b 100%);box-shadow:inset 0 0 35px #8ab8ff20,0 10px 24px #0005;touch-action:pan-y;cursor:grab}
+.collectible-art.linket-3d-stage{position:relative;display:block;width:100%;aspect-ratio:1/1;max-width:210px;min-height:170px;margin:0 auto 14px;overflow:hidden;border:1px solid #72baff;border-radius:24px;background:radial-gradient(ellipse at 50% 35%,#527fc5 0%,#243f75 48%,#0b142b 100%);box-shadow:inset 0 0 42px #b6dcff55,0 12px 30px #0008,0 0 22px #5da9ff44;touch-action:pan-y;cursor:grab}
 .collectible-art.linket-3d-stage:active{cursor:grabbing}
 .linket-3d-stage canvas{display:block;width:100%;height:100%;outline:0}
 .trade-item-option .linket-3d-stage{width:58px;min-width:58px;height:58px;aspect-ratio:1;margin:0;border-radius:12px}
@@ -769,7 +769,7 @@ async function refreshSavedGame(){
  update();
 }
 
-const collectible3DNames=new Set(["Happy Turtle","Tiny Bee","Frost Wolf","Golden Owl","Galaxy Dragon"]);
+const collectible3DNames=new Set(["Happy Turtle","Tiny Bee","Bouncy Bunny","Robot Buddy","Frost Wolf","Golden Owl","Crystal Cat","Lumi Fox","Galaxy Dragon","Starwing","Seashell Snail","Surfer Seal","Crab Pal","Coral Turtle","Pearl Dolphin","Tidal Phoenix","Moon Moth","Astro Pup","Comet Cat","Nebula Fox","Solar Dragon","Void Unicorn","Puppy Pal","Corgi Buddy","Dalmatian Dash","Shiba Star","Golden Retriever","Cosmic Wolf"]);
 function collectibleArt(name,fallback,extraClass=""){
  if(collectible3DNames.has(name))return '<div class="collectible-art linket-3d-stage '+extraClass+'" data-linket-3d="'+accountSafe(name)+'" role="img" aria-label="'+accountSafe(name)+'"></div>';
  return '<div class="emoji '+extraClass+'">'+fallback+'</div>';
@@ -1103,7 +1103,91 @@ function factoryPick(x){const s=modeState;if(!s||s.finished)return;if(x===s.targ
    addEyes(g,.49,.22,.95);
    const beak=new THREE.Mesh(new THREE.ConeGeometry(.13,.25,5),orange);beak.position.set(0,.02,.53);beak.rotation.x=.15;g.add(beak);
    for(let i=0;i<3;i++)sphere(g,0,-.35-i*.10,.39,.36-i*.04,.055,.04,pale);
-  }else{
+  }else if(name==="Bouncy Bunny"||name==="Starwing"||name==="Void Unicorn"){
+   const coat=material(name==="Bouncy Bunny"?"#f4d8ee":name==="Starwing"?"#d9f4ff":"#eee8ff"),inner=material("#ff9fca"),mane=material(name==="Starwing"?"#8b66ff":"#f5a5d8");
+   sphere(g,0,-.18,0,.48,.43,.42,coat);sphere(g,0,.28,.30,.40,.38,.36,coat);
+   if(name==="Bouncy Bunny"){for(const x of [-.20,.20]){const ear=sphere(g,x,.80,.22,.13,.43,.12,coat);ear.rotation.z=x<0?-.16:.16;sphere(g,x,.81,.34,.065,.31,.035,inner);}addEyes(g,.62,.17,.9);sphere(g,0,.06,.69,.09,.07,.04,inner);}
+   else{const horn=new THREE.Mesh(new THREE.ConeGeometry(.105,.55,10),material("#ffe6a0",.22,.3));horn.position.set(0,.82,.28);horn.rotation.x=-.12;g.add(horn);for(const x of [-.48,.48]){const w=sphere(g,x,.02,-.12,.38,.42,.06,material("#b8d9ff"));w.rotation.z=x<0?-.55:.55;}addEyes(g,.62,.17,.9);sphere(g,0,.48,.36,.24,.17,.20,mane); }
+   for(const x of [-.25,.25])sphere(g,x,-.53,.16,.17,.12,.22,coat);
+  }else if(name==="Robot Buddy"){
+   const metal=material("#91a9c2",.25,.65),blue=material("#35d9ff",.2,.35),joint=material("#33465c",.3,.55);
+   sphere(g,0,-.18,0,.48,.45,.38,metal);sphere(g,0,.38,.22,.43,.36,.32,metal);
+   sphere(g,-.16,.40,.51,.075,.10,.04,blue);sphere(g,.16,.40,.51,.075,.10,.04,blue);sphere(g,0,.16,.54,.12,.035,.025,joint);
+   for(const x of [-.53,.53]){sphere(g,x,-.18,.02,.15,.17,.16,joint);sphere(g,x*1.15,-.20,.02,.11,.25,.12,metal);}
+   for(const x of [-.24,.24])sphere(g,x,-.62,.12,.13,.20,.14,joint);
+   const antenna=sphere(g,0,.80,.20,.035,.18,.035,blue);
+  }else if(name==="Seashell Snail"){
+   const body=material("#75cdb2"),shell=material("#ed9b65",.28,.15),rim=material("#ffe0a4");
+   sphere(g,0,-.34,.05,.62,.23,.30,body);sphere(g,.28,-.02,-.03,.22,.48,.22,body);
+   sphere(g,-.10,.02,-.12,.48,.48,.40,shell);sphere(g,-.10,.02,.24,.37,.37,.12,rim);
+   for(const x of [-.08,.28]){const stalk=sphere(g,x,.55,.18,.045,.24,.045,body);sphere(g,x,.78,.20,.11,.11,.09,white);}
+   addEyes(g,.30,.18,.55);sphere(g,.30,-.18,.36,.11,.05,.04,pink);
+  }else if(name==="Surfer Seal"||name==="Pearl Dolphin"){
+   const sea=material(name==="Surfer Seal"?"#91b8c9":"#63d5df"),light=material("#e6fbff"),fin=material("#348da9");
+   sphere(g,0,-.18,0,.62,.36,.42,sea);sphere(g,0,.12,.35,.38,.34,.34,sea);
+   sphere(g,0,-.02,.66,.27,.16,.27,light);sphere(g,0,.02,.88,.08,.06,.05,dark);addEyes(g,.65,.16,.8);
+   for(const x of [-.48,.48]){const f=sphere(g,x,-.32,.05,.28,.09,.20,fin);f.rotation.z=x<0?-.5:.5;}
+   if(name==="Pearl Dolphin"){const nose=sphere(g,0,.02,.92,.23,.12,.23,sea);const dorsal=new THREE.Mesh(new THREE.ConeGeometry(.15,.38,7),fin);dorsal.position.set(0,.47,-.03);g.add(dorsal);}
+   else{const hat=sphere(g,0,.52,.18,.34,.10,.27,material("#f4d36d"));hat.rotation.z=-.08;}
+  }else if(name==="Crab Pal"){
+   const red=material("#ed654c"),belly=material("#ffb08a"),claw=material("#ff8b60");
+   sphere(g,0,-.12,0,.58,.38,.40,red);sphere(g,0,-.27,.34,.42,.20,.18,belly);
+   for(const x of [-.48,-.25,.25,.48]){const leg=sphere(g,x,-.48,.02,.09,.28,.10,red);leg.rotation.z=x<0?-.6:.6;}
+   for(const x of [-.62,.62]){const arm=sphere(g,x,.10,0,.10,.34,.10,red);arm.rotation.z=x<0?-.7:.7;sphere(g,x*1.18,.36,.03,.20,.17,.16,claw);}
+   for(const x of [-.20,.20]){sphere(g,x,.48,.18,.055,.23,.05,red);sphere(g,x,.67,.22,.12,.12,.10,white);}
+   addEyes(g,.32,.20,.7);
+  }else if(name==="Pearl Dolphin"){
+   const aqua=material("#62d8e8");sphere(g,0,-.1,0,.62,.34,.34,aqua);sphere(g,0,.05,.45,.40,.24,.38,aqua);sphere(g,0,-.02,.78,.30,.12,.30,aqua);addEyes(g,.66,.17,.8);
+   const fin=new THREE.Mesh(new THREE.ConeGeometry(.18,.45,7),material("#b8f7f5"));fin.position.set(0,.43,-.12);g.add(fin);
+  }else if(name==="Tidal Phoenix"){
+   const flame=material("#ff784e",.28,.15),gold=material("#ffd36b",.25,.3),wing=material("#e64b65");
+   sphere(g,0,-.08,.05,.38,.56,.34,flame);sphere(g,0,.38,.28,.32,.32,.30,gold);addEyes(g,.55,.13,.75);
+   for(const x of [-.58,.58]){const w=sphere(g,x,.02,-.05,.48,.22,.10,wing);w.rotation.z=x<0?-.55:.55;for(let j=0;j<3;j++){const feather=sphere(g,x*1.2,.16-j*.18,.02,.20,.10,.08,gold);feather.rotation.z=x<0?-.5:.5;}}
+   for(let i=0;i<3;i++){const f=new THREE.Mesh(new THREE.ConeGeometry(.10,.40,7),gold);f.position.set((i-1)*.17,-.54,.25);f.rotation.z=Math.PI;g.add(f);}
+  }else if(name==="Moon Moth"){
+   const lilac=material("#a78be8"),wing=material("#d5c7ff",.22,.12),spot=material("#ffe9a6");
+   sphere(g,0,-.02,.12,.15,.60,.16,lilac);sphere(g,0,.35,.22,.23,.22,.20,lilac);
+   for(const x of [-.52,.52]){const w=sphere(g,x,.02,-.02,.48,.58,.07,wing);w.rotation.z=x<0?-.28:.28;sphere(g,x,.02,.055,.15,.20,.035,spot);}
+   for(const x of [-.10,.10]){const a=sphere(g,x,.68,.20,.025,.23,.025,lilac);a.rotation.z=x<0?-.3:.3;}
+   addEyes(g,.42,.10,.65);
+  }else if(["Astro Pup","Puppy Pal","Corgi Buddy","Dalmatian Dash","Shiba Star","Golden Retriever"].includes(name)){
+   const fur=material(name==="Astro Pup"?"#9db7d9":name==="Dalmatian Dash"?"#f4f1e8":name==="Shiba Star"?"#d98c45":name==="Golden Retriever"?"#e6ad55":name==="Corgi Buddy"?"#d88d50":"#c98c62");
+   const patch=material(name==="Dalmatian Dash"?"#252b35":"#f5d6a5"),earMat=material(name==="Astro Pup"?"#6d8caf":"#9a563c");
+   sphere(g,0,-.25,0,.58,.36,.42,fur);sphere(g,0,.20,.30,.38,.37,.34,fur);
+   for(const x of [-.28,.28]){const ear=sphere(g,x,.56,.22,.14,name==="Corgi Buddy"?.30:.25,.13,name==="Shiba Star"||name==="Dalmatian Dash"?earMat:fur);ear.rotation.z=x<0?-.35:.35;}
+   addEyes(g,.60,.16,.85);sphere(g,0,.02,.62,.22,.15,.16,patch);sphere(g,0,.12,.77,.075,.06,.05,dark);
+   for(const x of [-.40,.40])sphere(g,x,-.51,.12,.15,.17,.17,patch);
+   if(name==="Dalmatian Dash")for(const [x,y] of [[-.35,-.2],[.3,-.28],[.18,.22]])sphere(g,x,y,.37,.075,.08,.025,dark);
+   if(name==="Astro Pup"){const ring=new THREE.Mesh(new THREE.TorusGeometry(.48,.045,8,40),material("#62dfff",.2,.45));ring.position.set(0,.23,-.02);ring.rotation.x=1.2;g.add(ring);}
+  }else if(["Crystal Cat","Comet Cat"].includes(name)){
+   const fur=material(name==="Crystal Cat"?"#b9eaff":"#e9a7c9"),inner=material("#ff9fbd");
+   sphere(g,0,-.16,0,.48,.43,.40,fur);sphere(g,0,.25,.28,.39,.36,.33,fur);
+   for(const x of [-.27,.27]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.17,.42,5),fur);ear.position.set(x,.68,.20);ear.rotation.z=x<0?.25:-.25;g.add(ear);sphere(g,x,.68,.30,.06,.14,.03,inner);}
+   addEyes(g,.59,.16,.9);sphere(g,0,.02,.64,.12,.08,.04,inner);
+   const tail=sphere(g,.48,-.30,-.10,.13,.48,.13,fur);tail.rotation.z=-.75;
+   for(let i=0;i<3;i++)sphere(g,.25+i*.07,.12,.58,.12,.018,.015,white);
+  }else if(["Lumi Fox","Nebula Fox"].includes(name)){
+   const fur=material(name==="Lumi Fox"?"#ff9a45":"#8064d8"),tip=material("#fff0d8");
+   sphere(g,0,-.18,0,.48,.43,.40,fur);sphere(g,0,.24,.28,.38,.35,.32,fur);
+   for(const x of [-.27,.27]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.15,.46,6),fur);ear.position.set(x,.68,.20);ear.rotation.z=x<0?.25:-.25;g.add(ear);}
+   addEyes(g,.58,.16,.9);sphere(g,0,.02,.64,.20,.12,.13,tip);
+   const tail=sphere(g,.52,-.30,-.08,.20,.52,.18,fur);tail.rotation.z=-.85;sphere(g,.70,-.66,-.02,.17,.16,.16,tip);
+  }else if(name==="Solar Dragon"||name==="Cosmic Wolf"){
+   const body=material(name==="Solar Dragon"?"#efa83b":"#596b9c"),accent=material(name==="Solar Dragon"?"#ffe17b":"#a7c9ef");
+   sphere(g,0,-.14,0,.54,.54,.42,body);sphere(g,0,.27,.28,.43,.42,.36,body);addEyes(g,.60,.18,.95);
+   if(name==="Solar Dragon"){for(const x of [-.28,.28]){const h=new THREE.Mesh(new THREE.ConeGeometry(.12,.42,8),accent);h.position.set(x,.76,.18);g.add(h);}for(const x of [-.5,.5]){const w=sphere(g,x,.06,-.15,.38,.42,.07,accent);w.rotation.z=x<0?-.55:.55;}}
+   else{for(const x of [-.28,.28]){const e=new THREE.Mesh(new THREE.ConeGeometry(.14,.48,7),body);e.position.set(x,.72,.10);e.rotation.z=x<0?-.3:.3;g.add(e);}sphere(g,0,-.03,.63,.26,.17,.15,accent);}
+  }else if(name==="Coral Turtle"){
+   const aqua=material("#36c9b2"),coral=material("#ff9879"),shell=material("#c66b57");
+   sphere(g,0,-.12,0,.58,.50,.46,aqua);sphere(g,0,-.02,-.22,.48,.38,.36,shell);
+   for(let i=0;i<7;i++){const a=i*Math.PI*2/7;sphere(g,Math.cos(a)*.25,.03+Math.sin(a)*.20,.02,.14,.13,.07,coral);}
+   sphere(g,0,.12,.40,.40,.35,.35,aqua);addEyes(g,.69,.18,.9);
+   for(const x of [-.43,.43])sphere(g,x,-.45,.16,.18,.15,.21,coral);
+  }else if(name==="Crab Pal"){
+   const red=material("#ed654c");sphere(g,0,-.12,0,.58,.38,.40,red);for(const x of [-.5,-.25,.25,.5]){const leg=sphere(g,x,-.45,0,.09,.26,.09,red);leg.rotation.z=x<0?-.5:.5;}addEyes(g,.35,.20,.7);
+  }else if(name==="Happy Turtle"){
+   const green=material("#65c94b");sphere(g,0,-.1,0,.58,.48,.42,green);sphere(g,0,0,-.2,.46,.34,.34,material("#9b6237"));sphere(g,0,.12,.40,.40,.34,.34,green);addEyes(g,.70,.18,.9);
+  }  }else{
    const purple=material("#8754e8",.3,.12),lav=material("#d4a4ff",.3,.08),wing=material("#5936a9",.38,.1),horn=material("#f2d5ff",.25,.25);
    sphere(g,0,-.12,0,.55,.58,.43,purple);
    sphere(g,0,.28,.27,.46,.44,.38,purple);
