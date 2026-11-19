@@ -771,7 +771,7 @@ async function refreshSavedGame(){
 
 const collectible3DNames=new Set(["Happy Turtle","Tiny Bee","Bouncy Bunny","Robot Buddy","Frost Wolf","Golden Owl","Crystal Cat","Lumi Fox","Galaxy Dragon","Starwing","Seashell Snail","Surfer Seal","Crab Pal","Coral Turtle","Pearl Dolphin","Tidal Phoenix","Moon Moth","Astro Pup","Comet Cat","Nebula Fox","Solar Dragon","Void Unicorn","Puppy Pal","Corgi Buddy","Dalmatian Dash","Shiba Star","Golden Retriever","Cosmic Wolf"]);
 function collectibleArt(name,fallback,extraClass=""){
- if(collectible3DNames.has(name))return '<div class="collectible-art linket-3d-stage '+extraClass+'" data-linket-3d="'+accountSafe(name)+'" role="img" aria-label="'+accountSafe(name)+'"></div>';
+ if(collectible3DNames.has(name))return '<div class="collectible-art linket-3d-stage '+extraClass+'" data-linket-model="'+accountSafe(name)+'" role="img" aria-label="'+accountSafe(name)+'"></div>';
  return '<div class="emoji '+extraClass+'">'+fallback+'</div>';
 }
 function drawCollection(){
@@ -1217,7 +1217,7 @@ function factoryPick(x){const s=modeState;if(!s||s.finished)return;if(x===s.targ
    scene.add(new T.HemisphereLight(0xe5f2ff,0x27334f,2.0));
    const key=new T.DirectionalLight(0xffffff,3.1);key.position.set(-3,4,5);scene.add(key);
    const rim=new T.PointLight(0x73baff,18,9);rim.position.set(3,1,2);scene.add(rim);
-   const figure=makeFigure(el.dataset.linket3d);scene.add(figure);
+   const figure=makeFigure(el.dataset.linketModel);scene.add(figure);
    const floor=new T.Mesh(new T.CircleGeometry(1.0,48),new T.MeshBasicMaterial({color:0x8ebcff,transparent:true,opacity:.10}));
    floor.rotation.x=-Math.PI/2;floor.position.y=-.78;floor.position.z=-.1;scene.add(floor);
    const resize=()=>{const w=Math.max(1,el.clientWidth),h=Math.max(1,el.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
