@@ -830,10 +830,11 @@ async function ownerAdjustTokens(direction){
  const target=document.getElementById("ownerTarget").value;
  const amount=Number(document.getElementById("ownerTokenAmount").value);
  if(!target||!Number.isSafeInteger(amount)||amount<1||amount>1000000000){
-  ownerMessage("Choose a player and enter an amount from 1 to 1,000,000,000.");return;
+  ownerMessage("Choose a player and enter an amount from 1 to 1,000,000,000.");
+  alert("Choose a player and enter an amount from 1 to 1,000,000,000.");return;
  }
  const selected=ownerPlayers.find(p=>String(p.player_id)===String(target));
- if(!selected){ownerMessage("That player could not be found. Refresh the dashboard and try again.");return;}
+ if(!selected){ownerMessage("That player could not be found. Refresh the dashboard and try again.");alert("That player could not be found. Refresh the dashboard and try again.");return;}
  const action=direction>0?"add":"remove";
  if(!confirm("Are you sure you want to "+action+" "+amount.toLocaleString()+" tokens "+(direction>0?"to ":"from ")+selected.username+"?"))return;
  ownerMessage((direction>0?"Adding":"Removing")+" tokens…");
@@ -842,22 +843,22 @@ async function ownerAdjustTokens(direction){
    p_user_id:target,p_amount:amount,p_direction:direction>0?1:-1
   });
   if(error)throw error;
+  if(data===null||data===undefined)throw new Error("The database did not return the updated token balance.");
   if(direction>0 && target!==session.user.id){
    try{
     await sendOwnerGiftNotification(target,"🎁 You received tokens!","The Linket owner gave you "+amount.toLocaleString()+" tokens!");
    }catch(notificationError){
-    console.warn("Tokens were granted, but the gift message could not be sent:",notificationError.message||notificationError);
+    console.error("Tokens were granted, but the gift message could not be sent:",notificationError);
+    ownerMessage("Tokens were added, but the gift message failed: "+(notificationError.message||notificationError));
    }
-  }
-  if(target===session.user.id){
-   await refreshSavedGame();
-   drawCollection();
-   renderOwnerDashboard();
   }
   await loadOwnerDashboard();
   ownerMessage("Updated "+selected.username+"'s balance to "+Number(data).toLocaleString()+" tokens.");
+  alert("Success! "+selected.username+" now has "+Number(data).toLocaleString()+" tokens.");
  }catch(e){
+  console.error("Linket token adjustment failed:",e);
   ownerMessage("Could not adjust tokens: "+(e.message||e));
+  alert("Could not adjust tokens:\n"+(e.message||e));
  }
 }
 function selectOwnerPlayer(id){
