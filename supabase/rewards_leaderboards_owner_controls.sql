@@ -262,3 +262,15 @@ end $$;
 grant execute on function public.linket_get_daily_status() to authenticated;
 grant execute on function public.linket_get_player_progress() to authenticated;
 notify pgrst, 'reload schema';
+
+
+insert into public.linket_quests(title,description,target_type,target_value,reward_tokens,enabled)
+select 'First Victory','Win one Linket game.','wins',1,50,true
+where not exists(select 1 from public.linket_quests where title='First Victory');
+insert into public.linket_quests(title,description,target_type,target_value,reward_tokens,enabled)
+select 'Curious Collector','Own five different collectibles.','collectibles',5,100,true
+where not exists(select 1 from public.linket_quests where title='Curious Collector');
+insert into public.linket_quests(title,description,target_type,target_value,reward_tokens,enabled)
+select 'Token Saver','Hold at least 500 tokens.','tokens',500,75,true
+where not exists(select 1 from public.linket_quests where title='Token Saver');
+notify pgrst, 'reload schema';
