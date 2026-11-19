@@ -112,6 +112,28 @@ input,select,textarea{border:1px solid #b9cdbb}
 .news-empty{text-align:center;padding:35px}
 @media(max-width:600px){.news-heading{align-items:stretch}.news-card{padding:14px;gap:10px}.login{margin:25px auto}}
 
+
+/* Blooket-inspired fixed side navigation */
+@media(min-width:701px){
+ header{margin-left:230px;padding-left:28px}
+ main{max-width:none;margin:0 0 0 230px;padding:25px 30px}
+ .tabs{position:fixed;z-index:30;left:0;top:0;bottom:0;width:230px;height:100vh;margin:0;padding:18px 13px;display:flex;flex-direction:column;align-items:stretch;gap:7px;overflow-y:auto;background:#08140c;border-right:1px solid #245238;box-shadow:8px 0 28px #0005}
+ .sidebar-brand{font-size:27px;font-weight:1000;padding:8px 12px 22px;color:#effff4}
+ .sidebar-brand span{color:#39ff88}
+ .sidebar-label{padding:4px 13px 8px;color:#80a88d;font-size:11px;font-weight:900;letter-spacing:1.6px}
+ .tabs button{width:100%;margin:0;padding:13px 14px;display:flex;align-items:center;gap:11px;text-align:left;border:1px solid transparent;border-radius:12px;background:transparent;color:#d9ffe5;font-size:14px;box-shadow:none}
+ .tabs button:hover{background:#14291b;border-color:#28583a}
+ .tabs button.active{background:#174329;color:#8dffb5;border-color:#39ff88;box-shadow:inset 3px 0 #39ff88}
+}
+@media(max-width:700px){
+ header{margin-left:0}
+ main{margin:0;padding:16px}
+ .tabs{position:relative;top:auto;left:auto;bottom:auto;width:100%;height:auto;margin:14px 0;padding:10px;display:flex;flex-direction:row;flex-wrap:nowrap;gap:7px;overflow-x:auto;background:#08140c;border:1px solid #245238;border-radius:14px}
+ .sidebar-brand,.sidebar-label{display:none}
+ .tabs button{flex:0 0 auto;margin:0;padding:10px 12px;white-space:nowrap;background:#14231a;color:#d9ffe5;border:1px solid #245238}
+ .tabs button.active{background:#39e77d;color:#04130a;border-color:#75ffab}
+}
+
 </style>
 </head>
 <body>
@@ -128,8 +150,10 @@ input,select,textarea{border:1px solid #b9cdbb}
 </div>
 <div id="game" class="hidden">
 <section class="hero"><h2>YOUR GAME • YOUR COLLECTION</h2><h1>Play big.<br>Collect everything.</h1><p>Answer questions, open awesome packs, and build your ultimate collection!</p><button onclick="tab('modes')">▶ Play Linket</button><div class="christmas-launch"><h2>🎄 LINKET WINTERFEST</h2><p>Play the limited-time Snowflake Scramble and earn bonus tokens!</p><button onclick="openChristmasEvent()">🎅 Enter Christmas Event</button><span class="small"> Nov 17, 2026 – Jan 5, 2027</span></div><div id="announcementBoard" class="card hidden" style="margin-top:18px;text-align:left"><h2>📣 Linket News</h2><div id="announcementList"></div></div></section>
-<nav class="tabs">
-<button class="active" onclick="tab('modes',this)">🎮 Game Modes</button><button onclick="tab('news',this)">📣 News</button><button onclick="tab('modules',this)">🧩 Modules</button><button onclick="tab('packs',this)">🎁 Packs</button><button onclick="tab('index',this)">🏅 Collectible Index</button><button onclick="tab('locker',this)">📚 Collection</button><button onclick="tab('account',this)">👤 My Account</button><button onclick="tab('liveGames',this)">🌐 Live Games</button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 Owner Dashboard</button>
+<nav class="tabs" aria-label="Main menu">
+<div class="sidebar-brand">✨ Link<span>et</span></div>
+<div class="sidebar-label">MENU</div>
+<button class="active" onclick="tab('modes',this)">🎮 <span>Game Modes</span></button><button onclick="tab('news',this)">📣 <span>News</span></button><button onclick="tab('modules',this)">🧩 <span>Modules</span></button><button onclick="tab('packs',this)">🎁 <span>Packs</span></button><button onclick="tab('index',this)">🏅 <span>Collectible Index</span></button><button onclick="tab('locker',this)">📚 <span>Collection</span></button><button onclick="tab('account',this)">👤 <span>My Account</span></button><button onclick="tab('liveGames',this)">🌐 <span>Live Games</span></button><button id="ownerTab" class="hidden" onclick="tab('ownerDashboard',this)">👑 <span>Owner Dashboard</span></button>
 </nav>
 <section id="modes" class="panel active"><h1>Game Modes</h1><div class="grid" id="modeGrid"></div></section>
  <section id="news" class="panel"><div class="news-heading"><div><p class="small">📯 OFFICIAL LINKET UPDATES</p><h1>📣 Linket News</h1><p>Announcements and updates from the Linket owner.</p></div><button class="secondary" onclick="loadAnnouncements()">↻ Refresh News</button></div><div id="newsFeed" class="news-feed"><div class="card">Loading announcements…</div></div></section>
