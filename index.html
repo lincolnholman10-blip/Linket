@@ -579,8 +579,6 @@ async function loadTrades(){
 async function cancelTrade(id){try{const {error}=await supabaseClient.rpc("linket_trade_cancel",{p_trade_id:id});if(error)throw error;await loadTrades();}catch(e){alert(e.message);}}
 
 async function respondToTrade(id,accept){if(!confirm(accept?"Accept and complete this trade?":"Decline this trade?"))return;try{const {error}=await supabaseClient.rpc("linket_trade_respond",{p_trade_id:id,p_accept:accept});if(error)throw error;await refreshSavedGame();drawCollection();renderTradeOfferChoices();await loadTrades();alert(accept?"Trade completed!":"Trade declined.");}catch(e){alert(e.message);}}
-async function cancelTrade(id){try{const {error}=await supabaseClient.rpc("linket_trade_cancel",{p_trade_id:id});if(error)throw error;await loadTrades();}catch(e){alert(e.message);}}
-
 function tab(id,btn){
  if(id==="ownerDashboard"&&(!player||!player.owner)){alert("Owner access only.");return;}
  if(id==="ownerDashboard")loadOwnerDashboard();
