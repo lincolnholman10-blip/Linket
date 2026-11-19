@@ -424,6 +424,8 @@ async function loadProfile(user){
  if(profile.is_banned){await supabaseClient.auth.signOut();throw new Error("This Linket account has been banned. Contact the game owner if you believe this is a mistake.");}
  await loadGameData();
  showGame();
+ // Wait until the game screen is visible before showing any gifts received while offline.
+ await new Promise(resolve=>setTimeout(resolve,500));
  await loadGiftNotifications();
  if(window.linketGiftNotificationRefresh)clearInterval(window.linketGiftNotificationRefresh);
  window.linketGiftNotificationRefresh=setInterval(()=>{if(session)loadGiftNotifications();},15000);
