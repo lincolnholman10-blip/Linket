@@ -507,7 +507,7 @@ function renderCollectibleIndex(){
 function draw(){
  document.getElementById("modeGrid").innerHTML=modes.map((m,i)=>{
   const key=modeKeys[i],level=modeUnlocks[key]||1;
-  return '<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small">'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><p><b>Unlocked stage: '+level+'/3</b></p><button onclick="startMode('+i+')">Play Stage '+level+'</button>'+(level<3?'<button class="secondary" onclick="unlockMode(\''+key+'\')">🧠 Answer a question to unlock Stage '+(level+1)+'</button>':'<p>🏆 All stages unlocked!</p>')+'</div>';
+  return '<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small">'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><p><b>Unlocked stage: '+level+'/3</b></p><button onclick="startMode('+i+')">Play Stage '+level+'</button><button class="secondary" onclick="openModeMultiplayer(\''+m[1]+'\')">🌐 Play Multiplayer</button>'+(level<3?'<button class="secondary" onclick="unlockMode(\''+key+'\')">🧠 Answer a question to unlock Stage '+(level+1)+'</button>':'<p>🏆 All stages unlocked!</p>')+'</div>';
  }).join("")+(isWinterfestActive()?'<div class="card winterfest-mode-card"><div class="emoji">🎄❄️</div><h2>Winterfest Challenge</h2><p class="small">A limited-time Christmas adventure! Catch snowflakes solo or race friends in a festive multiplayer quiz.</p><button onclick="startChristmasMode()">❄️ Play Solo</button><button class="secondary" onclick="openChristmasMultiplayer()">🌐 Play Multiplayer</button><p class="small">Available Nov 17, 2026 – Jan 5, 2027</p></div>':"");
  document.getElementById("packGrid").innerHTML=packs.map((p,i)=>'<div class="card mystery-pack-card" onclick="choosePack('+i+')"><div class="mystery-pack-wrap"><div class="mystery-pack-seal">✦ LINKET ✦</div><div class="mystery-pack-emoji">'+p[0]+'</div><div class="mystery-pack-label">MYSTERY<br>COLLECTIBLE</div><div class="mystery-pack-shine"></div></div><h2>'+p[1]+'</h2><p class="pack-price">'+p[2]+' tokens <span>per pack</span></p><p class="small">Tap to choose how many to open</p><button class="pack-open-btn" onclick="event.stopPropagation();choosePack('+i+')">✨ Choose Packs</button></div>').join("");
  renderCollectibleIndex();drawCollection();update();if(player.owner)renderOwnerDashboard();
@@ -856,6 +856,12 @@ async function modeWin(message){
 async function loadModeUnlocks(){if(!session)return;try{const {data,error}=await supabaseClient.rpc("linket_get_mode_unlocks");if(error)throw error;(data||[]).forEach(x=>{modeUnlocks[x.mode_key]=Number(x.unlocked_level)||1;});draw();}catch(e){console.warn("Could not load saved quiz progress: "+e.message);}}
 async function unlockMode(key){const level=modeUnlocks[key]||1;if(level>=3)return;const q=modeQuestions[key][level-1];const answer=prompt(q[0]+"\\n0: "+q[1][0]+"\\n1: "+q[1][1]+"\\n2: "+q[1][2]+"\\nEnter 0, 1, or 2");if(answer===null)return;const n=Number(answer);if(!Number.isInteger(n)||n<0||n>2){alert("Enter 0, 1, or 2.");return;}try{const {data,error}=await supabaseClient.rpc("linket_answer_mode_question",{p_mode_key:key,p_answer:n});if(error)throw error;modeUnlocks[key]=Number(data)||level;alert("Correct! Level "+modeUnlocks[key]+" unlocked.");draw();}catch(e){alert(e.message||"Not quite—try again.");}}
 function startMode(id){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}if(id===0)startTower();if(id===1)startGold();if(id===2)startCafe();if(id===3)startFactory();}
+function openModeMultiplayer(modeName){
+ tab("liveGames");
+ const status=document.getElementById("liveRoomStatus");
+ if(!activeLiveRoom)status.innerHTML='<div class="card"><h2>🌐 '+accountSafe(modeName)+' — Multiplayer</h2><p>Create a room and invite friends with the 6-character code. Everyone can join from the Live Games tab.</p></div>';
+ else refreshLiveRoom();
+}
 function openChristmasMultiplayer(){
  if(!isWinterfestActive()){alert("Winterfest is not active.");return;}
  tab("liveGames");
