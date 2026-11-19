@@ -762,7 +762,7 @@ async function refreshSavedGame(){
 const collectibleArtSymbols={"Happy Turtle":"happy-turtle","Tiny Bee":"tiny-bee","Frost Wolf":"frost-wolf","Golden Owl":"golden-owl","Galaxy Dragon":"galaxy-dragon"};
 function collectibleArt(name,fallback,extraClass=""){
  const symbol=collectibleArtSymbols[name];
- return symbol?'<div class="collectible-art '+extraClass+'" role="img" aria-label="'+accountSafe(name)+'"><svg viewBox="0 0 160 160" aria-hidden="true"><use href="assets/collectibles/featured.svg#'+symbol+'"></use></svg></div>':'<div class="emoji '+extraClass+'">'+fallback+'</div>';
+ return symbol?'<div class="collectible-art '+extraClass+'" role="img" aria-label="'+accountSafe(name)+'"><svg viewBox="0 0 160 160" aria-hidden="true"><use href="assets/collectibles/featured.svg?v=3d2#'+symbol+'"></use></svg></div>':'<div class="emoji '+extraClass+'">'+fallback+'</div>';
 }
 function drawCollection(){
  const search=(document.getElementById("collectionSearch")?.value||"").trim().toLowerCase(),rarity=document.getElementById("collectionRarity")?.value||"all",sort=document.getElementById("collectionSort")?.value||"rarity";
