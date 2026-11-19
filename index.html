@@ -847,6 +847,53 @@ function ownerEditEvent(id){
  const e=(window.ownerEventRows||[]).find(x=>x.id===id);if(!e)return;
  document.getElementById("ownerEventId").value=e.id;document.getElementById("adminEventTitle").value=e.title;document.getElementById("adminEventDetails").value=e.message;document.getElementById("adminEventStart").value=e.starts_at?new Date(e.starts_at).toISOString().slice(0,16):"";document.getElementById("adminEventEnd").value=e.ends_at?new Date(e.ends_at).toISOString().slice(0,16):"";document.getElementById("adminEventReward").value=e.reward_tokens;document.getElementById("adminEventStatus").value=e.status;
 }
+async function ownerLoadFeatureControls(){
+ const results=await Promise.all([supabaseClient.rpc("linket_owner_get_daily_settings"),supabaseClient.rpc("linket_owner_list_quests"),supabaseClient.rpc("linket_owner_list_achievements")]);
+ results.forEach(x=>{if(x.error)throw x.error;});
+ const d=(results[0].data||[])[0];if(d){document.getElementById("ownerDailyEnabled").checked=d.enabled;document.getElementById("ownerDailyBase").value=d.base_reward;document.getElementById("ownerDailyBonus").value=d.streak_bonus;document.getElementById("ownerDailyCap").value=d.max_streak_bonus;}
+ window.ownerQuestRows=results[1].data||[];window.ownerAchievementRows=results[2].data||[];
+ document.getElementById("ownerQuestList").innerHTML=window.ownerQuestRows.map(q=>'<div class="feature-row"><b>'+ownerEscape(q.title)+'</b><small>'+ownerEscape(q.description)+' · '+q.target_value+' '+q.target_type+' · '+q.reward_tokens+' tokens · '+(q.enabled?'Enabled':'Disabled')+'</small><button class="secondary" onclick="ownerEditQuest(\''+q.id+'\')">Edit</button></div>').join("")||"No quests yet.";
+ document.getElementById("ownerAchievementList").innerHTML=window.ownerAchievementRows.map(a=>'<div class="feature-row"><b>'+ownerEscape(a.icon)+' '+ownerEscape(a.title)+'</b><small>'+ownerEscape(a.description)+' · '+a.target_value+' '+a.metric+' · '+(a.enabled?'Enabled':'Disabled')+'</small></div>').join("")||"No achievements yet.";
+}
+async function ownerSaveDailySettings(){
+ try{const {error}=await supabaseClient.rpc("linket_owner_save_daily_settings",{p_enabled:document.getElementById("ownerDailyEnabled").checked,p_base_reward:Number(document.getElementById("ownerDailyBase").value),p_streak_bonus:Number(document.getElementById("ownerDailyBonus").value),p_max_streak_bonus:Number(document.getElementById("ownerDailyCap").value)});if(error)throw error;ownerMessage("Daily reward settings saved.");await loadRewardsCenter();}
+ catch(e){ownerMessage("Could not save daily rewards: "+e.message);}
+}
+function ownerClearQuest(){["ownerQuestId","ownerQuestTitle","ownerQuestDescription"].forEach(id=>document.getElementById(id).value="");document.getElementById("ownerQuestMetric").value="wins";document.getElementById("ownerQuestTarget").value=3;document.getElementById("ownerQuestReward").value=100;document.getElementById("ownerQuestEnabled").checked=true;}
+function ownerEditQuest(id){const q=(window.ownerQuestRows||[]).find(x=>x.id===id);if(!q)return;document.getElementById("ownerQuestId").value=q.id;document.getElementById("ownerQuestTitle").value=q.title;document.getElementById("ownerQuestDescription").value=q.description;document.getElementById("ownerQuestMetric").value=q.target_type;document.getElementById("ownerQuestTarget").value=q.target_value;document.getElementById("ownerQuestReward").value=q.reward_tokens;document.getElementById("ownerQuestEnabled").checked=q.enabled;}
+async function ownerSaveQuest(){
+ try{const {error}=await supabaseClient.rpc("linket_owner_save_quest",{p_id:document.getElementById("ownerQuestId").value||null,p_title:document.getElementById("ownerQuestTitle").value.trim(),p_description:document.getElementById("ownerQuestDescription").value.trim(),p_target_type:document.getElementById("ownerQuestMetric").value,p_target_value:Number(document.getElementById("ownerQuestTarget").value),p_reward_tokens:Number(document.getElementById("ownerQuestReward").value),p_enabled:document.getElementById("ownerQuestEnabled").checked});if(error)throw error;ownerMessage("Quest saved.");ownerClearQuest();await ownerLoadFeatureControls();await loadRewardsCenter();}
+ catch(e){ownerMessage("Could not save quest: "+e.message);}
+}
+async function ownerSaveAchievement(){
+ try{const {error}=await supabaseClient.rpc("linket_owner_save_achievement",{p_id:document.getElementById("ownerAchievementId").value.trim(),p_title:document.getElementById("ownerAchievementTitle").value.trim(),p_description:document.getElementById("ownerAchievementDescription").value.trim(),p_icon:document.getElementById("ownerAchievementIcon").value.trim(),p_metric:document.getElementById("ownerAchievementMetric").value,p_target_value:Number(document.getElementById("ownerAchievementTarget").value),p_enabled:document.getElementById("ownerAchievementEnabled").checked});if(error)throw error;ownerMessage("Achievement saved.");await ownerLoadFeatureControls();await loadRewardsCenter();}
+ catch(e){ownerMessage("Could not save achievement: "+e.message);}
+}
+async function loadRewardsCenter(){
+ if(!session)return;
+ try{
+  const results=await Promise.all([supabaseClient.rpc("linket_get_daily_status"),supabaseClient.rpc("linket_get_quest_board"),supabaseClient.rpc("linket_get_achievement_board"),supabaseClient.rpc("linket_get_player_progress")]);
+  results.forEach(x=>{if(x.error)throw x.error;});
+  const d=(results[0].data||[])[0]||{},p=(results[3].data||[])[0]||{};
+  document.getElementById("dailyStreak").textContent=(d.current_streak||0)+" day streak";
+  document.getElementById("dailyRewardInfo").textContent=d.claimed_today?"You have claimed today's reward. Your next reward is ready tomorrow.":"Today's reward: "+Number(d.reward_preview||0).toLocaleString()+" tokens. Claim now!";
+  document.getElementById("claimDailyButton").disabled=!!d.claimed_today;
+  document.getElementById("claimDailyButton").textContent=d.claimed_today?"✅ Already claimed":"🎁 Claim "+Number(d.reward_preview||0).toLocaleString()+" tokens";
+  const metrics={wins:Number(p.wins||0),score:Number(p.best_score||0),tokens:Number(p.tokens||0),collectibles:Number(p.collectibles||0)};
+  document.getElementById("playerQuestBoard").innerHTML=(results[1].data||[]).map(q=>{const current=metrics[q.target_type]||0,done=current>=q.target_value;return '<div class="card"><h3>'+(done?'✅ ':'📜 ')+accountSafe(q.title)+'</h3><p class="small">'+accountSafe(q.description)+'</p><p>'+current.toLocaleString()+' / '+q.target_value.toLocaleString()+' '+q.target_type+'</p><div class="pack-progress"><i style="width:'+Math.min(100,current/q.target_value*100)+'%"></i></div><b>Reward: '+q.reward_tokens.toLocaleString()+' tokens</b><p class="small">'+(done?'Goal reached!':'Keep playing to complete this quest.')+'</p></div>';}).join("")||'<div class="card">No active quests right now.</div>';
+  document.getElementById("playerAchievementBoard").innerHTML=(results[2].data||[]).map(a=>{const current=metrics[a.metric]||0,done=current>=a.target_value;return '<div class="card"><div class="emoji">'+accountSafe(a.icon)+'</div><h3>'+accountSafe(a.title)+'</h3><p class="small">'+accountSafe(a.description)+'</p><b>'+current.toLocaleString()+' / '+a.target_value.toLocaleString()+'</b><p class="small">'+(done?'🏅 Unlocked!':'🔒 Not unlocked yet')+'</p></div>';}).join("")||'<div class="card">No achievements yet.</div>';
+ }catch(e){const status=document.getElementById("dailyRewardStatus");if(status)status.textContent="Rewards setup needed: "+e.message;}
+}
+async function claimDailyReward(){
+ const button=document.getElementById("claimDailyButton");button.disabled=true;document.getElementById("dailyRewardStatus").textContent="Claiming your reward…";
+ try{const {data,error}=await supabaseClient.rpc("linket_claim_daily_reward");if(error)throw error;const r=Array.isArray(data)?data[0]:data;if(!r)throw new Error("No reward result returned.");if(r.claimed){await refreshSavedGame();document.getElementById("dailyRewardStatus").textContent="🎉 "+r.message+" You received "+Number(r.reward_tokens).toLocaleString()+" tokens!";}else document.getElementById("dailyRewardStatus").textContent=r.message;await loadRewardsCenter();}
+ catch(e){document.getElementById("dailyRewardStatus").textContent="Could not claim reward: "+e.message;button.disabled=false;}
+}
+async function loadLeaderboard(){
+ if(!session)return;const category=document.getElementById("leaderboardCategory").value,body=document.getElementById("leaderboardRows");document.getElementById("leaderboardStatus").textContent="Loading global rankings…";
+ try{const {data,error}=await supabaseClient.rpc("linket_get_leaderboard",{p_category:category,p_limit:50});if(error)throw error;body.innerHTML=(data||[]).map(p=>'<tr><td class="leaderboard-rank">#'+p.rank+'</td><td>'+accountSafe(p.username)+(p.user_id===session.user.id?' <b>(You)</b>':'')+'</td><td>'+Number(p.score||0).toLocaleString()+' '+accountSafe(p.detail)+'</td></tr>').join("")||'<tr><td colspan="3">No rankings yet. Be the first!</td></tr>';document.getElementById("leaderboardStatus").textContent="Showing the top 50 players.";}
+ catch(e){body.innerHTML='<tr><td colspan="3">Leaderboard setup needed: '+accountSafe(e.message)+'</td></tr>';document.getElementById("leaderboardStatus").textContent="";}
+}
 function ownerMessage(message){const el=document.getElementById("ownerStatus");if(el)el.textContent=message||"";}
 function ownerEscape(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
 async function loadOwnerDashboard(){
@@ -874,7 +921,7 @@ async function loadOwnerDashboard(){
   document.getElementById("ownerAverageCollectibles").textContent=averageCollectibles;
   document.getElementById("ownerTopPlayer").textContent=topPlayer?topPlayer.username:"—";
   document.getElementById("ownerBannedCount").textContent=ownerPlayers.filter(p=>p.is_banned).length.toLocaleString();
-  await ownerLoadCatalog();await ownerLoadEvents();
+  await ownerLoadCatalog();await ownerLoadEvents();await ownerLoadFeatureControls();
 
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
