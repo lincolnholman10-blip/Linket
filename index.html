@@ -1308,7 +1308,7 @@ function renderLinketAdventureQuestion(){
  const s=modeState;if(!s||s.finished)return;
  if(modeTimer){clearInterval(modeTimer);modeTimer=null;}
  s.timeLeft=15;
- if(s.index>=s.goal){modeWin(({classic:"Quiz complete! Great work!",racing:"🏁 You crossed the finish line!",battle:"🏆 You survived the Battle Royale!",fishing:"🐟 Amazing catch! Your basket is full!",monster:"👾 Monster defeated! Linket champion!",crypto:"💎 Vault unlocked! You collected every gem!"})[s.kind]);return;}
+ if(s.index>=s.goal){if(s.kind==="racing"&&s.progress<100){s.finished=true;modeNote("🏁 Race over! You reached "+s.progress+"% of the track. Try again!");return;}if(s.kind==="monster"&&s.hp>0){s.finished=true;modeNote("👾 The monster survived with "+s.hp+" HP. Try again!");return;}modeWin(({classic:"Quiz complete! Great work!",racing:"🏁 You crossed the finish line!",battle:"🏆 You survived the Battle Royale!",fishing:"🐟 Amazing catch! Your basket is full!",monster:"👾 Monster defeated! Linket champion!",crypto:"💎 Vault unlocked! You collected every gem!"})[s.kind]);return;}
  const q=s.questions[s.index%s.questions.length];
  const scene=document.getElementById("advScene");
  const scenes={
@@ -1325,7 +1325,9 @@ function renderLinketAdventureQuestion(){
  document.getElementById("advChoices").innerHTML=q[1].map((choice,i)=>'<button class="game-choice" onclick="answerLinketAdventure('+i+')">'+choice+'</button>').join("");
  document.getElementById("advScore").textContent=s.score;
  document.getElementById("advStreak").textContent=s.streak;
- const timerBar=document.getElementById("advTimer");if(timerBar)timerBar.style.width="100%";
+ const timerBar=document.getElementById("advTimer");if(timerBar){timerBar.style.width="100%";timerBar.style.background="linear-gradient(90deg,#55e58b,#c9f36b)";}
+ const hero=document.querySelector(".battle-hero");if(hero)hero.textContent="🛡️";
+ const foe=document.querySelector(".battle-foe");if(foe)foe.textContent="🐲";
  const stat=document.getElementById("advStat");
  stat.textContent=({classic:"📝 Question "+(s.index+1)+"/"+s.goal,racing:"🏎️ Finish "+s.progress+"%",battle:"❤️ ".repeat(s.lives),fishing:"🐟 "+s.score+"/"+s.goal,monster:"👾 Monster HP: "+s.hp,crypto:"💎 "+s.gems+"/"+s.goal})[s.kind];
  document.getElementById("advProgress").style.width=(s.index/s.goal*100)+"%";
