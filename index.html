@@ -143,6 +143,13 @@ input,select,textarea{border:1px solid #b9cdbb}
 .pack-result .collectible-art{width:150px;height:150px;max-width:45vw;margin:0 auto}
 .pack-result .collectible-art svg{width:100%;height:100%}
 
+
+/* Real-time 3D collectible viewer */
+.collectible-art.linket-3d-stage{position:relative;display:block;width:100%;aspect-ratio:1/1;max-width:170px;margin:0 auto 12px;overflow:hidden;border:0;border-radius:22px;background:radial-gradient(ellipse at 50% 38%,#344d82 0%,#18284c 55%,#0b142b 100%);box-shadow:inset 0 0 35px #8ab8ff20,0 10px 24px #0005;touch-action:pan-y;cursor:grab}
+.collectible-art.linket-3d-stage:active{cursor:grabbing}
+.linket-3d-stage canvas{display:block;width:100%;height:100%;outline:0}
+.trade-item-option .linket-3d-stage{width:58px;min-width:58px;height:58px;aspect-ratio:1;margin:0;border-radius:12px}
+.pack-result .linket-3d-stage{width:150px;height:150px;max-width:45vw;margin:0 auto}
 </style>
 <style>
 .trade-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:26px 30px;margin:10px 0 18px;border:1px solid #318b55;border-radius:22px;background:radial-gradient(circle at 85% 20%,#22683b,#102a1a 55%,#09140d);box-shadow:0 12px 32px #0006}.trade-hero h1{margin:5px 0 8px;font-size:clamp(26px,4vw,38px)}.trade-hero p{max-width:650px;margin:0;color:#c8e8d1}.trade-hero-icon{font-size:64px;filter:drop-shadow(0 6px 15px #39ff8855)}.trade-kicker{margin:0 0 5px!important;color:#8dffb5!important;font-size:10px!important;font-weight:1000;letter-spacing:2px}.trade-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}.trade-step{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid #28583a;border-radius:13px;background:#101a13;color:#dfffe8}.trade-step span{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#39e77d;color:#04130a;font-weight:1000}.trade-layout{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr);gap:16px;align-items:start}.trade-panel{padding:20px;text-align:left}.trade-panel-title{display:flex;align-items:center;gap:12px}.trade-panel-title h2{margin:0;font-size:20px}.trade-big-icon{font-size:34px}.trade-search-row{display:flex;gap:8px;align-items:center}.trade-search-row input{min-width:0;margin:0}.trade-search-row button{white-space:nowrap}.trade-player-results{display:grid;gap:7px;margin:12px 0}.trade-player-result{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #28583a;border-radius:12px;background:#0a160e}.trade-player-result button{margin:0;padding:9px 14px}.trade-selected-player{margin-top:12px;padding:12px;border-radius:12px;background:#123a22;color:#a8ffc4;font-weight:800}.trade-subhead{margin:16px 0 8px;color:#a9ffc2;font-weight:900}.trade-choice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;max-height:310px;overflow:auto;padding:2px}.trade-item-option{display:flex;align-items:center;gap:9px;min-width:0;padding:10px;border:1px solid #28583a;border-radius:12px;background:#0a160e;cursor:pointer}.trade-item-option:has(input:checked){border-color:#39ff88;background:#143d25;box-shadow:0 0 0 2px #39ff8822}.trade-item-option input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;margin:0;accent-color:#39e77d}.trade-item-emoji{font-size:27px}.trade-item-info{flex:1;min-width:0}.trade-item-info b{display:block;font-size:13px;overflow-wrap:anywhere}.trade-item-info small{display:block;color:#a9cbb4;font-size:11px}.trade-item-option input[type=number]{width:58px;flex:0 0 58px;margin:0;padding:7px;text-align:center;font-size:12px}.trade-send-row{margin-top:16px;padding-top:12px;border-top:1px solid #28583a}.trade-send-row p{margin:0 0 8px}.trade-send-button{width:100%;padding:15px;font-size:16px}.trade-history-panel{margin-top:18px;padding:20px;text-align:left}.trade-history-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}.trade-history-heading h2{margin:0}.trade-history-card{margin:10px 0;padding:14px;border:1px solid #28583a;border-radius:14px;background:#0a160e}.trade-status{display:inline-block;margin-left:6px;padding:4px 8px;border-radius:20px;background:#1b3826;color:#a8ffc4;font-size:11px;font-weight:900;text-transform:capitalize}.trade-history-card p{color:#c5e4ce;margin:8px 0}.trade-history-actions{display:flex;gap:7px;flex-wrap:wrap}.trade-history-actions button{margin:0;padding:9px 13px}@media(max-width:850px){.trade-layout{grid-template-columns:1fr}}@media(max-width:520px){.trade-hero{padding:20px}.trade-hero-icon{font-size:42px}.trade-steps{grid-template-columns:1fr}.trade-search-row{align-items:stretch;flex-direction:column}.trade-search-row button{width:100%}.trade-history-heading{align-items:flex-start;flex-direction:column}}
@@ -232,98 +239,7 @@ input,select,textarea{border:1px solid #b9cdbb}
  <div class="game-box"><div class="game-top"><h2 id="gameTitle">Game</h2><button class="secondary" onclick="closeMode()">✕ Close</button></div>
  <p id="gameInstructions" class="small"></p><div class="game-hud" id="gameHud"></div><div id="gamePlayArea"></div><p id="gameNote" class="game-note" aria-live="polite"></p></div>
 </div>
-<svg id="linketCollectibleSprite" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>
-<radialGradient id="skinGreen" cx="28%" cy="18%" r="85%"><stop stop-color="#d9ff9b"/><stop offset=".38" stop-color="#82e84c"/><stop offset=".78" stop-color="#39a936"/><stop offset="1" stop-color="#15552b"/></radialGradient>
-<linearGradient id="shellGreen" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#efffa5"/><stop offset=".28" stop-color="#8ce34e"/><stop offset=".7" stop-color="#328b3b"/><stop offset="1" stop-color="#16472b"/></linearGradient>
-<radialGradient id="beeYellow" cx="25%" cy="16%" r="90%"><stop stop-color="#fff9a6"/><stop offset=".38" stop-color="#ffd84d"/><stop offset=".8" stop-color="#e99a19"/><stop offset="1" stop-color="#9b4e12"/></radialGradient>
-<linearGradient id="beeBlack" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#59606b"/><stop offset=".35" stop-color="#242a35"/><stop offset="1" stop-color="#080d16"/></linearGradient>
-<linearGradient id="iceFur" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#fff"/><stop offset=".3" stop-color="#d6f6ff"/><stop offset=".72" stop-color="#83c9ef"/><stop offset="1" stop-color="#3973b2"/></linearGradient>
-<radialGradient id="owlGold" cx="28%" cy="12%" r="90%"><stop stop-color="#fff9cf"/><stop offset=".3" stop-color="#ffdf72"/><stop offset=".68" stop-color="#d18b26"/><stop offset="1" stop-color="#784016"/></radialGradient>
-<linearGradient id="owlFeather" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff4b1"/><stop offset=".45" stop-color="#e7ae42"/><stop offset="1" stop-color="#99551c"/></linearGradient>
-<radialGradient id="dragonPurple" cx="28%" cy="12%" r="90%"><stop stop-color="#e6c3ff"/><stop offset=".32" stop-color="#a06aff"/><stop offset=".7" stop-color="#5941c8"/><stop offset="1" stop-color="#21164e"/></radialGradient>
-<linearGradient id="dragonWing" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffb4ff"/><stop offset=".45" stop-color="#a65bff"/><stop offset="1" stop-color="#34216e"/></linearGradient>
-<radialGradient id="eyeBlue" cx="30%" cy="20%"><stop stop-color="#fff"/><stop offset=".22" stop-color="#bfffff"/><stop offset=".58" stop-color="#35cfff"/><stop offset="1" stop-color="#15528f"/></radialGradient>
-<filter id="mascotShadow" x="-50%" y="-50%" width="200%" height="210%"><feGaussianBlur stdDeviation="5"/></filter>
-<linearGradient id="mascotGloss" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#fff" stop-opacity=".7"/><stop offset=".3" stop-color="#fff" stop-opacity=".16"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#08152c" stop-opacity=".2"/></linearGradient>
-</defs>
-<symbol id="happy-turtle" viewBox="0 0 160 160">
-<ellipse cx="81" cy="143" rx="47" ry="7" fill="#06190f" opacity=".45" filter="url(#mascotShadow)"/>
-<path d="M39 91Q20 81 17 103Q16 122 43 124L58 111M119 91Q140 81 144 103Q145 122 117 124L102 111" fill="url(#skinGreen)" stroke="#286d35" stroke-width="2"/>
-<path d="M43 69Q39 37 81 32Q123 34 127 73L121 106H40Z" fill="#64472d" stroke="#2f241d" stroke-width="3"/>
-<path d="M43 70Q47 39 82 38Q116 39 124 72Q123 91 111 105H52Q41 91 43 70Z" fill="url(#shellGreen)" stroke="#d8ff9d" stroke-width="2.5"/>
-<path d="M82 40L63 66L83 81L109 61M63 66L48 91M83 81L81 103M109 61L126 84" fill="none" stroke="#276537" stroke-width="3.5" opacity=".9"/>
-<path d="M48 66Q59 45 77 44M88 43Q108 44 118 61" fill="none" stroke="#f5ffcb" stroke-width="3" opacity=".7" stroke-linecap="round"/>
-<ellipse cx="82" cy="99" rx="42" ry="34" fill="url(#skinGreen)" stroke="#327b37" stroke-width="2"/>
-<path d="M46 89Q49 71 65 69M99 69Q116 73 120 90" fill="none" stroke="#edffcc" stroke-width="4" opacity=".5" stroke-linecap="round"/>
-<ellipse cx="66" cy="91" rx="9" ry="11" fill="#fff"/><ellipse cx="101" cy="91" rx="9" ry="11" fill="#fff"/>
-<ellipse cx="68" cy="93" rx="4.5" ry="6" fill="#17283a"/><ellipse cx="103" cy="93" rx="4.5" ry="6" fill="#17283a"/>
-<circle cx="69" cy="90" r="2.3" fill="#fff"/><circle cx="104" cy="90" r="2.3" fill="#fff"/>
-<path d="M75 111Q84 120 96 110" fill="none" stroke="#743d37" stroke-width="2.8" stroke-linecap="round"/>
-<ellipse cx="52" cy="108" rx="6" ry="4" fill="#ff9a9a" opacity=".65"/><ellipse cx="113" cy="108" rx="6" ry="4" fill="#ff9a9a" opacity=".65"/>
-<path d="M53 128l-5 8m57-8l7 8" stroke="#286d35" stroke-width="3" stroke-linecap="round"/>
-<path d="M49 137Q82 145 115 137" fill="none" stroke="#eaffb5" stroke-width="2" opacity=".55"/>
-</symbol>
-<symbol id="tiny-bee" viewBox="0 0 160 160">
-<ellipse cx="81" cy="143" rx="39" ry="6" fill="#111522" opacity=".4" filter="url(#mascotShadow)"/>
-<path d="M68 70Q40 19 57 20Q81 20 87 70Z" fill="#dffaff" fill-opacity=".72" stroke="#fff" stroke-width="2"/><path d="M91 69Q103 19 124 27Q136 37 105 81Z" fill="#dffaff" fill-opacity=".65" stroke="#fff" stroke-width="2"/>
-<path d="M59 39Q72 49 75 65M112 42Q105 54 100 68" fill="none" stroke="#8dd8f5" stroke-width="1.8"/>
-<path d="M49 84Q44 55 81 51Q119 53 116 87L108 123Q82 140 55 122Z" fill="url(#beeYellow)" stroke="#995a17" stroke-width="2.5"/>
-<path d="M54 74Q70 83 67 124M94 56Q84 86 100 129" fill="none" stroke="url(#beeBlack)" stroke-width="14"/>
-<path d="M54 78Q62 77 66 84M99 65Q92 91 101 112" fill="none" stroke="#fff2a6" stroke-width="2" opacity=".65"/>
-<ellipse cx="68" cy="88" rx="8.5" ry="10.5" fill="#fff"/><ellipse cx="99" cy="88" rx="8.5" ry="10.5" fill="#fff"/>
-<ellipse cx="70" cy="90" rx="4" ry="5.5" fill="#171d2a"/><ellipse cx="101" cy="90" rx="4" ry="5.5" fill="#171d2a"/>
-<circle cx="71" cy="87" r="2" fill="#fff"/><circle cx="102" cy="87" r="2" fill="#fff"/>
-<path d="M76 108Q84 115 94 107" fill="none" stroke="#75431f" stroke-width="2.6" stroke-linecap="round"/>
-<path d="M67 57Q56 27 43 29M98 56Q111 27 125 29" fill="none" stroke="#342a2a" stroke-width="2.8" stroke-linecap="round"/><circle cx="42" cy="28" r="5" fill="#44302a"/><circle cx="126" cy="28" r="5" fill="#44302a"/>
-<path d="M55 126l-9 10m59-10l10 10" stroke="#33252a" stroke-width="3" stroke-linecap="round"/>
-<path d="M44 97Q34 103 41 111M118 97Q128 103 121 111" fill="none" stroke="#ffe98b" stroke-width="2"/>
-</symbol>
-<symbol id="frost-wolf" viewBox="0 0 160 160">
-<ellipse cx="81" cy="143" rx="48" ry="7" fill="#061a31" opacity=".4" filter="url(#mascotShadow)"/>
-<path d="M40 64L27 15L65 43L82 33L101 43L135 15L127 75Q145 103 122 130L105 141H54L34 119Q17 88 40 64Z" fill="url(#iceFur)" stroke="#528bb9" stroke-width="2.5"/>
-<path d="M41 55L32 24L59 48M120 55L130 24L105 48" fill="#a9e7ff" stroke="#528bb9" stroke-width="2"/>
-<path d="M45 64Q57 52 70 66M91 66Q106 51 119 64" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
-<path d="M47 77Q57 66 75 76M89 76Q106 65 117 77" fill="none" stroke="#79b8df" stroke-width="2" opacity=".6"/>
-<ellipse cx="64" cy="83" rx="9" ry="11" fill="url(#eyeBlue)"/><ellipse cx="105" cy="83" rx="9" ry="11" fill="url(#eyeBlue)"/>
-<ellipse cx="65" cy="84" rx="3" ry="6" fill="#071a36"/><ellipse cx="104" cy="84" rx="3" ry="6" fill="#071a36"/>
-<circle cx="67" cy="79" r="2.5" fill="#fff"/><circle cx="107" cy="79" r="2.5" fill="#fff"/>
-<path d="M68 103Q82 93 98 103L86 119Q82 122 78 118Z" fill="#e8faff" stroke="#6297c1" stroke-width="2"/>
-<path d="M78 105Q85 100 92 105L86 111Z" fill="#294e78"/>
-<path d="M77 119Q86 127 97 118" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
-<path d="M40 104l-13 7m94-7l13 7M55 129l-8 10m51-10l8 10" stroke="#eafaff" stroke-width="5" stroke-linecap="round"/>
-<path d="M51 48l8-10 7 10m27 0l8-10 8 10" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/>
-<path d="M20 52l7-10 7 10-7 9zM138 91l7-9 7 9-7 9zM79 12l6-9 7 9-7 9z" fill="#fff" stroke="#a9eaff" stroke-width="1.4"/>
-</symbol>
-<symbol id="golden-owl" viewBox="0 0 160 160">
-<ellipse cx="80" cy="143" rx="47" ry="7" fill="#2b1a08" opacity=".4" filter="url(#mascotShadow)"/>
-<path d="M34 69L23 16L64 44Q80 34 98 44L137 16L126 77Q145 111 113 137H47Q15 111 34 69Z" fill="url(#owlGold)" stroke="#98601c" stroke-width="2.6"/>
-<path d="M36 61L28 25L59 50M124 61L132 25L101 50" fill="url(#owlFeather)" stroke="#98601c" stroke-width="2"/>
-<path d="M43 103Q25 89 34 72M117 103Q136 88 126 72" fill="none" stroke="#fff0a7" stroke-width="5" opacity=".7"/>
-<g fill="url(#owlFeather)" stroke="#9b601e" stroke-width="1.3"><path d="M42 114Q36 94 49 83Q62 99 53 119Z"/><path d="M55 128Q47 108 62 96Q74 113 65 132Z"/><path d="M105 128Q97 108 112 96Q124 113 115 132Z"/><path d="M118 114Q112 94 125 83Q138 99 129 119Z"/></g>
-<circle cx="59" cy="81" r="21" fill="#fff4d0" stroke="#b47a26" stroke-width="2"/><circle cx="101" cy="81" r="21" fill="#fff4d0" stroke="#b47a26" stroke-width="2"/>
-<circle cx="61" cy="82" r="11" fill="#a55b16"/><circle cx="99" cy="82" r="11" fill="#a55b16"/><circle cx="62" cy="82" r="5.5" fill="#21170d"/><circle cx="98" cy="82" r="5.5" fill="#21170d"/>
-<circle cx="64" cy="78" r="2.6" fill="#fff"/><circle cx="100" cy="78" r="2.6" fill="#fff"/>
-<path d="M80 94L68 109L92 109Z" fill="#f3a22d" stroke="#9a5618" stroke-width="2"/>
-<path d="M47 115l11 7 9-8m46 1l-11 7-9-8M58 132l8 4m36-4l-8 4" fill="none" stroke="#fff2b3" stroke-width="2.4" stroke-linecap="round"/>
-<path d="M66 138l-4 5m32-5l4 5" stroke="#9c5a1d" stroke-width="3" stroke-linecap="round"/>
-<path d="M48 55Q60 45 72 52M88 52Q101 44 114 55" fill="none" stroke="#fffbd5" stroke-width="2" opacity=".7"/>
-</symbol>
-<symbol id="galaxy-dragon" viewBox="0 0 160 160">
-<ellipse cx="81" cy="143" rx="51" ry="7" fill="#0a092a" opacity=".4" filter="url(#mascotShadow)"/>
-<path d="M57 85Q11 39 18 16Q52 18 81 65Q107 18 143 16Q148 51 105 91L123 127L85 144L48 126Z" fill="url(#dragonWing)" stroke="#d18aff" stroke-width="2.5"/>
-<path d="M48 91Q19 81 17 56Q44 55 68 83M115 91Q144 80 143 56Q116 55 94 83" fill="#39227e" stroke="#d18aff" stroke-width="2"/>
-<path d="M51 74L46 42L73 61L85 31L103 61L124 40L118 86Q137 108 112 133L84 144L54 125Q37 99 51 74Z" fill="url(#dragonPurple)" stroke="#5547bd" stroke-width="2.6"/>
-<path d="M53 67L48 43L73 62M102 62L121 42L117 72" fill="#e5b1ff" stroke="#9359d4" stroke-width="2"/>
-<path d="M61 65L68 49L77 65M94 65L103 49L110 67" fill="none" stroke="#f5d2ff" stroke-width="2.5" stroke-linecap="round"/>
-<path d="M56 93Q63 80 77 85M94 85Q108 79 115 93" fill="none" stroke="#e0d2ff" stroke-width="3" stroke-linecap="round"/>
-<ellipse cx="70" cy="91" rx="8.5" ry="10.5" fill="#91ffff"/><ellipse cx="102" cy="91" rx="8.5" ry="10.5" fill="#91ffff"/>
-<ellipse cx="71" cy="92" rx="3" ry="6" fill="#11123b"/><ellipse cx="101" cy="92" rx="3" ry="6" fill="#11123b"/>
-<circle cx="73" cy="87" r="2.5" fill="#fff"/><circle cx="104" cy="87" r="2.5" fill="#fff"/>
-<path d="M77 110Q87 118 97 109" fill="none" stroke="#f1e2ff" stroke-width="2.5" stroke-linecap="round"/>
-<path d="M56 123l-13 12m60-12l13 12" stroke="#a98dff" stroke-width="5" stroke-linecap="round"/>
-<path d="M25 61Q40 70 53 86M135 61Q122 70 108 86" fill="none" stroke="#ffbdff" stroke-width="1.8" opacity=".75"/>
-<g fill="#fff"><circle cx="31" cy="103" r="2.7"/><circle cx="128" cy="111" r="2.7"/><circle cx="82" cy="18" r="3.2"/><circle cx="146" cy="44" r="2.2"/><circle cx="20" cy="124" r="2.2"/></g>
-</symbol></svg>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
@@ -853,10 +769,10 @@ async function refreshSavedGame(){
  update();
 }
 
-const collectibleArtSymbols={"Happy Turtle":"happy-turtle","Tiny Bee":"tiny-bee","Frost Wolf":"frost-wolf","Golden Owl":"golden-owl","Galaxy Dragon":"galaxy-dragon"};
+const collectible3DNames=new Set(["Happy Turtle","Tiny Bee","Frost Wolf","Golden Owl","Galaxy Dragon"]);
 function collectibleArt(name,fallback,extraClass=""){
- const symbol=collectibleArtSymbols[name];
- return symbol?'<div class="collectible-art '+extraClass+'" role="img" aria-label="'+accountSafe(name)+'"><svg viewBox="0 0 160 160" aria-hidden="true"><use href="#'+symbol+'"></use></svg></div>':'<div class="emoji '+extraClass+'">'+fallback+'</div>';
+ if(collectible3DNames.has(name))return '<div class="collectible-art linket-3d-stage '+extraClass+'" data-linket-3d="'+accountSafe(name)+'" role="img" aria-label="'+accountSafe(name)+'"></div>';
+ return '<div class="emoji '+extraClass+'">'+fallback+'</div>';
 }
 function drawCollection(){
  const search=(document.getElementById("collectionSearch")?.value||"").trim().toLowerCase(),rarity=document.getElementById("collectionRarity")?.value||"all",sort=document.getElementById("collectionSort")?.value||"rarity";
@@ -1128,6 +1044,112 @@ function factoryPick(x){const s=modeState;if(!s||s.finished)return;if(x===s.targ
  if(button)button.addEventListener("click",runSignIn);
  const password=document.getElementById("password");
  if(password)password.addEventListener("keydown",function(event){if(event.key==="Enter")runSignIn(event);});
+})();
+</script>
+<script>
+(function(){
+ const stages=new WeakMap();
+ let THREE=null,loading=null;
+ function loadThree(){
+  if(THREE)return Promise.resolve(THREE);
+  if(!loading)loading=import("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js").then(m=>(THREE=m,m));
+  return loading;
+ }
+ function material(color,roughness=.42,metalness=.02){return new THREE.MeshStandardMaterial({color,roughness,metalness});}
+ function sphere(group,x,y,z,sx,sy,sz,mat,detail=32){
+  const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,detail,detail),mat);
+  mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;
+ }
+ function addEyes(g,z,spacing=.34,scale=1){
+  const white=material("#ffffff",.18),iris=material("#16233e",.18),shine=new THREE.MeshBasicMaterial({color:"#ffffff"});
+  for(const x of [-spacing,spacing]){
+   sphere(g,x,.16,z,.105*scale,.14*scale,.055,white);
+   sphere(g,x+.018,.15,z+.048,.052*scale,.085*scale,.025,iris);
+   sphere(g,x-.005,.205,z+.071,.022*scale,.027*scale,.012,shine);
+  }
+ }
+ function makeFigure(name){
+  const g=new THREE.Group();
+  const dark=material("#26334c"),white=material("#fff4dc"),pink=material("#ff9eaa");
+  if(name==="Happy Turtle"){
+   const green=material("#65c94b"),light=material("#a7ed72"),shell=material("#8b542d",.34),plate=material("#d59a49");
+   sphere(g,0,-.12,0,.59,.52,.48,green);
+   sphere(g,0,-.03,-.22,.48,.39,.39,shell);
+   sphere(g,0,.02,-.20,.42,.34,.35,plate);
+   for(let i=0;i<6;i++){const a=i*Math.PI/3;sphere(g,Math.cos(a)*.25,.04+Math.sin(a)*.22,.035,.17,.16,.08,light);}
+   sphere(g,0,.12,.40,.43,.38,.38,green);addEyes(g,.72,.19,1.0);
+   for(const x of [-.43,.43])sphere(g,x,-.48,.18,.19,.16,.22,light);
+   sphere(g,0,-.27,.72,.12,.07,.035,pink);
+  }else if(name==="Tiny Bee"){
+   const yellow=material("#ffc83d"),black=material("#242b3c"),wing= new THREE.MeshPhysicalMaterial({color:"#c9f2ff",transparent:true,opacity:.72,roughness:.12,transmission:.2});
+   sphere(g,0,-.02,0,.48,.58,.43,yellow);
+   for(const y of [-.28,.05,.36]){const stripe=sphere(g,0,y,.015,.49,.105,.44,black);stripe.rotation.z=.05;}
+   sphere(g,0,.42,.25,.39,.31,.34,yellow);addEyes(g,.55,.16,.9);
+   for(const x of [-.28,.28]){const w=sphere(g,x*.85,.72,-.06,.23,.35,.055,wing);w.rotation.z=x<0?.55:-.55;}
+   const antenna=material("#33283a");for(const x of [-.18,.18]){const a=sphere(g,x,.86,.22,.035,.20,.035,antenna);a.rotation.z=x<0?-.35:.35;sphere(g,x*1.8,1.02,.22,.07,.07,.07,antenna);}
+  }else if(name==="Frost Wolf"){
+   const ice=material("#b9e8ff"),blue=material("#6cb4e7"),inner=material("#e18eaa");
+   sphere(g,0,-.12,0,.56,.58,.43,ice);
+   sphere(g,0,.28,.24,.47,.48,.4,blue);
+   for(const x of [-.30,.30]){const ear=sphere(g,x,.72,.18,.19,.34,.16,ice);ear.rotation.z=x<0?-.25:.25;sphere(g,x,.73,.315,.105,.22,.045,inner);}
+   addEyes(g,.60,.20,1);
+   sphere(g,0,-.02,.62,.30,.22,.20,ice);sphere(g,0,.10,.79,.12,.08,.06,dark);
+   for(const x of [-.48,.48])sphere(g,x,-.48,.05,.18,.16,.24,ice);
+  }else if(name==="Golden Owl"){
+   const gold=material("#e7a72e",.28,.32),pale=material("#ffe6a0",.3,.18),orange=material("#f08a27",.28,.12);
+   sphere(g,0,-.08,0,.57,.67,.42,gold);
+   for(const x of [-.37,.37]){const ear=sphere(g,x,.62,-.02,.19,.31,.16,gold);ear.rotation.z=x<0?-.45:.45;}
+   for(const x of [-.22,.22])sphere(g,x,.23,.37,.25,.26,.12,pale);
+   addEyes(g,.49,.22,.95);
+   const beak=new THREE.Mesh(new THREE.ConeGeometry(.13,.25,5),orange);beak.position.set(0,.02,.53);beak.rotation.x=.15;g.add(beak);
+   for(let i=0;i<3;i++)sphere(g,0,-.35-i*.10,.39,.36-i*.04,.055,.04,pale);
+  }else{
+   const purple=material("#8754e8",.3,.12),lav=material("#d4a4ff",.3,.08),wing=material("#5936a9",.38,.1),horn=material("#f2d5ff",.25,.25);
+   sphere(g,0,-.12,0,.55,.58,.43,purple);
+   sphere(g,0,.28,.27,.46,.44,.38,purple);
+   for(const x of [-.27,.27]){const h=new THREE.Mesh(new THREE.ConeGeometry(.12,.43,8),horn);h.position.set(x,.78,.15);h.rotation.z=x<0?-.35:.35;g.add(h);}
+   for(const x of [-.48,.48]){const w=sphere(g,x,.10,-.18,.42,.52,.07,wing);w.rotation.z=x<0?-.55:.55;}
+   addEyes(g,.62,.18,1);
+   sphere(g,0,.02,.67,.22,.14,.12,lav);
+   for(let i=0;i<5;i++)sphere(g,(i-2)*.17,-.40,.39,.07,.09,.07,lav);
+   const tail=sphere(g,.50,-.43,-.12,.13,.48,.13,purple);tail.rotation.z=-.8;
+  }
+  // Soft feet and subtle glossy highlights complete the toy-like sculpt.
+  sphere(g,-.22,-.60,.19,.20,.12,.25,material("#f3c66e"));
+  sphere(g,.22,-.60,.19,.20,.12,.25,material("#f3c66e"));
+  return g;
+ }
+ function mount(el){
+  if(stages.has(el)||!el.isConnected)return;
+  loadThree().then(T=>{
+   if(!el.isConnected||stages.has(el))return;
+   const scene=new T.Scene();
+   const camera=new T.PerspectiveCamera(34,1,.1,100);camera.position.set(0,.18,5.2);
+   const renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:"low-power"});
+   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
+   renderer.outputColorSpace=T.SRGBColorSpace;
+   renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
+   el.replaceChildren(renderer.domElement);
+   scene.add(new T.HemisphereLight(0xe5f2ff,0x27334f,2.0));
+   const key=new T.DirectionalLight(0xffffff,3.1);key.position.set(-3,4,5);scene.add(key);
+   const rim=new T.PointLight(0x73baff,18,9);rim.position.set(3,1,2);scene.add(rim);
+   const figure=makeFigure(el.dataset.linket3d);scene.add(figure);
+   const floor=new T.Mesh(new T.CircleGeometry(1.0,48),new T.MeshBasicMaterial({color:0x8ebcff,transparent:true,opacity:.10}));
+   floor.rotation.x=-Math.PI/2;floor.position.y=-.78;floor.position.z=-.1;scene.add(floor);
+   const resize=()=>{const w=Math.max(1,el.clientWidth),h=Math.max(1,el.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
+   resize();const observer=new ResizeObserver(resize);observer.observe(el);
+   let dragging=false,lastX=0;
+   renderer.domElement.addEventListener("pointerdown",e=>{dragging=true;lastX=e.clientX;renderer.domElement.setPointerCapture(e.pointerId);});
+   renderer.domElement.addEventListener("pointermove",e=>{if(dragging){figure.rotation.y+=(e.clientX-lastX)*.012;lastX=e.clientX;}});
+   renderer.domElement.addEventListener("pointerup",()=>dragging=false);
+   renderer.domElement.addEventListener("pointercancel",()=>dragging=false);
+   let frame=0;const animate=()=>{if(!el.isConnected){observer.disconnect();renderer.dispose();stages.delete(el);return;}frame=requestAnimationFrame(animate);if(!dragging)figure.rotation.y+=.006;figure.position.y=Math.sin(performance.now()*.0018)*.035;renderer.render(scene,camera);};
+   stages.set(el,{renderer,observer,animate:frame});animate();
+  }).catch(err=>{el.textContent="3D preview unavailable";el.title="Please check your connection and refresh.";});
+ }
+ function scan(){document.querySelectorAll("[data-linket-3d]").forEach(mount);}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",scan);else scan();
+ new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
 </body>
