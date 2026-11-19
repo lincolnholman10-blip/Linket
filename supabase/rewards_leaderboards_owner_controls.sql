@@ -274,3 +274,56 @@ insert into public.linket_quests(title,description,target_type,target_value,rewa
 select 'Token Saver','Hold at least 500 tokens.','tokens',500,75,true
 where not exists(select 1 from public.linket_quests where title='Token Saver');
 notify pgrst, 'reload schema';
+
+
+create table if not exists public.linket_quest_claims (
+ user_id uuid not null references auth.users(id) on delete cascade,
+ quest_id uuid not null references public.linket_quests(id) on delete cascade,
+ claimed_at timestamptz not null default now(),
+ primary key(user_id,quest_id)
+);
+alter table public.linket_quest_claims enable row level security;
+revoke all on public.linket_quest_claims from anon,authenticated;
+
+drop function if exists public.linket_get_quest_board();
+create or replace function public.linket_get_quest_board()
+returns table(id uuid,title text,description text,target_type text,target_value integer,reward_tokens integer,enabled boolean,progress numeric,claimed boolean)
+language plpgsql security definer set search_path=public,auth
+as $$
+declare v_user uuid:=auth.uid(); v_tokens numeric; v_collectibles bigint; v_wins bigint; v_best bigint;
+begin
+ if v_user is null then raise exception 'Please sign in.'; end if;
+ select coalesce(p.tokens,0) into v_tokens from public.profiles p where p.id=v_user;
+ select coalesce(sum(o.quantity),0) into v_collectibles from public.owned_collectibles o where o.user_id=v_user;
+ select count(*) filter(where g.won),coalesce(max(g.score),0) into v_wins,v_best from public.linket_game_results g where g.user_id=v_user;
+ return query select q.id,q.title,q.description,q.target_type,q.target_value,q.reward_tokens,q.enabled,
+   case q.target_type when 'wins' then v_wins when 'score' then v_best when 'tokens' then v_tokens when 'collectibles' then v_collectibles else 0 end,
+   exists(select 1 from public.linket_quest_claims qc where qc.user_id=v_user and qc.quest_id=q.id)
+ from public.linket_quests q where q.enabled=true order by q.created_at desc limit 30;
+end $$;
+
+create or replace function public.linket_claim_quest(p_quest_id uuid)
+returns table(claimed boolean,reward_tokens integer,message text)
+language plpgsql security definer set search_path=public,auth
+as $$
+declare v_user uuid:=auth.uid(); q public.linket_quests%rowtype; v_progress numeric;
+begin
+ if v_user is null then raise exception 'Please sign in.'; end if;
+ select * into q from public.linket_quests where id=p_quest_id and enabled=true;
+ if not found then raise exception 'Quest is not available.'; end if;
+ if exists(select 1 from public.linket_quest_claims where user_id=v_user and quest_id=p_quest_id) then
+  return query select false,0,'You already claimed this quest reward.'; return;
+ end if;
+ if q.target_type='wins' then select count(*) into v_progress from public.linket_game_results where user_id=v_user and won;
+ elsif q.target_type='score' then select coalesce(max(score),0) into v_progress from public.linket_game_results where user_id=v_user;
+ elsif q.target_type='tokens' then select coalesce(tokens,0) into v_progress from public.profiles where id=v_user;
+ else select coalesce(sum(quantity),0) into v_progress from public.owned_collectibles where user_id=v_user;
+ end if;
+ if v_progress<q.target_value then return query select false,0,'Quest goal has not been reached yet.'; return; end if;
+ insert into public.linket_quest_claims(user_id,quest_id) values(v_user,p_quest_id);
+ update public.profiles set tokens=coalesce(tokens,0)+q.reward_tokens where id=v_user;
+ return query select true,q.reward_tokens,'Quest reward claimed!';
+end $$;
+grant execute on function public.linket_get_quest_board() to authenticated;
+grant execute on function public.linket_claim_quest(uuid) to authenticated;
+notify pgrst, 'reload schema';
