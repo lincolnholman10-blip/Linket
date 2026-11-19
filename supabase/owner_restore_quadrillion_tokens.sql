@@ -1,11 +1,13 @@
 -- Linket: restore the signed-in owner's balance to one quadrillion tokens.
 -- Run this entire migration once in the Supabase SQL Editor.
--- Existing profiles policies are captured and recreated unchanged around the type change.
+-- Existing profiles policies and triggers are captured and recreated unchanged around the type change.
 
 do $migration$
 declare
   v_policy_defs jsonb := '[]'::jsonb;
+  v_trigger_defs jsonb := '[]'::jsonb;
   v_policy record;
+  v_trigger record;
   v_saved jsonb;
   v_sql text;
 begin
@@ -47,9 +49,31 @@ begin
     execute format('drop policy %I on public.profiles', v_policy.polname);
   end loop;
 
+  -- Triggers such as the token activity logger can depend directly on the
+  -- tokens column definition. Save their exact CREATE statements and drop
+  -- them temporarily; their trigger functions remain in place.
+  for v_trigger in
+    select t.tgname, pg_get_triggerdef(t.oid, true) as trigger_sql
+    from pg_trigger t
+    where t.tgrelid = 'public.profiles'::regclass
+      and not t.tgisinternal
+  loop
+    v_trigger_defs := v_trigger_defs || jsonb_build_array(jsonb_build_object(
+      'name', v_trigger.tgname,
+      'definition', v_trigger.trigger_sql
+    ));
+    execute format('drop trigger %I on public.profiles', v_trigger.tgname);
+  end loop;
+
   alter table public.profiles
     alter column tokens type numeric(20,0)
     using coalesce(tokens, 0)::numeric(20,0);
+
+  -- Restore triggers exactly as they were before the type change.
+  for v_saved in select value from jsonb_array_elements(v_trigger_defs)
+  loop
+    execute v_saved->>'definition';
+  end loop;
 
   -- Recreate every profiles policy with its original command, roles and expressions.
   for v_saved in select value from jsonb_array_elements(v_policy_defs)
