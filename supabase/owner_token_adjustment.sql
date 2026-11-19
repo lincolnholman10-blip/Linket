@@ -1,5 +1,6 @@
 -- Linket owner token adjustment
--- Run once in the Supabase SQL Editor.
+-- Uses the same owner-check helper as the working Owner Dashboard functions.
+-- Run this updated file in the Supabase SQL Editor.
 
 create or replace function public.linket_owner_adjust_tokens(
   p_user_id uuid,
@@ -15,10 +16,7 @@ declare
   v_current numeric;
   v_new_balance numeric;
 begin
-  if not exists (
-    select 1 from public.profiles
-    where id = auth.uid() and is_owner = true
-  ) then
+  if auth.uid() is null or not public.linket_owner_dashboard_is_owner() then
     raise exception 'Owner access required.';
   end if;
 
@@ -28,7 +26,7 @@ begin
   if p_amount is null or p_amount < 1 or p_amount > 1000000000 then
     raise exception 'Token amount must be between 1 and 1,000,000,000.';
   end if;
-  if p_direction not in (-1, 1) then
+  if p_direction is null or p_direction not in (-1, 1) then
     raise exception 'Invalid token adjustment direction.';
   end if;
 
@@ -53,4 +51,5 @@ end;
 $$;
 
 revoke all on function public.linket_owner_adjust_tokens(uuid, integer, integer) from public;
+revoke all on function public.linket_owner_adjust_tokens(uuid, integer, integer) from anon;
 grant execute on function public.linket_owner_adjust_tokens(uuid, integer, integer) to authenticated;
