@@ -804,6 +804,34 @@ async function adminPublishAnnouncement(){
  catch(e){ownerMessage("Could not publish announcement: "+e.message);}
 }
 
+async function ownerAdjustTokens(direction){
+ if(!player||!player.owner)return;
+ const target=document.getElementById("ownerTarget").value;
+ const amount=Number(document.getElementById("ownerTokenAmount").value);
+ if(!target||!Number.isSafeInteger(amount)||amount<1||amount>1000000000){
+  ownerMessage("Choose a player and enter an amount from 1 to 1,000,000,000.");return;
+ }
+ const selected=ownerPlayers.find(p=>String(p.player_id)===String(target));
+ if(!selected){ownerMessage("That player could not be found. Refresh the dashboard and try again.");return;}
+ const action=direction>0?"add":"remove";
+ if(!confirm("Are you sure you want to "+action+" "+amount.toLocaleString()+" tokens "+(direction>0?"to ":"from ")+selected.username+"?"))return;
+ ownerMessage((direction>0?"Adding":"Removing")+" tokens…");
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_owner_adjust_tokens",{
+   p_user_id:target,p_amount:amount,p_direction:direction>0?1:-1
+  });
+  if(error)throw error;
+  if(target===session.user.id){
+   await refreshSavedGame();
+   drawCollection();
+   renderOwnerDashboard();
+  }
+  await loadOwnerDashboard();
+  ownerMessage("Updated "+selected.username+"'s balance to "+Number(data).toLocaleString()+" tokens.");
+ }catch(e){
+  ownerMessage("Could not adjust tokens: "+(e.message||e));
+ }
+}
 function selectOwnerPlayer(id){
   const selected=ownerPlayers.find(p=>String(p.player_id)===String(id));
   if(!selected){ownerMessage("That player could not be found. Refresh the dashboard and try again.");return;}
