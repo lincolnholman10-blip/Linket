@@ -438,6 +438,7 @@ async function linketLogin(){
  }catch(e){showError(e.message||"Sign-in failed. Please try again.");}
  finally{setBusy(false);}
 }
+window.linketLogin = linketLogin;
 async function createAccount(){
  if(busy)return;
  const username=document.getElementById("username").value.trim();
@@ -1124,8 +1125,8 @@ function factoryPick(x){const s=modeState;if(!s||s.finished)return;if(x===s.targ
  function runSignIn(event){
   if(event)event.preventDefault();
   try{
-   if(typeof linketLogin!=="function")throw new Error("The sign-in code did not load. Please refresh the page.");
-   linketLogin();
+   if(typeof window.linketLogin!=="function")throw new Error("The sign-in code did not initialize. Please refresh the page.");
+   window.linketLogin();
   }catch(error){
    const status=document.getElementById("error");
    if(status)status.textContent=error.message||"Sign-in could not start. Please refresh the page.";
