@@ -33,7 +33,7 @@
  <ellipse cx="51" cy="103" rx="7" ry="5" fill="#ff9b9b" opacity=".7"/><ellipse cx="114" cy="103" rx="7" ry="5" fill="#ff9b9b" opacity=".7"/>
  <path d="M52 134l-7 7m62-7l8 7" stroke="#246b37" stroke-width="3.2" stroke-linecap="round"/>
  <path d="M55 131l-3 6m54-6l4 6" stroke="#c5ff8a" stroke-width="2" stroke-linecap="round"/>
-<path d="M0 0H160V160H0Z" fill="url(#toyGloss)" opacity=".28" pointer-events="none"/></symbol>
+</symbol>
 <symbol id="tiny-bee" viewBox="0 0 160 160">
  <ellipse cx="81" cy="139" rx="46" ry="7" fill="#111321" opacity=".45" filter="url(#softShadow)"/>
  <path d="M69 71Q38 14 57 22Q83 25 86 70Z" fill="url(#wing)" stroke="#a5e8ff" stroke-width="1.8"/>
@@ -51,7 +51,7 @@
  <circle cx="44" cy="26" r="6" fill="#4c3525"/><circle cx="124" cy="26" r="6" fill="#4c3525"/>
  <path d="M49 122l-13 12m72-12l13 12" stroke="#33252a" stroke-width="3.2" stroke-linecap="round"/>
  <path d="M42 91Q33 97 38 104M122 91Q132 97 126 104" fill="none" stroke="#ffe989" stroke-width="2.2" stroke-linecap="round"/>
-<path d="M0 0H160V160H0Z" fill="url(#toyGloss)" opacity=".28" pointer-events="none"/></symbol>
+</symbol>
 <symbol id="frost-wolf" viewBox="0 0 160 160">
  <ellipse cx="82" cy="139" rx="53" ry="8" fill="#071b35" opacity=".55" filter="url(#softShadow)"/>
  <path d="M39 58L29 13L62 39L81 29L104 39L135 13L128 66Q147 94 126 122L108 139H51L31 112Q19 82 39 58Z" fill="url(#wolfFur)" stroke="#477fae" stroke-width="2.8"/>
@@ -67,7 +67,7 @@
  <path d="M40 99l-17 8m97-8l17 8M55 125l-9 14m51-14l9 14" stroke="#e9fbff" stroke-width="6" stroke-linecap="round"/>
  <path d="M53 51l7-11 7 10m28 0l8-11 7 10" fill="none" stroke="#fff" stroke-width="2.2" opacity=".8"/>
  <path d="M20 48l8-11 8 11-8 11zM139 85l7-9 7 9-7 9zM79 10l6-9 7 9-7 9z" fill="#fff" stroke="#a6eaff" stroke-width="1.5"/>
-<path d="M0 0H160V160H0Z" fill="url(#toyGloss)" opacity=".28" pointer-events="none"/></symbol>
+</symbol>
 <symbol id="golden-owl" viewBox="0 0 160 160">
  <ellipse cx="80" cy="139" rx="51" ry="8" fill="#2c1b07" opacity=".5" filter="url(#softShadow)"/>
  <path d="M34 67L23 15L63 42Q80 31 98 42L137 15L126 75Q145 112 113 135H47Q16 111 34 67Z" fill="url(#goldOwl)" stroke="#9a641d" stroke-width="2.8"/>
@@ -82,7 +82,7 @@
  <path d="M45 113l12 8 9-9m49 1l-12 8-9-9M57 128l9 5m37-5l-9 5" fill="none" stroke="#fff1a8" stroke-width="2.8" stroke-linecap="round"/>
  <path d="M66 135l-4 6m32-6l4 6" stroke="#a85e1a" stroke-width="3.2" stroke-linecap="round"/>
  <path d="M47 54Q60 44 72 51M88 51Q102 43 115 54" fill="none" stroke="#fffbd1" stroke-width="2.2" opacity=".7"/>
-<path d="M0 0H160V160H0Z" fill="url(#toyGloss)" opacity=".28" pointer-events="none"/></symbol>
+</symbol>
 <symbol id="galaxy-dragon" viewBox="0 0 160 160">
  <ellipse cx="81" cy="140" rx="57" ry="8" fill="#090a2a" opacity=".55" filter="url(#softShadow)"/>
  <path d="M57 83Q12 34 18 15Q54 18 82 63Q105 18 143 15Q148 53 105 88L123 123L86 141L48 122Z" fill="url(#dragonWing)" stroke="#d18aff" stroke-width="2.8"/>
@@ -98,5 +98,5 @@
  <path d="M56 120l-14 13m61-13l14 13" stroke="#a78bff" stroke-width="6" stroke-linecap="round"/>
  <path d="M25 58Q40 67 53 84M135 58Q122 68 108 84" fill="none" stroke="#ffb6ff" stroke-width="1.8" opacity=".8"/>
  <g fill="#fff"><circle cx="31" cy="99" r="3"/><circle cx="128" cy="107" r="3"/><circle cx="82" cy="18" r="3.5"/><circle cx="146" cy="42" r="2.5"/><circle cx="20" cy="121" r="2.5"/><circle cx="111" cy="28" r="2"/></g>
-<path d="M0 0H160V160H0Z" fill="url(#toyGloss)" opacity=".28" pointer-events="none"/></symbol>
+</symbol>
 </svg>
