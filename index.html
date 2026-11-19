@@ -261,7 +261,8 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div class="card owner-section"><h2>📣 Announcements</h2><label for="adminAnnouncementTitle">Announcement title</label><input id="adminAnnouncementTitle" maxlength="100" placeholder="Announcement title">
 <label for="adminAnnouncementMessage">Message</label><textarea id="adminAnnouncementMessage" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="Message for all Linket players"></textarea>
 <button onclick="adminPublishAnnouncement()">Publish announcement</button></div>
-<div class="card owner-section"><h2>🎨 Collectible catalog</h2><p class="small">Browse the collectibles built into Linket, grouped by rarity. This is a live catalog preview; editing pack contents and drop rates requires a database-backed catalog editor.</p><div id="ownerCollectibleCatalog" class="grid"></div></div><div class="card owner-section"><h2>🎉 Live events</h2><p class="small">Publish event announcements to all players. Include the event dates, rules, and rewards in the details.</p><label for="adminEventTitle">Event title</label><input id="adminEventTitle" maxlength="100" placeholder="Weekend Token Boost"><label for="adminEventDetails">Event details and dates</label><textarea id="adminEventDetails" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="What is happening, when it starts and ends, and what players can earn…"></textarea><button onclick="adminPublishEvent()">📣 Announce event</button></div><div class="card owner-section"><h2>🧾 Recent owner activity</h2><div id="ownerActivity" class="activity-list">Loading activity…</div></div>
+<div class="card owner-section"><h2>🎨 Collectible manager</h2><p class="small">Edit the saved catalog, rarity, pack label, display emoji, and drop weight. The current pack-opening RPC still controls actual rewards until its odds logic is migrated to this catalog.</p><div id="ownerCollectibleCatalog" class="grid"></div><div class="owner-tools-grid"><div><label for="ownerItemId">Collectible ID (existing name for edits)</label><input id="ownerItemId" maxlength="80" placeholder="Happy Turtle"><label for="ownerItemName">Display name</label><input id="ownerItemName" maxlength="80" placeholder="Happy Turtle"><label for="ownerItemEmoji">Emoji</label><input id="ownerItemEmoji" maxlength="12" value="✨"><label for="ownerItemRarity">Rarity</label><select id="ownerItemRarity"><option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythical</option></select><label for="ownerItemPack">Pack</label><input id="ownerItemPack" maxlength="80" value="All Packs"><label for="ownerItemWeight">Drop weight</label><input id="ownerItemWeight" type="number" min="0" max="1000000" step="0.0001" value="1"><label><input id="ownerItemEnabled" type="checkbox" checked> Enabled in catalog</label><button onclick="ownerSaveCollectible()">💾 Save collectible</button></div></div></div>
+<div class="card owner-section"><h2>🎉 Live event manager</h2><p class="small">Create drafts, schedule events, activate them, or mark them ended. Token reward amounts are stored with each event; automatic reward distribution is not enabled yet.</p><input id="ownerEventId" type="hidden"><label for="adminEventTitle">Event title</label><input id="adminEventTitle" maxlength="100" placeholder="Weekend Token Boost"><label for="adminEventDetails">Event details</label><textarea id="adminEventDetails" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="Tell players what is happening…"></textarea><label for="adminEventStart">Starts</label><input id="adminEventStart" type="datetime-local"><label for="adminEventEnd">Ends</label><input id="adminEventEnd" type="datetime-local"><label for="adminEventReward">Token reward</label><input id="adminEventReward" type="number" min="0" max="1000000" value="0"><label for="adminEventStatus">Status</label><select id="adminEventStatus"><option value="draft">Draft</option><option value="scheduled">Scheduled</option><option value="active">Active now</option><option value="ended">Ended</option></select><div class="owner-actions"><button onclick="ownerSaveEvent()">💾 Save event</button><button class="secondary" onclick="ownerClearEventForm()">Clear form</button></div><div id="ownerEventsList" class="activity-list">Load events after running the SQL setup.</div></div><div class="card owner-section"><h2>🧾 Recent owner activity</h2><div id="ownerActivity" class="activity-list">Loading activity…</div></div>
 </section>
 
 </div>
@@ -689,6 +690,38 @@ async function adminPublishEvent(){
   ownerMessage("Event announcement published!");await loadAnnouncements();await loadOwnerDashboard();
  }catch(e){ownerMessage("Could not publish event announcement: "+e.message);}
 }
+async function ownerLoadCatalog(){
+ const box=document.getElementById("ownerCollectibleCatalog");if(!box)return;
+ const {data,error}=await supabaseClient.rpc("linket_owner_list_collectibles");if(error)throw error;
+ box.innerHTML=(data||[]).map(x=>'<div class="card collection-card"><div class="emoji">'+ownerEscape(x.emoji)+'</div><strong>'+ownerEscape(x.display_name)+'</strong><p>'+ownerEscape(x.rarity)+' · '+ownerEscape(x.pack_name)+'</p><p class="small">Weight: '+Number(x.drop_weight)+' · '+(x.enabled?'Enabled':'Disabled')+'</p><button class="secondary" onclick="ownerEditCollectible(\''+ownerEscape(x.collectible_id).replace(/'/g,"&#39;")+'\')">Edit</button></div>').join("")||'<p>No catalog entries yet.</p>';
+ window.ownerCatalogRows=data||[];
+}
+function ownerEditCollectible(id){
+ const x=(window.ownerCatalogRows||[]).find(v=>v.collectible_id===id);if(!x)return;
+ document.getElementById("ownerItemId").value=x.collectible_id;document.getElementById("ownerItemName").value=x.display_name;document.getElementById("ownerItemEmoji").value=x.emoji;document.getElementById("ownerItemRarity").value=x.rarity;document.getElementById("ownerItemPack").value=x.pack_name;document.getElementById("ownerItemWeight").value=x.drop_weight;document.getElementById("ownerItemEnabled").checked=x.enabled;
+}
+async function ownerSaveCollectible(){
+ const id=document.getElementById("ownerItemId").value.trim(),name=document.getElementById("ownerItemName").value.trim(),emoji=document.getElementById("ownerItemEmoji").value.trim(),rarity=document.getElementById("ownerItemRarity").value,pack=document.getElementById("ownerItemPack").value.trim(),weight=Number(document.getElementById("ownerItemWeight").value),enabled=document.getElementById("ownerItemEnabled").checked;
+ if(!id||!name||!Number.isFinite(weight)||weight<0){ownerMessage("Enter a collectible ID, name, and valid drop weight.");return;}
+ try{const {error}=await supabaseClient.rpc("linket_owner_save_collectible",{p_collectible_id:id,p_display_name:name,p_emoji:emoji,p_rarity:rarity,p_pack_name:pack,p_drop_weight:weight,p_enabled:enabled});if(error)throw error;ownerMessage("Collectible catalog saved.");await ownerLoadCatalog();}
+ catch(e){ownerMessage("Could not save collectible: "+e.message);}
+}
+function ownerClearEventForm(){["ownerEventId","adminEventTitle","adminEventDetails","adminEventStart","adminEventEnd"].forEach(id=>document.getElementById(id).value="");document.getElementById("adminEventReward").value="0";document.getElementById("adminEventStatus").value="draft";}
+async function ownerSaveEvent(){
+ const id=document.getElementById("ownerEventId").value||null,title=document.getElementById("adminEventTitle").value.trim(),message=document.getElementById("adminEventDetails").value.trim(),start=document.getElementById("adminEventStart").value,end=document.getElementById("adminEventEnd").value,reward=Number(document.getElementById("adminEventReward").value),status=document.getElementById("adminEventStatus").value;
+ try{const {error}=await supabaseClient.rpc("linket_owner_save_event",{p_event_id:id,p_title:title,p_message:message,p_starts_at:start?new Date(start).toISOString():null,p_ends_at:end?new Date(end).toISOString():null,p_reward_tokens:reward,p_status:status});if(error)throw error;ownerMessage("Event saved.");ownerClearEventForm();await ownerLoadEvents();}
+ catch(e){ownerMessage("Could not save event: "+e.message);}
+}
+async function ownerLoadEvents(){
+ const box=document.getElementById("ownerEventsList");if(!box)return;
+ const {data,error}=await supabaseClient.rpc("linket_owner_list_events");if(error)throw error;
+ box.innerHTML=(data||[]).map(e=>'<div class="activity-item"><strong>'+ownerEscape(e.title)+'</strong><p>'+ownerEscape(e.status)+' · '+Number(e.reward_tokens)+' tokens</p><p class="small">'+ownerEscape(e.message)+'</p><small>'+(e.starts_at?new Date(e.starts_at).toLocaleString():"No start")+' → '+(e.ends_at?new Date(e.ends_at).toLocaleString():"No end")+'</small><button class="secondary" onclick="ownerEditEvent(\''+e.id+'\')">Edit</button></div>').join("")||"No events created yet.";
+ window.ownerEventRows=data||[];
+}
+function ownerEditEvent(id){
+ const e=(window.ownerEventRows||[]).find(x=>x.id===id);if(!e)return;
+ document.getElementById("ownerEventId").value=e.id;document.getElementById("adminEventTitle").value=e.title;document.getElementById("adminEventDetails").value=e.message;document.getElementById("adminEventStart").value=e.starts_at?new Date(e.starts_at).toISOString().slice(0,16):"";document.getElementById("adminEventEnd").value=e.ends_at?new Date(e.ends_at).toISOString().slice(0,16):"";document.getElementById("adminEventReward").value=e.reward_tokens;document.getElementById("adminEventStatus").value=e.status;
+}
 function ownerMessage(message){const el=document.getElementById("ownerStatus");if(el)el.textContent=message||"";}
 function ownerEscape(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
 async function loadOwnerDashboard(){
@@ -716,8 +749,7 @@ async function loadOwnerDashboard(){
   document.getElementById("ownerAverageCollectibles").textContent=averageCollectibles;
   document.getElementById("ownerTopPlayer").textContent=topPlayer?topPlayer.username:"—";
   document.getElementById("ownerBannedCount").textContent=ownerPlayers.filter(p=>p.is_banned).length.toLocaleString();
-  const catalog=document.getElementById("ownerCollectibleCatalog");
-  if(catalog)catalog.innerHTML=items.map(i=>'<div class="card collection-card"><div class="emoji">'+i[1]+'</div><strong>'+ownerEscape(i[0])+'</strong><p><span class="rarity '+i[2]+'">'+i[2]+'</span></p></div>').join("");
+  await ownerLoadCatalog();await ownerLoadEvents();
 
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
