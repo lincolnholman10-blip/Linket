@@ -724,7 +724,7 @@ function draw(){
  document.getElementById("modeGrid").innerHTML=modes.map((m,i)=>{
   const key=modeKeys[i],level=modeUnlocks[key]||1;
   return '<div class="card"><div class="emoji">'+m[0]+'</div><h2>'+m[1]+'</h2><p class="small">'+["Build defenses and stop the monster wave.","Search the mine for gold while avoiding traps.","Prepare customer orders before time runs out.","Sort products on the conveyor belt."][i]+'</p><p><b>Unlocked stage: '+level+'/3</b></p><button onclick="startMode('+i+')">Play Stage '+level+'</button><button class="secondary" onclick="openModeMultiplayer(\''+m[1]+'\')">🌐 Play Multiplayer</button>'+(level<3?'<button class="secondary" onclick="unlockMode(\''+key+'\')">🧠 Answer a question to unlock Stage '+(level+1)+'</button>':'<p>🏆 All stages unlocked!</p>')+'</div>';
- }).join("")+(isWinterfestActive()?'<div class="card winterfest-mode-card"><div class="emoji">🎄❄️</div><h2>Winterfest Challenge</h2><p class="small">A limited-time Christmas adventure! Catch snowflakes solo or race friends in a festive multiplayer quiz.</p><button onclick="startChristmasMode()">❄️ Play Solo</button><button class="secondary" onclick="openChristmasMultiplayer()">🌐 Play Multiplayer</button><p class="small">Available Nov 17, 2026 – Jan 5, 2027</p></div>':"");
+ }).join("")+renderExtraModes()+(isWinterfestActive()?'<div class="card winterfest-mode-card"><div class="emoji">🎄❄️</div><h2>Winterfest Challenge</h2><p class="small">A limited-time Christmas adventure! Catch snowflakes solo or race friends in a festive multiplayer quiz.</p><button onclick="startChristmasMode()">❄️ Play Solo</button><button class="secondary" onclick="openChristmasMultiplayer()">🌐 Play Multiplayer</button><p class="small">Available Nov 17, 2026 – Jan 5, 2027</p></div>':"");
  document.getElementById("packGrid").innerHTML=packs.map((p,i)=>'<div class="card mystery-pack-card" onclick="choosePack('+i+')"><div class="mystery-pack-wrap"><div class="mystery-pack-seal">✦ LINKET ✦</div><div class="mystery-pack-emoji">'+p[0]+'</div><div class="mystery-pack-label">MYSTERY<br>COLLECTIBLE</div><div class="mystery-pack-shine"></div></div><h2>'+p[1]+'</h2><p class="pack-price">'+p[2]+' tokens <span>per pack</span></p><p class="small">Tap to choose how many to open</p><button class="pack-open-btn" onclick="event.stopPropagation();choosePack('+i+')">✨ Choose Packs</button></div>').join("");
  renderCollectibleIndex();drawCollection();update();if(player.owner)renderOwnerDashboard();
 }
@@ -1216,6 +1216,81 @@ async function modeWin(message){
 async function loadModeUnlocks(){if(!session)return;try{const {data,error}=await supabaseClient.rpc("linket_get_mode_unlocks");if(error)throw error;(data||[]).forEach(x=>{modeUnlocks[x.mode_key]=Number(x.unlocked_level)||1;});draw();}catch(e){console.warn("Could not load saved quiz progress: "+e.message);}}
 async function unlockMode(key){const level=modeUnlocks[key]||1;if(level>=3)return;const q=modeQuestions[key][level-1];const answer=prompt(q[0]+"\\n0: "+q[1][0]+"\\n1: "+q[1][1]+"\\n2: "+q[1][2]+"\\nEnter 0, 1, or 2");if(answer===null)return;const n=Number(answer);if(!Number.isInteger(n)||n<0||n>2){alert("Enter 0, 1, or 2.");return;}try{const {data,error}=await supabaseClient.rpc("linket_answer_mode_question",{p_mode_key:key,p_answer:n});if(error)throw error;modeUnlocks[key]=Number(data)||level;alert("Correct! Level "+modeUnlocks[key]+" unlocked.");draw();}catch(e){alert(e.message||"Not quite—try again.");}}
 function startMode(id){if(modeTimer){clearInterval(modeTimer);modeTimer=null;}if(id===0)startTower();if(id===1)startGold();if(id===2)startCafe();if(id===3)startFactory();}
+
+const linketAdventureQuestions=[
+ ["Which planet is known as the Red Planet?",["Mars","Venus","Jupiter","Mercury"],0],
+ ["How many sides does a hexagon have?",["Five","Six","Seven","Eight"],1],
+ ["What is the largest ocean on Earth?",["Atlantic","Indian","Arctic","Pacific"],3],
+ ["Which animal is a mammal?",["Shark","Dolphin","Frog","Trout"],1],
+ ["What gas do plants absorb?",["Oxygen","Nitrogen","Carbon dioxide","Helium"],2],
+ ["What is 9 × 7?",["56","63","72","79"],1],
+ ["Which instrument has keys?",["Violin","Flute","Piano","Drum"],2],
+ ["What is the freezing point of water in Celsius?",["0°","10°","32°","100°"],0],
+ ["Which shape has three sides?",["Square","Triangle","Circle","Pentagon"],1],
+ ["What is the closest star to Earth?",["Sirius","The Sun","Polaris","Vega"],1],
+ ["Which continent is the largest?",["Africa","Europe","Asia","Australia"],2],
+ ["What do bees make?",["Milk","Honey","Silk","Wax only"],1]
+];
+const linketExtraModes=[
+ {id:"classic",icon:"📝",name:"Classic Quiz",desc:"Answer a full quiz and build a score streak."},
+ {id:"racing",icon:"🏎️",name:"Racing",desc:"Race your Linket kart to the finish with every correct answer."},
+ {id:"battle",icon:"⚔️",name:"Battle Royale",desc:"Stay in the game by answering correctly before your three hearts run out."},
+ {id:"fishing",icon:"🎣",name:"Fishing Frenzy",desc:"Answer correctly to reel in fish and fill your catch basket."},
+ {id:"monster",icon:"👾",name:"Monster Brawl",desc:"Power up and defeat a monster by answering its challenge questions."},
+ {id:"crypto",icon:"💎",name:"Crypto Hack",desc:"Solve questions to collect gems and reach the vault target."}
+];
+function renderExtraModes(){
+ return linketExtraModes.map(m=>'<div class="card"><div class="emoji">'+m.icon+'</div><h2>'+m.name+'</h2><p class="small">'+m.desc+'</p><button onclick="startLinketAdventure(\''+m.id+'\')">▶ Play '+m.name+'</button><button class="secondary" onclick="openModeMultiplayer(\''+m.name+'\')">🌐 Play Multiplayer</button></div>').join("");
+}
+function startLinketAdventure(id){
+ if(modeTimer){clearInterval(modeTimer);modeTimer=null;}
+ const names={classic:"Classic Quiz",racing:"Racing",battle:"Battle Royale",fishing:"Fishing Frenzy",monster:"Monster Brawl",crypto:"Crypto Hack"};
+ const goals={classic:10,racing:10,battle:10,fishing:8,monster:5,crypto:10};
+ modeState={finished:false,kind:id,index:0,score:0,streak:0,lives:3,progress:0,goal:goals[id],hp:5,gems:0,questions:linketAdventureQuestions.slice().sort(()=>Math.random()-.5)};
+ modeShell(linketExtraModes.find(m=>m.id===id).icon+" "+names[id],
+  ({classic:"Answer 10 questions. Build your streak and earn your best score.",racing:"Get 10 answers right to drive your kart across the finish line.",battle:"You have 3 hearts. A wrong answer costs one. Survive the challenge!",fishing:"Catch 8 fish by choosing the correct answer. Wrong casts lose a turn.",monster:"Defeat the monster with 5 successful hits. Wrong answers let it strike back.",crypto:"Collect 10 gems by solving questions. Each correct answer earns a gem."})[id],
+  '<span>⭐ Score: <b id="advScore">0</b></span><span>🔥 Streak: <b id="advStreak">0</b></span><span id="advStat"></span>',
+  '<div class="game-progress"><i id="advProgress"></i></div><h2 id="advQuestion" style="text-align:center"></h2><div id="advChoices" class="grid"></div><p id="advFeedback" class="game-note"></p>');
+ renderLinketAdventureQuestion();
+}
+function renderLinketAdventureQuestion(){
+ const s=modeState;if(!s||s.finished)return;
+ if(s.index>=s.goal){modeWin(({classic:"Quiz complete! Great work!",racing:"🏁 You crossed the finish line!",battle:"🏆 You survived the Battle Royale!",fishing:"🐟 Amazing catch! Your basket is full!",monster:"👾 Monster defeated! Linket champion!",crypto:"💎 Vault unlocked! You collected every gem!"})[s.kind]);return;}
+ const q=s.questions[s.index%s.questions.length];
+ document.getElementById("advQuestion").textContent=q[0];
+ document.getElementById("advChoices").innerHTML=q[1].map((choice,i)=>'<button class="game-choice" onclick="answerLinketAdventure('+i+')">'+choice+'</button>').join("");
+ document.getElementById("advScore").textContent=s.score;
+ document.getElementById("advStreak").textContent=s.streak;
+ const stat=document.getElementById("advStat");
+ stat.textContent=({classic:"📝 Question "+(s.index+1)+"/"+s.goal,racing:"🏎️ Finish "+s.progress+"%",battle:"❤️ ".repeat(s.lives),fishing:"🐟 "+s.score+"/"+s.goal,monster:"👾 Monster HP: "+s.hp,crypto:"💎 "+s.gems+"/"+s.goal})[s.kind];
+ document.getElementById("advProgress").style.width=(s.index/s.goal*100)+"%";
+}
+function answerLinketAdventure(choice){
+ const s=modeState;if(!s||s.finished)return;
+ const q=s.questions[s.index%s.questions.length],correct=choice===q[2];
+ document.querySelectorAll("#advChoices button").forEach(b=>b.disabled=true);
+ if(correct){
+  s.score+=100+Math.min(s.streak,5)*20;s.streak++;
+  if(s.kind==="racing")s.progress=Math.min(100,s.progress+10);
+  if(s.kind==="fishing")s.gems++;
+  if(s.kind==="monster")s.hp--;
+  if(s.kind==="crypto")s.gems++;
+  document.getElementById("advFeedback").textContent=({classic:"✅ Correct! Keep your streak going!",racing:"🚀 Boost! Your kart speeds ahead!",battle:"🛡️ Correct! You stay in the arena!",fishing:"🐟 A catch! Nice work!",monster:"💥 Direct hit! The monster is weakening!",crypto:"💎 Gem secured! Keep hacking!"})[s.kind];
+ }else{
+  s.streak=0;
+  if(s.kind==="battle")s.lives--;
+  if(s.kind==="monster")s.hp++;
+  document.getElementById("advFeedback").textContent="❌ Not quite! The correct answer is "+q[1][q[2]]+".";
+ }
+ s.index++;
+ if(s.kind==="battle"&&s.lives<=0){s.finished=true;modeNote("💔 You were knocked out! You answered "+s.score/100+" questions' worth of points.");return;}
+ if(s.kind==="monster"&&s.hp<=0){modeWin("👾 Monster defeated! Linket champion!");return;}
+ if(s.kind==="monster"&&s.hp>=9){s.finished=true;modeNote("The monster overpowered you. Try another strategy!");return;}
+ if(s.kind==="fishing"&&s.index>=s.goal&&s.gems<s.goal){s.finished=true;modeNote("Fishing trip over! You caught "+s.gems+" fish. Try again!");return;}
+ if(s.kind==="crypto"&&s.index>=s.goal&&s.gems<s.goal){s.finished=true;modeNote("Hack ended. You collected "+s.gems+" gems. Try again!");return;}
+ setTimeout(()=>{if(modeState===s&&!s.finished)renderLinketAdventureQuestion();},650);
+}
+
 function openModeMultiplayer(modeName){
  tab("liveGames");
  const status=document.getElementById("liveRoomStatus");
