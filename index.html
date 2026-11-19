@@ -186,8 +186,41 @@ input,select,textarea{border:1px solid #b9cdbb}
 <style>
 .trade-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:26px 30px;margin:10px 0 18px;border:1px solid #318b55;border-radius:22px;background:radial-gradient(circle at 85% 20%,#22683b,#102a1a 55%,#09140d);box-shadow:0 12px 32px #0006}.trade-hero h1{margin:5px 0 8px;font-size:clamp(26px,4vw,38px)}.trade-hero p{max-width:650px;margin:0;color:#c8e8d1}.trade-hero-icon{font-size:64px;filter:drop-shadow(0 6px 15px #39ff8855)}.trade-kicker{margin:0 0 5px!important;color:#8dffb5!important;font-size:10px!important;font-weight:1000;letter-spacing:2px}.trade-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}.trade-step{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid #28583a;border-radius:13px;background:#101a13;color:#dfffe8}.trade-step span{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#39e77d;color:#04130a;font-weight:1000}.trade-layout{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr);gap:16px;align-items:start}.trade-panel{padding:20px;text-align:left}.trade-panel-title{display:flex;align-items:center;gap:12px}.trade-panel-title h2{margin:0;font-size:20px}.trade-big-icon{font-size:34px}.trade-search-row{display:flex;gap:8px;align-items:center}.trade-search-row input{min-width:0;margin:0}.trade-search-row button{white-space:nowrap}.trade-player-results{display:grid;gap:7px;margin:12px 0}.trade-player-result{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #28583a;border-radius:12px;background:#0a160e}.trade-player-result button{margin:0;padding:9px 14px}.trade-selected-player{margin-top:12px;padding:12px;border-radius:12px;background:#123a22;color:#a8ffc4;font-weight:800}.trade-subhead{margin:16px 0 8px;color:#a9ffc2;font-weight:900}.trade-choice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;max-height:310px;overflow:auto;padding:2px}.trade-item-option{display:flex;align-items:center;gap:9px;min-width:0;padding:10px;border:1px solid #28583a;border-radius:12px;background:#0a160e;cursor:pointer}.trade-item-option:has(input:checked){border-color:#39ff88;background:#143d25;box-shadow:0 0 0 2px #39ff8822}.trade-item-option input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;margin:0;accent-color:#39e77d}.trade-item-emoji{font-size:27px}.trade-item-info{flex:1;min-width:0}.trade-item-info b{display:block;font-size:13px;overflow-wrap:anywhere}.trade-item-info small{display:block;color:#a9cbb4;font-size:11px}.trade-item-option input[type=number]{width:58px;flex:0 0 58px;margin:0;padding:7px;text-align:center;font-size:12px}.trade-send-row{margin-top:16px;padding-top:12px;border-top:1px solid #28583a}.trade-send-row p{margin:0 0 8px}.trade-send-button{width:100%;padding:15px;font-size:16px}.trade-history-panel{margin-top:18px;padding:20px;text-align:left}.trade-history-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}.trade-history-heading h2{margin:0}.trade-history-card{margin:10px 0;padding:14px;border:1px solid #28583a;border-radius:14px;background:#0a160e}.trade-status{display:inline-block;margin-left:6px;padding:4px 8px;border-radius:20px;background:#1b3826;color:#a8ffc4;font-size:11px;font-weight:900;text-transform:capitalize}.trade-history-card p{color:#c5e4ce;margin:8px 0}.trade-history-actions{display:flex;gap:7px;flex-wrap:wrap}.trade-history-actions button{margin:0;padding:9px 13px}@media(max-width:850px){.trade-layout{grid-template-columns:1fr}}@media(max-width:520px){.trade-hero{padding:20px}.trade-hero-icon{font-size:42px}.trade-steps{grid-template-columns:1fr}.trade-search-row{align-items:stretch;flex-direction:column}.trade-search-row button{width:100%}.trade-history-heading{align-items:flex-start;flex-direction:column}}
 </style>
+<style>
+.gift-overlay{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:20px;background:rgba(5,10,28,.78);backdrop-filter:blur(7px);animation:giftFadeIn .22s ease-out}
+.gift-overlay.hidden{display:none!important}
+.gift-popup{position:relative;overflow:hidden;width:min(100%,430px);padding:30px 28px 26px;text-align:center;border:2px solid #ffca68;border-radius:28px;background:radial-gradient(circle at 50% 0,#7045a9 0,#30245f 48%,#172447 100%);box-shadow:0 22px 80px #0009,0 0 35px #ff589e55;animation:giftPop .35s cubic-bezier(.2,1.4,.4,1)}
+.gift-popup:before,.gift-popup:after{content:"";position:absolute;width:170px;height:170px;border-radius:50%;background:#ff589e22;filter:blur(3px);pointer-events:none}
+.gift-popup:before{top:-100px;left:-75px}.gift-popup:after{right:-95px;bottom:-110px;background:#ffd16622}
+.gift-confetti{position:relative;font-size:23px;letter-spacing:12px;margin-bottom:5px;animation:giftWiggle 2s ease-in-out infinite}
+.gift-present{position:relative;display:grid;place-items:center;width:104px;height:104px;margin:0 auto 12px;border-radius:28px;background:linear-gradient(145deg,#ffdf80,#ff9c42);font-size:62px;box-shadow:0 10px 28px #ffae4555,inset 0 3px 0 #fff8;transform:rotate(-5deg);animation:giftBounce 1.8s ease-in-out infinite}
+.gift-kicker{position:relative;color:#ffd98a;font-size:10px;font-weight:1000;letter-spacing:2.4px}
+.gift-popup h2{position:relative;margin:9px 0;font-size:clamp(24px,6vw,31px);color:#fff;text-shadow:0 3px 12px #0005}
+.gift-popup p{position:relative;margin:0 auto 14px;max-width:330px;color:#e7e7ff;font-size:16px;line-height:1.55;overflow-wrap:anywhere}
+.gift-sparkles{position:relative;margin:12px 0 17px;font-size:20px;letter-spacing:9px}
+.gift-popup button{position:relative;min-width:170px;margin:0;padding:14px 24px;border-radius:999px;background:linear-gradient(100deg,#ffdf72,#ff9d54);color:#42244d;font-size:16px;font-weight:1000;box-shadow:0 6px 0 #b85d48,0 10px 22px #0003}
+.gift-popup button:active{transform:translateY(3px);box-shadow:0 3px 0 #b85d48}
+@keyframes giftFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes giftPop{from{opacity:0;transform:translateY(18px) scale(.88)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes giftBounce{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(4deg) translateY(-7px)}}
+@keyframes giftWiggle{0%,100%{transform:rotate(0)}50%{transform:rotate(4deg)}}
+@media(prefers-reduced-motion:reduce){.gift-popup,.gift-confetti,.gift-present{animation:none}}
+</style>
+
 </head>
 <body>
+<div id="giftNotification" class="gift-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="giftNotificationTitle">
+ <div class="gift-popup">
+  <div class="gift-confetti" aria-hidden="true">✨ 🎉 ✨</div>
+  <div class="gift-present" aria-hidden="true">🎁</div>
+  <div class="gift-kicker">A LITTLE LINKET SURPRISE</div>
+  <h2 id="giftNotificationTitle">You got a gift!</h2>
+  <p id="giftNotificationMessage">Someone sent you something special!</p>
+  <div class="gift-sparkles" aria-hidden="true">⭐ 💖 ⭐</div>
+  <button type="button" onclick="closeGiftNotification()">Awesome! 🎉</button>
+ </div>
+</div>
+
 <header><div class="logo">✨ Link<span>et</span></div><div class="tokens">🪙 Tokens: <span id="tokens">0</span></div></header>
 <main>
 <div id="login" class="login">
@@ -357,14 +390,29 @@ async function sendOwnerGiftNotification(userId,title,message){
  });
  if(error)throw error;
 }
+let linketGiftQueue=[];
+function showNextGiftNotification(){
+ const overlay=document.getElementById("giftNotification");
+ if(!overlay||!linketGiftQueue.length){if(overlay)overlay.classList.add("hidden");return;}
+ const gift=linketGiftQueue.shift();
+ document.getElementById("giftNotificationTitle").textContent=gift.title||"You got a gift!";
+ document.getElementById("giftNotificationMessage").textContent=gift.message||"Someone sent you something special!";
+ overlay.classList.remove("hidden");
+}
+function closeGiftNotification(){
+ const overlay=document.getElementById("giftNotification");
+ if(overlay)overlay.classList.add("hidden");
+ if(linketGiftQueue.length)setTimeout(showNextGiftNotification,180);
+}
 async function loadGiftNotifications(){
  if(!session)return;
  try{
   const {data,error}=await supabaseClient.rpc("linket_player_take_gift_notifications");
   if(error)throw error;
-  (data||[]).forEach(n=>{
-   alert("🎁 "+n.title+"\n\n"+n.message);
-  });
+  if(data&&data.length){
+   linketGiftQueue.push(...data);
+   if(document.getElementById("giftNotification")?.classList.contains("hidden"))showNextGiftNotification();
+  }
  }catch(e){
   console.warn("Gift notifications could not load:",e.message||e);
  }
