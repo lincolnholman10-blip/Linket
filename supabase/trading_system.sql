@@ -132,3 +132,16 @@ grant execute on function public.linket_trade_create(uuid,jsonb,jsonb) to authen
 grant execute on function public.linket_trade_respond(uuid,boolean) to authenticated;
 grant execute on function public.linket_trade_cancel(uuid) to authenticated;
 grant execute on function public.linket_trade_list() to authenticated;
+
+create or replace function public.linket_trade_player_inventory(p_player_id uuid)
+returns table(collectible_id text, quantity integer)
+language sql security definer set search_path=public
+as $$
+ select o.collectible_id, o.quantity
+ from public.owned_collectibles o
+ where auth.uid() is not null and p_player_id is not null
+   and o.user_id=p_player_id and o.quantity>0
+ order by o.collectible_id;
+$$;
+revoke all on function public.linket_trade_player_inventory(uuid) from public;
+grant execute on function public.linket_trade_player_inventory(uuid) to authenticated;
