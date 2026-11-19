@@ -231,3 +231,34 @@ grant execute on function public.linket_owner_list_quests() to authenticated;
 grant execute on function public.linket_owner_save_achievement(text,text,text,text,text,integer,boolean) to authenticated;
 grant execute on function public.linket_owner_list_achievements() to authenticated;
 notify pgrst, 'reload schema';
+
+
+create or replace function public.linket_get_daily_status()
+returns table(claimed_today boolean,current_streak integer,total_claims bigint,reward_preview integer,next_claim_at timestamptz)
+language plpgsql security definer set search_path=public,auth
+as $$
+declare v_user uuid:=auth.uid(); v_last date; v_streak integer; v_total bigint; v_enabled boolean; v_base integer; v_bonus integer; v_cap integer;
+begin
+ if v_user is null then raise exception 'Please sign in.'; end if;
+ select enabled,base_reward,streak_bonus,max_streak_bonus into v_enabled,v_base,v_bonus,v_cap from public.linket_daily_settings where id=true;
+ select last_claim_date,streak,total_claims into v_last,v_streak,v_total from public.linket_daily_claims where user_id=v_user;
+ return query select (v_last=(now() at time zone 'UTC')::date),coalesce(v_streak,0),coalesce(v_total,0),
+   case when coalesce(v_enabled,true) then greatest(0,v_base+least(case when v_last=(now() at time zone 'UTC')::date-1 then coalesce(v_streak,0) else 0 end,v_cap)*v_bonus) else 0 end,
+   (date_trunc('day',now() at time zone 'UTC')+interval '1 day') at time zone 'UTC';
+end $$;
+
+create or replace function public.linket_get_player_progress()
+returns table(tokens numeric,collectibles bigint,wins bigint,best_score bigint)
+language plpgsql security definer set search_path=public,auth
+as $$
+begin
+ if auth.uid() is null then raise exception 'Please sign in.'; end if;
+ return query select coalesce(p.tokens,0)::numeric,
+   coalesce((select sum(o.quantity)::bigint from public.owned_collectibles o where o.user_id=auth.uid()),0),
+   coalesce((select count(*)::bigint from public.linket_game_results g where g.user_id=auth.uid() and g.won),0),
+   coalesce((select max(g.score)::bigint from public.linket_game_results g where g.user_id=auth.uid()),0)
+ from public.profiles p where p.id=auth.uid();
+end $$;
+grant execute on function public.linket_get_daily_status() to authenticated;
+grant execute on function public.linket_get_player_progress() to authenticated;
+notify pgrst, 'reload schema';
