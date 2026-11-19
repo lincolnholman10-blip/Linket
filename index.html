@@ -1187,7 +1187,7 @@ function factoryPick(x){const s=modeState;if(!s||s.finished)return;if(x===s.targ
    const red=material("#ed654c");sphere(g,0,-.12,0,.58,.38,.40,red);for(const x of [-.5,-.25,.25,.5]){const leg=sphere(g,x,-.45,0,.09,.26,.09,red);leg.rotation.z=x<0?-.5:.5;}addEyes(g,.35,.20,.7);
   }else if(name==="Happy Turtle"){
    const green=material("#65c94b");sphere(g,0,-.1,0,.58,.48,.42,green);sphere(g,0,0,-.2,.46,.34,.34,material("#9b6237"));sphere(g,0,.12,.40,.40,.34,.34,green);addEyes(g,.70,.18,.9);
-  }  }else{
+  }else{
    const purple=material("#8754e8",.3,.12),lav=material("#d4a4ff",.3,.08),wing=material("#5936a9",.38,.1),horn=material("#f2d5ff",.25,.25);
    sphere(g,0,-.12,0,.55,.58,.43,purple);
    sphere(g,0,.28,.27,.46,.44,.38,purple);
