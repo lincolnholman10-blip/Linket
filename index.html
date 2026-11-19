@@ -377,6 +377,8 @@ async function loadProfile(user){
  await loadGameData();
  showGame();
  await loadGiftNotifications();
+ if(window.linketGiftNotificationRefresh)clearInterval(window.linketGiftNotificationRefresh);
+ window.linketGiftNotificationRefresh=setInterval(()=>{if(session)loadGiftNotifications();},15000);
 }
 async function linketLogin(){
  if(busy)return;
