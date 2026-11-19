@@ -232,7 +232,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 </section><section id="account" class="panel"><h1>👤 My Account</h1><p>Your Linket account information.</p><div id="accountDetails" class="grid"></div><div class="card" style="max-width:520px;margin:20px auto"><h2>👋 Leaving Linket?</h2><p class="small">You can sign out of your account here.</p><button onclick="logout()">🚪 Log out</button></div></section><section id="liveGames" class="panel"><h1>🌐 Live Games</h1><p>Create a room and share its code, or enter a friend&#39;s code to join their room.</p><div class="grid" id="liveRoomEntry"><div class="card"><h2>➕ Create a Room</h2><p>Start a waiting room and invite friends.</p><button onclick="createLiveRoom()">Create Room</button></div><div class="card"><h2>🔑 Join a Room</h2><input id="liveJoinCode" maxlength="6" placeholder="Enter 6-character code" style="text-transform:uppercase"><button onclick="joinLiveRoom()">Join Room</button></div></div><div id="liveRoomStatus" style="margin-top:18px"></div></section><section id="locker" class="panel"><h1>📚 Your Collection</h1><p id="count"></p><div class="collection-toolbar"><input id="collectionSearch" type="search" placeholder="🔎 Search collectibles..." oninput="drawCollection()"><select id="collectionRarity" onchange="drawCollection()"><option value="all">All rarities</option><option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythical</option></select><select id="collectionSort" onchange="drawCollection()"><option value="rarity">Sort: Rarity</option><option value="name">Sort: Name</option><option value="quantity">Sort: Quantity owned</option><option value="newest">Sort: Collected first</option></select></div><div id="collectionStats" class="collection-stats"></div><div class="grid" id="collection"></div></section>
 <section id="ownerDashboard" class="panel">
 <h1>👑 Owner Dashboard</h1><p class="small">Private owner controls. Player changes are saved directly to Supabase.</p>
-<div class="owner-actions"><button onclick="loadOwnerDashboard()">↻ Refresh dashboard</button><button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button><button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000 tokens</button></div>
+<div class="owner-actions"><button onclick="loadOwnerDashboard()">↻ Refresh dashboard</button><button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button><button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000,000,000,000 tokens</button></div>
 <p id="ownerStatus" class="small" role="status" aria-live="polite"></p>
 <div class="card owner-section"><h2>📊 Game overview</h2><div class="grid owner-stats"><div class="card"><div class="emoji">📈</div><h3 id="ownerAverageTokens">—</h3><p>Average tokens per player</p></div><div class="card"><div class="emoji">🏆</div><h3 id="ownerTopPlayer">—</h3><p>Top token holder</p></div><div class="card"><div class="emoji">🎒</div><h3 id="ownerAverageCollectibles">—</h3><p>Average collectibles per player</p></div><div class="card"><div class="emoji">🚫</div><h3 id="ownerBannedCount">—</h3><p>Banned accounts</p></div></div><p class="small">Calculated from live player records.</p></div>
 <div class="grid owner-stats">
@@ -873,12 +873,13 @@ async function ownerUnlockAll(){
 }
 async function ownerRestoreTokens(){
  if(!player||!player.owner)return;
+ if(!confirm("Restore your token balance to exactly 1,000,000,000,000,000 tokens?"))return;
  try{
-  const {data,error}=await supabaseClient.rpc("linket_owner_restore_tokens");
+  const {data,error}=await supabaseClient.rpc("linket_owner_restore_quadrillion_tokens");
   if(error)throw error;
-  player.tokens=Number(data)||0;profile.tokens=player.tokens;
-  update();renderOwnerDashboard();
-  alert("Your 1,000,000 tokens have been saved to Supabase.");
+  player.tokens=Number(data);profile.tokens=player.tokens;
+  update();await loadOwnerDashboard();
+  alert("Your balance has been restored to 1,000,000,000,000,000 tokens.");
  }catch(e){alert("Could not restore tokens: "+e.message);}
 }
 async function refreshSavedGame(){
