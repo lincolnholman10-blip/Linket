@@ -150,6 +150,13 @@ input,select,textarea{border:1px solid #b9cdbb}
 .linket-mascot-art:after{content:"";position:absolute;width:145%;height:32%;top:8%;left:-22%;transform:rotate(-24deg);background:linear-gradient(90deg,transparent,#ffffff45,transparent);pointer-events:none;z-index:2}
 .mascot-emoji{position:relative;z-index:1;display:grid;place-items:center;width:76%;height:72%;font-size:clamp(48px,8vw,82px);line-height:1;filter:drop-shadow(0 5px 0 #173d27) drop-shadow(0 8px 5px #0005);transform:translateY(2px)}
 .mascot-nameplate{position:relative;z-index:3;max-width:88%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:5px 12px;border:2px solid #fff;border-radius:999px;background:#102b1b;color:#f4fff6;font-size:clamp(9px,1.5vw,12px);font-weight:1000;letter-spacing:.4px;text-shadow:0 1px 2px #0008;box-shadow:0 3px 0 #06140b}
+.mascot-detail{position:absolute;z-index:2;right:11%;bottom:24%;display:grid;place-items:center;width:34px;height:34px;border:2px solid #fff;border-radius:50%;background:#102b1b;color:#fff;font-size:19px;box-shadow:0 3px 0 #06140b,0 4px 8px #0006;transform:rotate(9deg)}
+.linket-mascot-art[data-mascot="Frost Wolf"] .mascot-detail,.linket-mascot-art[data-mascot="Moon Moth"] .mascot-detail{animation:mascotFloat 2.4s ease-in-out infinite}
+.linket-mascot-art[data-mascot="Robot Buddy"] .mascot-nameplate{border-radius:8px;letter-spacing:1px}
+@keyframes mascotFloat{50%{transform:translateY(-5px) rotate(-8deg)}}
+.trade-item-option .mascot-detail{width:19px;height:19px;right:2px;bottom:2px;font-size:11px;border-width:1px}
+.trade-item-option .mascot-spark{display:none}
+.pack-result .mascot-detail{width:42px;height:42px;font-size:24px}
 .mascot-spark{position:absolute;z-index:1;color:#fff7c9;text-shadow:0 2px 4px #0006;font-weight:1000}
 .mascot-spark-a{top:12%;left:12%;font-size:22px}.mascot-spark-b{top:20%;right:12%;font-size:17px}
 .linket-mascot-art[data-mascot*="Frost"],.linket-mascot-art[data-mascot*="Crystal"],.linket-mascot-art[data-mascot*="Pearl"]{--mascot-bg:#55bde8;--mascot-glow:#e5fbff}
@@ -791,9 +798,40 @@ async function refreshSavedGame(){
  update();
 }
 
+const collectibleLooks={
+ "Happy Turtle":["#55c96b","#c9ff91","🌿","Shell-patterned happy turtle"],
+ "Tiny Bee":["#e8b52e","#fff3a3","🍯","Honeycomb and tiny wings"],
+ "Bouncy Bunny":["#e98fbd","#ffe0f0","🥕","Long ears and carrot"],
+ "Robot Buddy":["#6497b8","#c9f3ff","⚙️","Metal bolts and glowing circuits"],
+ "Frost Wolf":["#55a9db","#dff8ff","❄️","Icy fur and snowflakes"],
+ "Golden Owl":["#d99a2b","#fff0a6","👑","Golden feathers and crown"],
+ "Crystal Cat":["#63b6df","#e4fbff","💎","Crystal facets and gem"],
+ "Lumi Fox":["#e98a43","#ffe1a9","✨","Glowing fox tail and sparkles"],
+ "Galaxy Dragon":["#7755d8","#e4caff","🌌","Galaxy scales and stars"],
+ "Starwing":["#8b74e8","#f2eaff","⭐","Starry wings and horn"],
+ "Seashell Snail":["#d98c67","#ffe1c2","🐚","Spiral shell and ocean bubbles"],
+ "Surfer Seal":["#55b8c8","#d9ffff","🏄","Surfboard and ocean waves"],
+ "Crab Pal":["#e66a53","#ffd1a9","🫧","Big claws and sea bubbles"],
+ "Coral Turtle":["#39bda7","#d3fff0","🪸","Coral shell and reef details"],
+ "Pearl Dolphin":["#4abdd2","#d8ffff","🫧","Pearl shine and water splashes"],
+ "Tidal Phoenix":["#e66a52","#ffe0a0","🌊","Flaming feathers and ocean crest"],
+ "Moon Moth":["#9279d8","#f0e8ff","🌙","Moon-dusted wings and antennae"],
+ "Astro Pup":["#6489c8","#d9edff","🚀","Space helmet and orbit ring"],
+ "Comet Cat":["#d879ad","#ffe1f2","☄️","Comet trail and star markings"],
+ "Nebula Fox":["#8061d4","#e9d9ff","🌠","Nebula tail and cosmic dust"],
+ "Solar Dragon":["#df9d2d","#fff0a4","☀️","Sunfire horns and radiant scales"],
+ "Void Unicorn":["#6650b7","#dfd2ff","🌀","Mystic horn and void aura"],
+ "Puppy Pal":["#c58b61","#ffe0bd","🦴","Floppy ears and puppy paws"],
+ "Corgi Buddy":["#d78d4d","#ffe0a8","🧡","Short legs and big ears"],
+ "Dalmatian Dash":["#d8dce5","#ffffff","🐾","Dalmatian spots and speedy paws"],
+ "Shiba Star":["#d68a45","#ffe0a8","🌟","Shiba cheeks and star charm"],
+ "Golden Retriever":["#d9a34a","#fff0bd","🎾","Golden coat and tennis ball"],
+ "Cosmic Wolf":["#586ca8","#dce6ff","🌌","Cosmic fur and constellation marks"]
+};
 function collectibleArt(name,fallback,extraClass=""){
- const safeName=accountSafe(name),safeEmoji=String(fallback||"✨");
- return '<div class="collectible-art linket-mascot-art '+extraClass+'" data-mascot="'+safeName+'" role="img" aria-label="'+safeName+'"><span class="mascot-spark mascot-spark-a">✦</span><span class="mascot-spark mascot-spark-b">✧</span><span class="mascot-emoji">'+safeEmoji+'</span><span class="mascot-nameplate">'+safeName+'</span></div>';
+ const safeName=accountSafe(name),safeEmoji=String(fallback||"✨"),look=collectibleLooks[name]||["#55b879","#d9ffe5","✦",name];
+ const bg=look[0],glow=look[1],detail=look[2],description=look[3];
+ return '<div class="collectible-art linket-mascot-art '+extraClass+'" data-mascot="'+safeName+'" role="img" aria-label="'+safeName+': '+accountSafe(description)+'" style="--mascot-bg:'+bg+';--mascot-glow:'+glow+'"><span class="mascot-spark mascot-spark-a">✦</span><span class="mascot-spark mascot-spark-b">✧</span><span class="mascot-detail">'+detail+'</span><span class="mascot-emoji">'+safeEmoji+'</span><span class="mascot-nameplate">'+safeName+'</span></div>';
 }
 function drawCollection(){
  const search=(document.getElementById("collectionSearch")?.value||"").trim().toLowerCase(),rarity=document.getElementById("collectionRarity")?.value||"all",sort=document.getElementById("collectionSort")?.value||"rarity";
