@@ -182,6 +182,51 @@ input,select,textarea{border:1px solid #b9cdbb}
 #accountDetails label{color:#c4e8cf}
 #accountDetails .small{color:#b7d9c1}
 #accountDetails h3{color:#effff4}
+
+/* Animated Linket adventure modes */
+.adventure-scene{position:relative;min-height:190px;margin:12px 0 18px;padding:18px;border:2px solid #28613c;border-radius:20px;overflow:hidden;background:linear-gradient(145deg,#142b1c,#07110a);box-shadow:inset 0 0 35px #0008}
+.adventure-scene .scene-title{font-weight:900;letter-spacing:1px;color:#baffd0;text-align:center}
+.scene-race{background:linear-gradient(#8bdcff 0 58%,#65a84d 58% 68%,#343b45 68%);border-color:#a6eaff}
+.race-track{position:absolute;left:0;right:0;bottom:12px;height:54px;background:repeating-linear-gradient(90deg,#252a31 0 48px,#303640 48px 96px);border-top:5px solid #fff;border-bottom:5px solid #fff}
+.race-track:after{content:"";position:absolute;left:0;right:0;top:22px;border-top:4px dashed #fff}
+.race-kart{position:absolute;z-index:2;bottom:35px;left:4%;font-size:42px;filter:drop-shadow(0 5px 4px #0008);transition:left .55s cubic-bezier(.2,.8,.2,1);animation:kartBounce .45s ease-in-out infinite alternate}
+.scene-fishing{background:linear-gradient(#8be4ff 0 48%,#1976a5 48% 100%);border-color:#8be4ff}
+.fishing-sun{position:absolute;right:28px;top:15px;font-size:38px;animation:sunGlow 2s infinite alternate}
+.fishing-wave{position:absolute;left:-5%;right:-5%;height:35px;bottom:28px;border-top:5px solid #b8f4ff;border-radius:50%;animation:waveDrift 3s ease-in-out infinite alternate}
+.fishing-fish{position:absolute;left:10%;bottom:42px;font-size:40px;animation:fishSwim 4s ease-in-out infinite alternate}
+.fishing-rod{position:absolute;right:18%;bottom:30px;font-size:55px;transform:rotate(-20deg);animation:rodBob 1.2s infinite alternate}
+.scene-battle{background:radial-gradient(circle at center,#623b71,#17152d 72%);border-color:#b88cff}
+.battle-arena{display:flex;align-items:center;justify-content:space-around;height:125px}
+.battle-hero{font-size:68px;animation:heroIdle .8s infinite alternate;filter:drop-shadow(0 7px 8px #0008)}
+.battle-foe{font-size:74px;animation:foeFloat 1.4s ease-in-out infinite alternate;filter:drop-shadow(0 0 15px #ff5e7a88)}
+.scene-monster{background:radial-gradient(circle at 50% 20%,#633c20,#1b100b 72%);border-color:#ffad54}
+.monster-stage{text-align:center;font-size:86px;line-height:1.3;animation:monsterBreath 1.4s ease-in-out infinite alternate;filter:drop-shadow(0 0 18px #ff8d3d88)}
+.monster-stage.hit{animation:monsterHit .35s ease}
+.scene-crypto{background:radial-gradient(circle at center,#153e65,#071323 75%);border-color:#64caff}
+.crypto-vault{display:flex;justify-content:center;align-items:center;gap:16px;min-height:120px;font-size:48px}
+.crypto-gem{display:inline-block;animation:gemFloat 1.5s ease-in-out infinite alternate;filter:drop-shadow(0 0 13px #64dfffaa)}
+.crypto-gem:nth-child(2){animation-delay:.25s}.crypto-gem:nth-child(3){animation-delay:.5s}
+.scene-classic{background:linear-gradient(135deg,#283c75,#111b3d);border-color:#8caaff}
+.classic-stars{font-size:50px;text-align:center;letter-spacing:15px;animation:starsPulse 1.8s infinite alternate}
+.adventure-question{font-size:clamp(20px,3vw,27px);text-align:center;margin:14px 0}
+.adventure-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+.adventure-choices button{min-height:66px;font-size:16px;border:1px solid #5b8d6a;background:linear-gradient(145deg,#205b36,#12321f);color:#effff4;box-shadow:0 5px 0 #071b0d;transition:transform .15s,filter .15s}
+.adventure-choices button:hover{transform:translateY(-3px) scale(1.015)}
+.adventure-choices button:disabled{opacity:.8}
+.adventure-feedback{min-height:32px;text-align:center;font-size:16px;font-weight:900}
+@keyframes kartBounce{to{transform:translateY(-5px) rotate(-2deg)}}
+@keyframes sunGlow{to{filter:drop-shadow(0 0 16px #fff8);transform:scale(1.08)}}
+@keyframes waveDrift{to{transform:translateX(28px) translateY(-7px)}}
+@keyframes fishSwim{to{transform:translateX(90px) translateY(-12px) scaleX(-1)}}
+@keyframes rodBob{to{transform:rotate(-8deg) translateY(-5px)}}
+@keyframes heroIdle{to{transform:translateY(-9px) rotate(3deg)}}
+@keyframes foeFloat{to{transform:translateY(-13px) scale(1.06)}}
+@keyframes monsterBreath{to{transform:scale(1.08) rotate(2deg)}}
+@keyframes monsterHit{25%{transform:translateX(-14px) rotate(-8deg);filter:brightness(2)}75%{transform:translateX(14px) rotate(8deg)}}
+@keyframes gemFloat{to{transform:translateY(-12px) rotate(12deg)}}
+@keyframes starsPulse{to{transform:scale(1.08);filter:drop-shadow(0 0 16px #a6c8ff)}}
+@media(max-width:520px){.adventure-choices{grid-template-columns:1fr}.adventure-scene{min-height:160px}.battle-hero,.battle-foe{font-size:54px}}
+
 </style>
 <style>
 .trade-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:26px 30px;margin:10px 0 18px;border:1px solid #318b55;border-radius:22px;background:radial-gradient(circle at 85% 20%,#22683b,#102a1a 55%,#09140d);box-shadow:0 12px 32px #0006}.trade-hero h1{margin:5px 0 8px;font-size:clamp(26px,4vw,38px)}.trade-hero p{max-width:650px;margin:0;color:#c8e8d1}.trade-hero-icon{font-size:64px;filter:drop-shadow(0 6px 15px #39ff8855)}.trade-kicker{margin:0 0 5px!important;color:#8dffb5!important;font-size:10px!important;font-weight:1000;letter-spacing:2px}.trade-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}.trade-step{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid #28583a;border-radius:13px;background:#101a13;color:#dfffe8}.trade-step span{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#39e77d;color:#04130a;font-weight:1000}.trade-layout{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr);gap:16px;align-items:start}.trade-panel{padding:20px;text-align:left}.trade-panel-title{display:flex;align-items:center;gap:12px}.trade-panel-title h2{margin:0;font-size:20px}.trade-big-icon{font-size:34px}.trade-search-row{display:flex;gap:8px;align-items:center}.trade-search-row input{min-width:0;margin:0}.trade-search-row button{white-space:nowrap}.trade-player-results{display:grid;gap:7px;margin:12px 0}.trade-player-result{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #28583a;border-radius:12px;background:#0a160e}.trade-player-result button{margin:0;padding:9px 14px}.trade-selected-player{margin-top:12px;padding:12px;border-radius:12px;background:#123a22;color:#a8ffc4;font-weight:800}.trade-subhead{margin:16px 0 8px;color:#a9ffc2;font-weight:900}.trade-choice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;max-height:310px;overflow:auto;padding:2px}.trade-item-option{display:flex;align-items:center;gap:9px;min-width:0;padding:10px;border:1px solid #28583a;border-radius:12px;background:#0a160e;cursor:pointer}.trade-item-option:has(input:checked){border-color:#39ff88;background:#143d25;box-shadow:0 0 0 2px #39ff8822}.trade-item-option input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;margin:0;accent-color:#39e77d}.trade-item-emoji{font-size:27px}.trade-item-info{flex:1;min-width:0}.trade-item-info b{display:block;font-size:13px;overflow-wrap:anywhere}.trade-item-info small{display:block;color:#a9cbb4;font-size:11px}.trade-item-option input[type=number]{width:58px;flex:0 0 58px;margin:0;padding:7px;text-align:center;font-size:12px}.trade-send-row{margin-top:16px;padding-top:12px;border-top:1px solid #28583a}.trade-send-row p{margin:0 0 8px}.trade-send-button{width:100%;padding:15px;font-size:16px}.trade-history-panel{margin-top:18px;padding:20px;text-align:left}.trade-history-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}.trade-history-heading h2{margin:0}.trade-history-card{margin:10px 0;padding:14px;border:1px solid #28583a;border-radius:14px;background:#0a160e}.trade-status{display:inline-block;margin-left:6px;padding:4px 8px;border-radius:20px;background:#1b3826;color:#a8ffc4;font-size:11px;font-weight:900;text-transform:capitalize}.trade-history-card p{color:#c5e4ce;margin:8px 0}.trade-history-actions{display:flex;gap:7px;flex-wrap:wrap}.trade-history-actions button{margin:0;padding:9px 13px}@media(max-width:850px){.trade-layout{grid-template-columns:1fr}}@media(max-width:520px){.trade-hero{padding:20px}.trade-hero-icon{font-size:42px}.trade-steps{grid-template-columns:1fr}.trade-search-row{align-items:stretch;flex-direction:column}.trade-search-row button{width:100%}.trade-history-heading{align-items:flex-start;flex-direction:column}}
@@ -1250,13 +1295,24 @@ function startLinketAdventure(id){
  modeShell(linketExtraModes.find(m=>m.id===id).icon+" "+names[id],
   ({classic:"Answer 10 questions. Build your streak and earn your best score.",racing:"Get 10 answers right to drive your kart across the finish line.",battle:"You have 3 hearts. A wrong answer costs one. Survive the challenge!",fishing:"Catch 8 fish by choosing the correct answer. Wrong casts lose a turn.",monster:"Defeat the monster with 5 successful hits. Wrong answers let it strike back.",crypto:"Collect 10 gems by solving questions. Each correct answer earns a gem."})[id],
   '<span>⭐ Score: <b id="advScore">0</b></span><span>🔥 Streak: <b id="advStreak">0</b></span><span id="advStat"></span>',
-  '<div class="game-progress"><i id="advProgress"></i></div><h2 id="advQuestion" style="text-align:center"></h2><div id="advChoices" class="grid"></div><p id="advFeedback" class="game-note"></p>');
+  '<div class="game-progress"><i id="advProgress"></i></div><div id="advScene" class="adventure-scene"></div><h2 id="advQuestion" class="adventure-question"></h2><div id="advChoices" class="grid adventure-choices"></div><p id="advFeedback" class="game-note adventure-feedback"></p>');
  renderLinketAdventureQuestion();
 }
 function renderLinketAdventureQuestion(){
  const s=modeState;if(!s||s.finished)return;
  if(s.index>=s.goal){modeWin(({classic:"Quiz complete! Great work!",racing:"🏁 You crossed the finish line!",battle:"🏆 You survived the Battle Royale!",fishing:"🐟 Amazing catch! Your basket is full!",monster:"👾 Monster defeated! Linket champion!",crypto:"💎 Vault unlocked! You collected every gem!"})[s.kind]);return;}
  const q=s.questions[s.index%s.questions.length];
+ const scene=document.getElementById("advScene");
+ const scenes={
+  classic:'<div class="scene-title">LINKET QUIZ ARENA</div><div class="classic-stars">⭐ ✨ ⭐</div><p style="text-align:center">Choose the correct answer!</p>',
+  racing:'<div class="scene-title">🏁 LINKET GRAND PRIX</div><div class="race-kart" id="raceKart">🏎️</div><div class="race-track"></div><div style="position:absolute;right:12px;top:15px;font-size:27px">🏁</div>',
+  battle:'<div class="scene-title">⚔️ LAST PLAYER STANDING</div><div class="battle-arena"><div class="battle-hero">🛡️</div><div style="font-size:26px">VS</div><div class="battle-foe">🐲</div></div>',
+  fishing:'<div class="scene-title">🌊 LINKET FISHING BAY</div><div class="fishing-sun">☀️</div><div class="fishing-fish">🐠</div><div class="fishing-rod">🎣</div><div class="fishing-wave"></div>',
+  monster:'<div class="scene-title">🔥 MONSTER ARENA</div><div class="monster-stage" id="monsterStage">👾</div><p style="text-align:center;margin:0">Hit the monster with a correct answer!</p>',
+  crypto:'<div class="scene-title">💎 SECURE THE LINKET VAULT</div><div class="crypto-vault"><span class="crypto-gem">💎</span><span class="crypto-gem">🔷</span><span class="crypto-gem">💠</span></div>'
+ };
+ scene.className="adventure-scene scene-"+s.kind;
+ scene.innerHTML=scenes[s.kind];
  document.getElementById("advQuestion").textContent=q[0];
  document.getElementById("advChoices").innerHTML=q[1].map((choice,i)=>'<button class="game-choice" onclick="answerLinketAdventure('+i+')">'+choice+'</button>').join("");
  document.getElementById("advScore").textContent=s.score;
@@ -1271,6 +1327,10 @@ function answerLinketAdventure(choice){
  document.querySelectorAll("#advChoices button").forEach(b=>b.disabled=true);
  if(correct){
   s.score+=100+Math.min(s.streak,5)*20;s.streak++;
+  if(s.kind==="racing"){const kart=document.getElementById("raceKart");if(kart)kart.style.left=Math.min(82,s.progress+4)+"%";}
+  if(s.kind==="monster"){const monster=document.getElementById("monsterStage");if(monster){monster.classList.remove("hit");void monster.offsetWidth;monster.classList.add("hit");}}
+  if(s.kind==="battle"){const foe=document.querySelector(".battle-foe");if(foe)foe.textContent="💥";}
+
   if(s.kind==="racing")s.progress=Math.min(100,s.progress+10);
   if(s.kind==="fishing")s.gems++;
   if(s.kind==="monster")s.hp--;
@@ -1278,6 +1338,9 @@ function answerLinketAdventure(choice){
   document.getElementById("advFeedback").textContent=({classic:"✅ Correct! Keep your streak going!",racing:"🚀 Boost! Your kart speeds ahead!",battle:"🛡️ Correct! You stay in the arena!",fishing:"🐟 A catch! Nice work!",monster:"💥 Direct hit! The monster is weakening!",crypto:"💎 Gem secured! Keep hacking!"})[s.kind];
  }else{
   s.streak=0;
+  if(s.kind==="battle"){const hero=document.querySelector(".battle-hero");if(hero)hero.textContent="💔";}
+  if(s.kind==="monster"){const monster=document.getElementById("monsterStage");if(monster){monster.classList.remove("hit");void monster.offsetWidth;monster.classList.add("hit");}}
+
   if(s.kind==="battle")s.lives--;
   if(s.kind==="monster")s.hp++;
   document.getElementById("advFeedback").textContent="❌ Not quite! The correct answer is "+q[1][q[2]]+".";
