@@ -524,36 +524,60 @@ async function leaveLiveRoom(){
 
 
 let tradeTarget=null;
+function tradeCollectibleCard(item,kind,owned){
+ const name=item[0],emoji=item[1],rarity=item[2],safe=accountSafe(name);
+ return '<label class="trade-item-option"><input type="checkbox" class="trade-'+kind+'-check" data-name="'+safe+'"><span class="trade-item-emoji">'+emoji+'</span><span class="trade-item-info"><b>'+safe+'</b><small>'+rarity+' · own '+owned+'</small></span><input aria-label="Quantity of '+safe+'" class="trade-'+kind+'-qty" data-name="'+safe+'" type="number" min="1" max="'+owned+'" value="1"></label>';
+}
 function renderTradeOfferChoices(){
  const box=document.getElementById("tradeOfferChoices");if(!box||!player)return;
  const owned=items.filter(x=>Number(player.quantities?.[x[0]]||0)>0);
- box.innerHTML=owned.length?owned.map(x=>'<label style="display:block;padding:7px"><input type="checkbox" class="trade-offer-check" data-name="'+accountSafe(x[0])+'" style="width:auto"> '+x[1]+' '+accountSafe(x[0])+' (own '+player.quantities[x[0]]+') <input class="trade-offer-qty" data-name="'+accountSafe(x[0])+'" type="number" min="1" max="'+player.quantities[x[0]]+'" value="1" style="width:75px"></label>').join(""):'<p class="small">Collect some items before trading.</p>';
+ box.innerHTML=owned.length?owned.map(x=>tradeCollectibleCard(x,"offer",Number(player.quantities[x[0]]))).join(""):'<p class="small">Your collection is empty. Open a pack to get collectibles to trade!</p>';
 }
 async function searchTradePlayers(){
  const q=document.getElementById("tradePlayerSearch").value.trim(),box=document.getElementById("tradePlayerResults");
- if(q.length<2){box.textContent="Enter at least 2 characters.";return;}box.textContent="Searching…";
- try{const {data,error}=await supabaseClient.rpc("linket_trade_search_players",{p_search:q});if(error)throw error;
- box.innerHTML=(data||[]).map(p=>'<p>'+accountSafe(p.username)+' <button onclick="selectTradePlayer(\''+p.player_id+'\',\''+accountSafe(p.username)+'\')">Select</button></p>').join("")||"No players found.";
+ if(q.length<2){box.textContent="Enter at least 2 characters.";return;}box.textContent="🔎 Looking for players…";
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_trade_search_players",{p_search:q});if(error)throw error;
+  box.innerHTML=(data||[]).map(p=>'<div class="trade-player-result"><b>👤 '+accountSafe(p.username)+'</b><button type="button" data-trade-player="'+accountSafe(p.player_id)+'" data-trade-name="'+accountSafe(p.username)+'">Trade</button></div>').join("")||'<p class="small">No players found. Check the spelling and try again.</p>';
+  box.querySelectorAll("[data-trade-player]").forEach(b=>b.addEventListener("click",()=>selectTradePlayer(b.dataset.tradePlayer,b.dataset.tradeName)));
  }catch(e){box.textContent="Search failed: "+e.message;}
 }
-async function selectTradePlayer(id,name){tradeTarget={id,name};document.getElementById("tradeTargetLabel").textContent="Trading with "+name;await loadTradeTargetInventory();}
-async function loadTradeTargetInventory(){const box=document.getElementById("tradeRequestChoices");box.textContent="Loading their collection…";try{const {data,error}=await supabaseClient.rpc("linket_trade_player_inventory",{p_player_id:tradeTarget.id});if(error)throw error;const rows=data||[];box.innerHTML=rows.length?rows.map(x=>{const it=items.find(i=>i[0]===x.collectible_id);return '<label style="display:block;padding:6px"><input type="checkbox" class="trade-request-check" data-name="'+accountSafe(x.collectible_id)+'" style="width:auto"> '+(it?it[1]+" ":"")+accountSafe(x.collectible_id)+' (own '+x.quantity+') <input class="trade-request-qty" data-name="'+accountSafe(x.collectible_id)+'" type="number" min="1" max="'+x.quantity+'" value="1" style="width:70px"></label>';}).join(""):"This player has no collectibles to request.";}catch(e){box.textContent="Could not load their collection: "+e.message;}}
+async function selectTradePlayer(id,name){
+ tradeTarget={id,name};document.getElementById("tradeTargetLabel").textContent="🤝 Ready to trade with "+name;await loadTradeTargetInventory();
+}
+async function loadTradeTargetInventory(){
+ const box=document.getElementById("tradeRequestChoices");box.textContent="Loading their collectibles…";
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_trade_player_inventory",{p_player_id:tradeTarget.id});if(error)throw error;
+  const rows=data||[];
+  box.innerHTML=rows.map(x=>{const it=items.find(i=>i[0]===x.collectible_id);return it?tradeCollectibleCard(it,"request",Number(x.quantity||0)):"";}).join("")||'<p class="small">This player has no collectibles to trade yet.</p>';
+ }catch(e){box.textContent="Could not load their collection: "+e.message;}
+}
 async function sendTradeOffer(){
- const status=document.getElementById("tradeCreateStatus");if(!tradeTarget){status.textContent="Choose a player first.";return;}
+ const status=document.getElementById("tradeCreateStatus");if(!tradeTarget){status.textContent="👆 Choose a player first.";return;}
  const offer=[...document.querySelectorAll(".trade-offer-check:checked")].map(el=>{const n=el.dataset.name;return {collectible_id:n,quantity:Number([...document.querySelectorAll(".trade-offer-qty")].find(q=>q.dataset.name===n)?.value)};});
- if(!offer.length||offer.some(x=>!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>Number(player.quantities[x.collectible_id]||0))){status.textContent="Choose valid collectibles and quantities.";return;}
+ if(!offer.length||offer.some(x=>!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>Number(player.quantities[x.collectible_id]||0))){status.textContent="Choose at least one collectible you own and a valid quantity.";return;}
  const request=[...document.querySelectorAll(".trade-request-check:checked")].map(el=>{const n=el.dataset.name;return {collectible_id:n,quantity:Number([...document.querySelectorAll(".trade-request-qty")].find(q=>q.dataset.name===n)?.value)};});
  if(request.some(x=>!Number.isInteger(x.quantity)||x.quantity<1)){status.textContent="Check the requested quantities.";return;}
- if(!confirm("Send this trade offer to "+tradeTarget.name+"?"))return;status.textContent="Sending…";
- try{const {error}=await supabaseClient.rpc("linket_trade_create",{p_recipient_id:tradeTarget.id,p_offer:offer,p_request:request});if(error)throw error;status.textContent="Trade request sent!";await loadTrades();}
+ if(!confirm("Send your trade offer to "+tradeTarget.name+"?"))return;status.textContent="🚀 Sending your offer…";
+ try{const {error}=await supabaseClient.rpc("linket_trade_create",{p_recipient_id:tradeTarget.id,p_offer:offer,p_request:request});if(error)throw error;status.textContent="🎉 Trade request sent! Your collectibles stay safe until they accept.";await loadTrades();}
  catch(e){status.textContent="Could not send: "+e.message;}
 }
 async function loadTrades(){
- const box=document.getElementById("tradeList");if(!box||!session)return;box.textContent="Loading…";
- try{const {data,error}=await supabaseClient.rpc("linket_trade_list");if(error)throw error;
- box.innerHTML=(data||[]).map(t=>{const incoming=t.recipient_id===session.user.id&&t.status==="pending";const other=incoming?t.sender_name:t.recipient_name;const itemsText=(t.items||[]).map(i=>{const it=items.find(x=>x[0]===i.collectible_id);return (it?it[1]+" ":"")+accountSafe(i.collectible_id)+" ×"+i.quantity;}).join(", ");const actions=incoming?'<button onclick="respondToTrade(\''+t.id+'\',true)">Accept</button><button class="secondary" onclick="respondToTrade(\''+t.id+'\',false)">Decline</button>':(t.sender_id===session.user.id&&t.status==="pending"?'<button class="secondary" onclick="cancelTrade(\''+t.id+'\')">Cancel</button>':'');return '<div class="activity-item"><b>'+(incoming?"From ":"With ")+accountSafe(other)+'</b> · '+accountSafe(t.status)+'<p>'+itemsText+'</p>'+actions+'</div>';}).join("")||"No trades yet.";
+ const box=document.getElementById("tradeList");if(!box||!session)return;box.textContent="Loading your trades…";
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_trade_list");if(error)throw error;
+  box.innerHTML=(data||[]).map(t=>{
+   const incoming=t.recipient_id===session.user.id&&t.status==="pending";
+   const other=incoming?t.sender_name:t.recipient_name;
+   const itemsText=(t.items||[]).map(i=>{const it=items.find(x=>x[0]===i.collectible_id);return (it?it[1]+" ":"")+accountSafe(i.collectible_id)+" ×"+i.quantity;}).join(", ");
+   const actions=incoming?'<button onclick="respondToTrade(\''+t.id+'\',true)">✅ Accept trade</button><button class="secondary" onclick="respondToTrade(\''+t.id+'\',false)">Decline</button>':(t.sender_id===session.user.id&&t.status==="pending"?'<button class="secondary" onclick="cancelTrade(\''+t.id+'\')">Cancel request</button>':'');
+   return '<div class="trade-history-card"><b>'+(incoming?"📩 Offer from ":"🤝 Trade with ")+accountSafe(other)+'</b><span class="trade-status">'+accountSafe(t.status)+'</span><p>'+(itemsText||"Collectible details unavailable")+'</p><div class="trade-history-actions">'+actions+'</div></div>';
+  }).join("")||'<p class="small">No trades yet. Find a player and send your first offer!</p>';
  }catch(e){box.textContent="Trading setup required: "+e.message;}
 }
+async function cancelTrade(id){try{const {error}=await supabaseClient.rpc("linket_trade_cancel",{p_trade_id:id});if(error)throw error;await loadTrades();}catch(e){alert(e.message);}}
+
 async function respondToTrade(id,accept){if(!confirm(accept?"Accept and complete this trade?":"Decline this trade?"))return;try{const {error}=await supabaseClient.rpc("linket_trade_respond",{p_trade_id:id,p_accept:accept});if(error)throw error;await refreshSavedGame();drawCollection();renderTradeOfferChoices();await loadTrades();alert(accept?"Trade completed!":"Trade declined.");}catch(e){alert(e.message);}}
 async function cancelTrade(id){try{const {error}=await supabaseClient.rpc("linket_trade_cancel",{p_trade_id:id});if(error)throw error;await loadTrades();}catch(e){alert(e.message);}}
 
