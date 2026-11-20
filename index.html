@@ -455,6 +455,8 @@ async function loadGameData(){
  if(ownerGodError)throw new Error("Could not load your secret Owner God collectible: "+ownerGodError.message);
  const {data:daBearsQuantity,error:daBearsError}=await supabaseClient.rpc("linket_get_da_bears_quantity");
  if(daBearsError)throw new Error("Could not load your secret Da Bears collectible: "+daBearsError.message);
+ const {data:voidEmperorQuantity,error:voidEmperorError}=await supabaseClient.rpc("linket_get_void_emperor_quantity");
+ if(voidEmperorError)throw new Error("Could not load your secret Void Emperor collectible: "+voidEmperorError.message);
  let {data:secretQuantity,error:secretError}=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
  if(secretError)throw new Error("Could not load your Christmas secret collectible: "+secretError.message);
  // Automatically grant Frostfire Phoenix once to the Linket owner account.
@@ -468,7 +470,7 @@ async function loadGameData(){
  const {data:temporaryRows,error:temporaryError}=await supabaseClient.rpc("linket_player_list_temporary_collectibles");
  if(temporaryError)throw new Error("Could not load temporary collectibles: "+temporaryError.message);
  player={name:profile.username||"Player",tokens:Number(profile.tokens)||0,
-  owned:[...new Set((latest||[]).map(row=>row.collectible_id))],quantities:Object.fromEntries((latest||[]).map(row=>[row.collectible_id,Number(row.quantity)||0])),owner:profile.is_owner===true,ownerGodQuantity:Number(ownerGodQuantity)||0,daBearsQuantity:Number(daBearsQuantity)||0,christmasSecretQuantity:Number(secretQuantity)||0,tempRows:temporaryRows||[]};
+  owned:[...new Set((latest||[]).map(row=>row.collectible_id))],quantities:Object.fromEntries((latest||[]).map(row=>[row.collectible_id,Number(row.quantity)||0])),owner:profile.is_owner===true,ownerGodQuantity:Number(ownerGodQuantity)||0,daBearsQuantity:Number(daBearsQuantity)||0,voidEmperorQuantity:Number(voidEmperorQuantity)||0,christmasSecretQuantity:Number(secretQuantity)||0,tempRows:temporaryRows||[]};
  try{localStorage.setItem(localKey(),JSON.stringify({owned:player.owned}));}catch(e){}
 }
 function save(){
@@ -603,6 +605,7 @@ function renderAccount(){
  const secretAvatars=[];
  if(Number(player.ownerGodQuantity||0)>0)secretAvatars.push(["__OWNER_GOD__","👑","Owner God"]);
  if(Number(player.daBearsQuantity||0)>0)secretAvatars.push(["__DA_BEARS__","🐻","Da Bears"]);
+ if(Number(player.voidEmperorQuantity||0)>0)secretAvatars.push(["__VOID_EMPEROR__","🤴","Void Emperor"]);
  if(Number(player.christmasSecretQuantity||0)>0)secretAvatars.push(["Frostfire Phoenix","🔥","Frostfire Phoenix"]);
  const current=profile.avatar_collectible||"";
  const secretOptions=secretAvatars.map(function(item){return '<option value="'+item[0]+'" '+(current===item[0]?'selected':'')+'>'+item[1]+' '+item[2]+' (Secret)</option>';}).join("");
@@ -615,7 +618,7 @@ function renderAccount(){
 }
 async function saveAvatar(){
  const choice=document.getElementById("avatarChoice").value;
- const secretOwned=(choice==="__OWNER_GOD__"&&Number(player.ownerGodQuantity||0)>0)||(choice==="__DA_BEARS__"&&Number(player.daBearsQuantity||0)>0)||(choice==="Frostfire Phoenix"&&Number(player.christmasSecretQuantity||0)>0);
+ const secretOwned=(choice==="__OWNER_GOD__"&&Number(player.ownerGodQuantity||0)>0)||(choice==="__DA_BEARS__"&&Number(player.daBearsQuantity||0)>0)||(choice==="__VOID_EMPEROR__"&&Number(player.voidEmperorQuantity||0)>0)||(choice==="Frostfire Phoenix"&&Number(player.christmasSecretQuantity||0)>0);
  if(choice&&!Number(player.quantities?.[choice]||0)&&!secretOwned){alert("You can only use a collectible you own.");renderAccount();return;}
  try{
   const {error}=await supabaseClient.rpc("linket_set_avatar_with_secrets",{p_collectible_id:choice||null});
@@ -1140,7 +1143,7 @@ async function loadOwnerDashboard(){
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
   const collectibleSelect=document.getElementById("ownerCollectibleChoice");
-  collectibleSelect.innerHTML='<option value="__OWNER_GOD__">👑 Owner God — Secret Exclusive</option><option value="__DA_BEARS__">🐻 Da Bears — Secret Exclusive</option>'+items.map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("");
+  collectibleSelect.innerHTML='<option value="__OWNER_GOD__">👑 Owner God — Secret Exclusive</option><option value="__DA_BEARS__">🐻 Da Bears — Secret Exclusive</option><option value="__VOID_EMPEROR__">🤴 Void Emperor — Secret Exclusive</option>'+items.map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("");
   const activity=document.getElementById("ownerActivity");
   const entries=activityResult.data||[];
   window.ownerActivityEntries=entries;
@@ -1271,8 +1274,9 @@ async function ownerRemoveCollectible(){
  const reason=(document.getElementById("ownerRemoveCollectibleReason")?.value||"").trim();
  const isOwnerGod=collectible==="__OWNER_GOD__";
  const isDaBears=collectible==="__DA_BEARS__";
+ const isVoidEmperor=collectible==="__VOID_EMPEROR__";
  const isFrostfire=collectible==="Frostfire Phoenix";
- const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":collectible;
+ const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":collectible;
  if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){
   ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;
  }
@@ -1310,7 +1314,8 @@ async function ownerGrantCollectible(){
  const quantity=Number(document.getElementById("ownerCollectibleQuantity").value);
  const isOwnerGod=collectible==="__OWNER_GOD__";
  const isDaBears=collectible==="__DA_BEARS__";
- const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":collectible;
+ const isVoidEmperor=collectible==="__VOID_EMPEROR__";
+ const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":collectible;
  if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;}
  if(!confirm("Grant "+quantity+" × "+displayName+" to the selected player?"))return;
  ownerMessage("Granting "+displayName+"…");
@@ -1322,6 +1327,9 @@ async function ownerGrantCollectible(){
   }else if(isDaBears){
    const result=await supabaseClient.rpc("linket_da_bears_grant",{p_user_id:target,p_quantity:quantity});
    data=result.data;error=result.error;
+  }else if(isVoidEmperor){
+   const result=await supabaseClient.rpc("linket_void_emperor_grant",{p_user_id:target,p_quantity:quantity});
+   data=result.data;error=result.error;
   }else if(isFrostfire){
    const result=await supabaseClient.rpc("linket_owner_grant_christmas_secret",{p_user_id:target,p_quantity:quantity});
    data=result.data;error=result.error;
@@ -1332,7 +1340,7 @@ async function ownerGrantCollectible(){
   if(error)throw error;
   if(target!==session.user.id){
    try{
-    await sendOwnerGiftNotification(target,isOwnerGod?"👑 You received Owner God!":isDaBears?"🐻 You received Da Bears!":isFrostfire?"🔥 You received Frostfire Phoenix!":"🎁 You received a collectible!",isOwnerGod?"The Linket owner granted you "+quantity+" × Owner God — a secret exclusive collectible!":isDaBears?"The Linket owner granted you "+quantity+" × Da Bears — a secret exclusive collectible!":isFrostfire?"The Linket owner granted you "+quantity+" × Frostfire Phoenix — a hidden Christmas secret!":"The Linket owner gave you "+quantity+" × "+collectible+"!");
+    await sendOwnerGiftNotification(target,isOwnerGod?"👑 You received Owner God!":isDaBears?"🐻 You received Da Bears!":isVoidEmperor?"🤴 You received Void Emperor!":isFrostfire?"🔥 You received Frostfire Phoenix!":"🎁 You received a collectible!",isOwnerGod?"The Linket owner granted you "+quantity+" × Owner God — a secret exclusive collectible!":isDaBears?"The Linket owner granted you "+quantity+" × Da Bears — a secret exclusive collectible!":isVoidEmperor?"The Linket owner granted you "+quantity+" × Void Emperor — a secret exclusive collectible!":isFrostfire?"The Linket owner granted you "+quantity+" × Frostfire Phoenix — a hidden Christmas secret!":"The Linket owner gave you "+quantity+" × "+collectible+"!");
    }catch(notificationError){
     console.warn("Collectible was granted, but the gift message could not be sent:",notificationError.message||notificationError);
    }
@@ -1383,6 +1391,8 @@ async function refreshSavedGame(){
  if(error)throw error;
  const {data:daBearsQuantity,error:daBearsError}=await supabaseClient.rpc("linket_get_da_bears_quantity");
  if(daBearsError)throw daBearsError;
+ const {data:voidEmperorQuantity,error:voidEmperorError}=await supabaseClient.rpc("linket_get_void_emperor_quantity");
+ if(voidEmperorError)throw voidEmperorError;
  let {data:secretQuantity,error:secretError}=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
  if(secretError)throw secretError;
  // Keep the owner's Frostfire Phoenix permanently present after every refresh.
@@ -1395,7 +1405,7 @@ async function refreshSavedGame(){
  }
  const {data:temporaryRows,error:temporaryError}=await supabaseClient.rpc("linket_player_list_temporary_collectibles");
  if(temporaryError)throw temporaryError;
- player.daBearsQuantity=Number(daBearsQuantity)||0;player.christmasSecretQuantity=Number(secretQuantity)||0;player.tempRows=temporaryRows||[];
+ player.daBearsQuantity=Number(daBearsQuantity)||0;player.voidEmperorQuantity=Number(voidEmperorQuantity)||0;player.christmasSecretQuantity=Number(secretQuantity)||0;player.tempRows=temporaryRows||[];
  player.tokens=Number(profile.tokens)||0;
  player.owned=[...new Set((rows||[]).map(row=>row.collectible_id))];player.quantities=Object.fromEntries((rows||[]).map(row=>[row.collectible_id,Number(row.quantity)||0]));
  try{localStorage.setItem(localKey(),JSON.stringify({owned:player.owned}));}catch(e){}
