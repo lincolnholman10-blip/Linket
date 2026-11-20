@@ -53,6 +53,23 @@ values(50,'Frostfire Phoenix','Christmas','🔥','Mythical',0.01)
 on conflict(pack_cost,collectible_id) do update
 set pack_name=excluded.pack_name,emoji=excluded.emoji,rarity=excluded.rarity,chance_percent=excluded.chance_percent;
 
+
+create or replace function public.linket_owner_grant_christmas_secret(p_user_id uuid,p_quantity integer default 1)
+returns integer language plpgsql security definer set search_path=public
+as $
+declare v_qty integer;
+begin
+ if auth.uid() is null or not public.linket_owner_dashboard_is_owner() then raise exception 'Owner access only.'; end if;
+ if not exists(select 1 from public.profiles p where p.id=p_user_id) then raise exception 'Choose a valid player.'; end if;
+ if p_quantity is null or p_quantity<1 or p_quantity>1000 then raise exception 'Quantity must be from 1 to 1000.'; end if;
+ insert into public.linket_christmas_secret_holders(user_id,quantity)
+ values(p_user_id,p_quantity)
+ on conflict(user_id) do update set quantity=public.linket_christmas_secret_holders.quantity+excluded.quantity,granted_at=now()
+ returning quantity into v_qty;
+ return v_qty;
+end;
+$;
+
 create or replace function public.linket_get_christmas_secret_quantity()
 returns integer language plpgsql stable security definer set search_path=public
 as $$
@@ -271,6 +288,11 @@ begin
    values(v_user,v_event.reward_collectible_id,1,v_expiry,v_event.created_by)
    on conflict(user_id,collectible_id,expires_at) do update
    set quantity=public.linket_temporary_collectibles.quantity+1;
+  elsif v_event.reward_collectible_id='Frostfire Phoenix' then
+   insert into public.linket_christmas_secret_holders(user_id,quantity)
+   values(v_user,1)
+   on conflict(user_id) do update
+   set quantity=public.linket_christmas_secret_holders.quantity+1,granted_at=now();
   else
    insert into public.owned_collectibles(user_id,collectible_id,quantity)
    values(v_user,v_event.reward_collectible_id,1)
@@ -283,6 +305,7 @@ end;
 $$;
 
 revoke all on function public.linket_get_christmas_secret_quantity() from public,anon;
+revoke all on function public.linket_owner_grant_christmas_secret(uuid,integer) from public,anon;
 revoke all on function public.linket_claim_christmas_collection_bonus() from public,anon;
 revoke all on function public.linket_player_list_temporary_collectibles() from public,anon;
 revoke all on function public.linket_owner_grant_temporary_collectible(uuid,text,integer,integer) from public,anon;
@@ -292,6 +315,7 @@ revoke all on function public.linket_player_list_active_events() from public,ano
 revoke all on function public.linket_owner_list_event_rewards() from public,anon;
 revoke all on function public.linket_get_christmas_bonus_claimed() from public,anon;
 grant execute on function public.linket_get_christmas_secret_quantity() to authenticated;
+grant execute on function public.linket_owner_grant_christmas_secret(uuid,integer) to authenticated;
 grant execute on function public.linket_claim_christmas_collection_bonus() to authenticated;
 grant execute on function public.linket_player_list_temporary_collectibles() to authenticated;
 grant execute on function public.linket_owner_grant_temporary_collectible(uuid,text,integer,integer) to authenticated;
