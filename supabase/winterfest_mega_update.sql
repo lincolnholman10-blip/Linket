@@ -304,6 +304,63 @@ begin
 end;
 $$;
 
+
+-- Extend the existing owner removal RPC so the secret stays manageable by the owner.
+create or replace function public.linket_owner_remove_collectible(
+ p_user_id uuid,p_collectible_id text,p_quantity integer,p_reason text
+)
+returns integer language plpgsql security definer set search_path=public
+as $function$
+declare
+ v_actor uuid:=auth.uid(); v_reason text:=trim(coalesce(p_reason,'')); v_remaining integer; v_owned integer; v_name text;
+begin
+ if v_actor is null or not public.linket_owner_dashboard_is_owner() then raise exception 'Owner access only.'; end if;
+ if p_user_id is null or not exists(select 1 from public.profiles p where p.id=p_user_id) then raise exception 'Choose a valid player.'; end if;
+ if p_collectible_id is null or length(trim(p_collectible_id))=0 then raise exception 'Choose a collectible.'; end if;
+ if p_quantity is null or p_quantity<1 or p_quantity>1000 then raise exception 'Quantity must be between 1 and 1000.'; end if;
+ if length(v_reason)=0 then raise exception 'A reason is required when removing a collectible.'; end if;
+ if length(v_reason)>300 then raise exception 'The reason must be 300 characters or fewer.'; end if;
+ if p_collectible_id='__OWNER_GOD__' then
+  select h.quantity into v_owned from public.linket_owner_god_holders h where h.user_id=p_user_id for update;
+  if not found then raise exception 'This player does not own Owner God.'; end if;
+  if v_owned<p_quantity then raise exception 'This player only owns % Owner God. Reduce the quantity.',v_owned; end if;
+  v_remaining:=v_owned-p_quantity;
+  if v_remaining=0 then delete from public.linket_owner_god_holders where user_id=p_user_id;
+  else update public.linket_owner_god_holders set quantity=v_remaining where user_id=p_user_id; end if;
+  v_name:='Owner God';
+ elsif p_collectible_id='__DA_BEARS__' then
+  select h.quantity into v_owned from public.linket_da_bears_holders h where h.user_id=p_user_id for update;
+  if not found then raise exception 'This player does not own Da Bears.'; end if;
+  if v_owned<p_quantity then raise exception 'This player only owns % Da Bears. Reduce the quantity.',v_owned; end if;
+  v_remaining:=v_owned-p_quantity;
+  if v_remaining=0 then delete from public.linket_da_bears_holders where user_id=p_user_id;
+  else update public.linket_da_bears_holders set quantity=v_remaining where user_id=p_user_id; end if;
+  v_name:='Da Bears';
+ elsif p_collectible_id='Frostfire Phoenix' then
+  select h.quantity into v_owned from public.linket_christmas_secret_holders h where h.user_id=p_user_id for update;
+  if not found then raise exception 'This player does not own Frostfire Phoenix.'; end if;
+  if v_owned<p_quantity then raise exception 'This player only owns % Frostfire Phoenix. Reduce the quantity.',v_owned; end if;
+  v_remaining:=v_owned-p_quantity;
+  if v_remaining=0 then delete from public.linket_christmas_secret_holders where user_id=p_user_id;
+  else update public.linket_christmas_secret_holders set quantity=v_remaining,granted_at=now() where user_id=p_user_id; end if;
+  v_name:='Frostfire Phoenix';
+ else
+  select oc.quantity into v_owned from public.owned_collectibles oc where oc.user_id=p_user_id and oc.collectible_id=p_collectible_id for update;
+  if not found then raise exception 'This player does not own that collectible.'; end if;
+  if v_owned<p_quantity then raise exception 'This player only owns % of that collectible. Reduce the quantity.',v_owned; end if;
+  v_remaining:=v_owned-p_quantity;
+  if v_remaining=0 then delete from public.owned_collectibles where user_id=p_user_id and collectible_id=p_collectible_id;
+  else update public.owned_collectibles set quantity=v_remaining where user_id=p_user_id and collectible_id=p_collectible_id; end if;
+  v_name:=p_collectible_id;
+ end if;
+ if p_user_id<>v_actor then
+  insert into public.linket_player_notifications(user_id,title,message)
+  values(p_user_id,'⚠️ Collectible update from Linket','The Linket owner removed '||p_quantity||' × '||v_name||' from your collection. Reason: '||v_reason);
+ end if;
+ return v_remaining;
+end;
+$function$;
+
 revoke all on function public.linket_get_christmas_secret_quantity() from public,anon;
 revoke all on function public.linket_owner_grant_christmas_secret(uuid,integer) from public,anon;
 revoke all on function public.linket_claim_christmas_collection_bonus() from public,anon;
