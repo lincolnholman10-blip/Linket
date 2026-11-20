@@ -78,6 +78,8 @@ begin
 end;
 $$;
 
+drop function if exists public.linket_owner_list_events();
+
 create or replace function public.linket_owner_list_events()
 returns table (
   id uuid,
