@@ -599,16 +599,25 @@ function renderAccount(){
  if(!session||!session.user||!profile||!player)return;
  const rows=[["Username",profile.username||player.name],["Email",session.user.email||"Unavailable"],["Token balance",Number(player.tokens||profile.tokens||0).toLocaleString()],["Account type",profile.is_owner?"Owner":"Player"],["Joined",session.user.created_at?new Date(session.user.created_at).toLocaleDateString():"Unavailable"]];
  const owned=items.filter(function(item){return Number(player.quantities?.[item[0]]||0)>0;});
+ const secretAvatars=[];
+ if(Number(player.ownerGodQuantity||0)>0)secretAvatars.push(["__OWNER_GOD__","👑","Owner God"]);
+ if(Number(player.daBearsQuantity||0)>0)secretAvatars.push(["__DA_BEARS__","🐻","Da Bears"]);
+ if(Number(player.christmasSecretQuantity||0)>0)secretAvatars.push(["Frostfire Phoenix","🔥","Frostfire Phoenix"]);
  const current=profile.avatar_collectible||"";
- const options='<option value="">Default avatar</option>'+owned.map(function(item){return '<option value="'+accountSafe(item[0])+'" '+(current===item[0]?'selected':'')+'>'+item[1]+' '+accountSafe(item[0])+' ('+item[2]+')</option>';}).join("");
+ const secretOptions=secretAvatars.map(function(item){return '<option value="'+item[0]+'" '+(current===item[0]?'selected':'')+'>'+item[1]+' '+item[2]+' (Secret)</option>';}).join("");
+ const options='<option value="">Default avatar</option>'+owned.map(function(item){return '<option value="'+accountSafe(item[0])+'" '+(current===item[0]?'selected':'')+'>'+item[1]+' '+accountSafe(item[0])+' ('+item[2]+')</option>';}).join("")+secretOptions;
  const avatar=items.find(function(item){return item[0]===current;});
- document.getElementById("accountDetails").innerHTML='<div class="card avatar-card" style="text-align:center"><div class="avatar-card-kicker">✨ YOUR PLAYER IDENTITY</div><div class="avatar-preview-ring"><div class="avatar-preview-emoji">'+(avatar?avatar[1]:"👤")+'</div></div><h2 class="avatar-name">'+(avatar?accountSafe(avatar[0]):"Default avatar")+'</h2><p class="small">Make your profile yours! Pick a collectible you own.</p><label for="avatarChoice">Choose your champion</label><select id="avatarChoice" class="avatar-picker" style="width:100%;margin:10px 0">'+options+'</select><button class="avatar-save-btn" onclick="saveAvatar()">🚀 Equip My Avatar</button><p class="small">Only collectibles in your collection can be equipped.</p></div>'+rows.map(function(row){return '<div class="card" style="text-align:left"><div class="small">'+row[0]+'</div><h3 style="overflow-wrap:anywhere">'+accountSafe(row[1])+'</h3></div>';}).join("");
+ const secretAvatar=secretAvatars.find(function(item){return item[0]===current;});
+ const avatarEmoji=avatar?avatar[1]:(secretAvatar?secretAvatar[1]:"👤");
+ const avatarName=avatar?avatar[0]:(secretAvatar?secretAvatar[2]:"Default avatar");
+ document.getElementById("accountDetails").innerHTML='<div class="card avatar-card" style="text-align:center"><div class="avatar-card-kicker">✨ YOUR PLAYER IDENTITY</div><div class="avatar-preview-ring"><div class="avatar-preview-emoji">'+avatarEmoji+'</div></div><h2 class="avatar-name">'+accountSafe(avatarName)+'</h2><p class="small">Make your profile yours! Pick any collectible or secret collectible you own.</p><label for="avatarChoice">Choose your champion</label><select id="avatarChoice" class="avatar-picker" style="width:100%;margin:10px 0">'+options+'</select><button class="avatar-save-btn" onclick="saveAvatar()">🚀 Equip My Avatar</button><p class="small">Secret avatars appear here only while you own them.</p></div>'+rows.map(function(row){return '<div class="card" style="text-align:left"><div class="small">'+row[0]+'</div><h3 style="overflow-wrap:anywhere">'+accountSafe(row[1])+'</h3></div>';}).join("");
 }
 async function saveAvatar(){
  const choice=document.getElementById("avatarChoice").value;
- if(choice&&!Number(player.quantities?.[choice]||0)){alert("You can only use a collectible you own.");renderAccount();return;}
+ const secretOwned=(choice==="__OWNER_GOD__"&&Number(player.ownerGodQuantity||0)>0)||(choice==="__DA_BEARS__"&&Number(player.daBearsQuantity||0)>0)||(choice==="Frostfire Phoenix"&&Number(player.christmasSecretQuantity||0)>0);
+ if(choice&&!Number(player.quantities?.[choice]||0)&&!secretOwned){alert("You can only use a collectible you own.");renderAccount();return;}
  try{
-  const {error}=await supabaseClient.rpc("linket_set_avatar",{p_collectible_id:choice||null});
+  const {error}=await supabaseClient.rpc("linket_set_avatar_with_secrets",{p_collectible_id:choice||null});
   if(error)throw error;
   profile.avatar_collectible=choice||null;renderAccount();
   alert(choice?"Avatar saved!":"Your default avatar has been restored.");
