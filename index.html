@@ -1138,7 +1138,7 @@ async function claimLiveEventReward(eventId){
  try{const {data,error}=await supabaseClient.rpc("linket_player_claim_event_reward",{p_event_id:eventId});if(error)throw error;await refreshSavedGame();drawCollection();alert("🎉 Event reward claimed! Your balance is "+Number(data?.[0]?.tokens||player.tokens).toLocaleString()+" tokens.");await loadWinterfestMegaFeatures();}
  catch(e){alert(e.message||"Could not claim event reward.");}
 }
-function loadAnnouncements(){
+async function loadAnnouncements(){
  if(!session)return;
  try{
   const {data,error}=await supabaseClient.from("linket_announcements").select("id,title,message,created_at").order("created_at",{ascending:false}).limit(50);
