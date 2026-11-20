@@ -402,7 +402,7 @@ const items = [
  ["Puppy Pal","🐶","Common"],["Corgi Buddy","🐕","Common"],["Dalmatian Dash","🐾","Rare"],["Shiba Star","🐕","Epic"],["Golden Retriever","🦮","Legendary"],["Cosmic Wolf","🐺","Mythical"],
  ["Rookie Hooper","🏀","Common"],["Goal Getter","⚽","Common"],["Court Captain","🏀","Rare"],["Grand Slam Star","⚾","Epic"],["Championship MVP","🏆","Legendary"],["Mason Plumlee","🗿","Mythical"],
  ["Pencil","✏️","Common"],["Books","📚","Common"],["Notebook","📓","Rare"],["Backpack","🎒","Rare"],["Science Flask","🧪","Epic"],["School Champion","🏀","Legendary"],["Principal's Trophy","🏆","Mythical"],
- ["Gingerbread Buddy","🍪","Common"],["Snowflake Sprite","❄️","Common"],["Peppermint Penguin","🐧","Rare"],["Frosty Snowman","☃️","Epic"],["Reindeer Dasher","🦌","Legendary"],["Santa Claus","🎅","Mythical"],["Frostfire Phoenix","🔥","Chroma"]
+ ["Gingerbread Buddy","🍪","Common"],["Snowflake Sprite","❄️","Common"],["Peppermint Penguin","🐧","Rare"],["Frosty Snowman","☃️","Epic"],["Reindeer Dasher","🦌","Legendary"],["Santa Claus","🎅","Mythical"],["Frostfire Phoenix","🔥","Mythical"]
 ];
 const modes = [["🛡️","Tower Defense"],["💰","Gold Quest"],["☕","Cafe"],["🏭","Factory"]];
 const packs = [["🎄","Christmas Pack",25],["🏖️","Beach Pack",38],["🌈","Rainbow Pack",50],["🚀","Space Pack",63],["🌌","Galaxy Pack",75],["🐶","Dog Pack",88],["🏀","Sports Pack",100],["🏫","School Pack",113]];
@@ -949,7 +949,7 @@ async function ownerInstallChristmasDrops(){
   ["Frosty Snowman","Snowman with a top hat, carrot nose, and coal buttons","☃️","Epic",7.003439,7.003082],
   ["Reindeer Dasher","Christmas reindeer with antlers and a tiny bell","🦌","Legendary",2.951449,2.951299],
   ["Santa Claus","Santa in a red suit with a white beard and gift sack","🎅","Mythical",0.005,0.005],
-  ["Frostfire Phoenix","An ancient flame reborn from the frozen ashes. Almost impossible to find.","🔥","Chroma",0.001,0.001]
+  ["Frostfire Phoenix","An ancient flame reborn from the frozen ashes. Almost impossible to find.","🔥","Mythical",0.001,0.001]
  ];
  if(!player||!player.owner){status.textContent="Owner access is required.";return;}
  status.textContent="Installing Christmas collectibles…";
@@ -978,7 +978,7 @@ async function ownerInstallChristmasDrops(){
   }
   await ownerLoadPackOdds();
   await ownerLoadCatalog();
-  status.textContent="Christmas Pack installed! Its festive drops now total exactly 100%, including the 0.001% Chroma secret.";
+  status.textContent="Christmas Pack installed! Its festive drops now total exactly 100%, including the 0.001% Mythical Frostfire Phoenix.";
  }catch(e){
   status.textContent="Could not finish installing Christmas drops: "+(e.message||e)+". You can click Install again safely.";
  }
@@ -1374,7 +1374,7 @@ async function ownerUnlockAll(){
   await refreshSavedGame();
   drawCollection();renderOwnerDashboard();
   if(Number(player.christmasSecretQuantity||0)<1)throw new Error("Frostfire Phoenix was not returned by the collection refresh. Please sign out and back in, then try again.");
-  alert("Every Linket collectible, including 1 × Frostfire Phoenix (Chroma), has been saved to your account.");
+  alert("Every Linket collectible, including 1 × Frostfire Phoenix (Mythical), has been saved to your account.");
  }catch(e){alert("Could not unlock collectibles: "+e.message);}
 }
 async function ownerRestoreTokens(){
@@ -1467,14 +1467,14 @@ function drawCollection(){
  const ownerGodQty=Number(player.ownerGodQuantity)||0,daBearsQty=Number(player.daBearsQuantity)||0,voidEmperorQty=Number(player.voidEmperorQuantity)||0,secretQty=Number(player.christmasSecretQuantity)||0;
  const stats=document.getElementById("collectionStats");if(stats)stats.innerHTML='<span class="collection-stat">✨ <b>'+collected.filter(x=>x[0]!=="Frostfire Phoenix").length+'</b> / '+(items.length-1)+' discovered</span><span class="collection-stat">📦 <b>'+(totalCopies+ownerGodQty+daBearsQty+voidEmperorQty+secretQty)+'</b> total copies</span><span class="collection-stat">🔍 <b>'+(items.length-1-collected.filter(x=>x[0]!=="Frostfire Phoenix").length)+'</b> still to find</span>'+(ownerGodQty?'<span class="collection-stat">👑 <b>'+ownerGodQty+'</b> Owner God</span>':'')+(daBearsQty?'<span class="collection-stat">🐻 <b>'+daBearsQty+'</b> Da Bears</span>':'')+(voidEmperorQty?'<span class="collection-stat">🤴 <b>'+voidEmperorQty+'</b> Void Emperor</span>':'');
  const showOwnerGod=ownerGodQty>0&&(!search||"owner god".includes(search)||"secret exclusive".includes(search))&&(rarity==="all"||rarity==="mythical");
- const showFrostfire=secretQty>0&&(!search||"frostfire phoenix".includes(search)||"chroma".includes(search))&&(rarity==="all"||rarity==="chroma");
+ const showFrostfire=secretQty>0&&(!search||"frostfire phoenix".includes(search)||"mythical".includes(search))&&(rarity==="all"||rarity==="mythical");
  const showDaBears=daBearsQty>0&&(!search||"da bears".includes(search)||"secret exclusive".includes(search))&&(rarity==="all"||rarity==="mythical");
  const showVoidEmperor=voidEmperorQty>0&&(!search||"void emperor".includes(search)||"secret exclusive".includes(search))&&(rarity==="all"||rarity==="secret exclusive");
  let visible=items.filter(item=>item[0]!=="Frostfire Phoenix").map((item,index)=>({item,index,qty:Number(player.quantities?.[item[0]]||0)}));
  if(rarity!=="all")visible=visible.filter(v=>v.item[2]===rarity);if(search)visible=visible.filter(v=>v.item[0].toLowerCase().includes(search)||v.item[2].toLowerCase().includes(search));
  visible.sort((a,b)=>sort==="name"?a.item[0].localeCompare(b.item[0]):sort==="quantity"?b.qty-a.qty:sort==="newest"?(Number(b.qty>0)-Number(a.qty>0))||a.index-b.index:rarityOrder[a.item[2]]-rarityOrder[b.item[2]]||a.item[0].localeCompare(b.item[0]));
  const godCard=showOwnerGod?'<div class="card collection-card owner-god-card" style="border:2px solid #f5c542;background:linear-gradient(145deg,#21133d,#453078);box-shadow:0 0 24px #f5c54255"><div class="emoji" style="font-size:4rem;text-shadow:0 0 22px #ffe77a">👑</div><h3 style="color:#ffe77a">Owner God</h3><span class="secret-exclusive-stripes">SECRET EXCLUSIVE</span><p><span class="owned-count">Owned ×'+ownerGodQty+'</span></p><p class="small">A permanent, untradeable gift from the Linket owner. Cannot be sold.</p><span class="small">🔒 Permanently protected</span></div>':'';
-  const frostfireCard=showFrostfire?'<div class="card collection-card owner-god-card frostfire-secret" style="border:2px solid #ff9b45;background:linear-gradient(145deg,#35151e,#24113b);box-shadow:0 0 28px #ff6b3577,0 0 38px #a34cff33"><div class="emoji" style="font-size:4rem;text-shadow:0 0 18px #ff8b38,0 0 30px #b45cff">🔥</div><h3 style="color:#ffd29b;text-shadow:0 0 12px #ff7138">Frostfire Phoenix</h3><span class="rarity Chroma">CHROMA</span><p><span class="owned-count">Owned ×'+secretQty+'</span></p><p class="frostfire-description" style="display:block!important;visibility:visible!important;opacity:1!important;color:#ffe6cf!important;font-size:14px!important;line-height:1.5!important;margin:12px 0!important;font-weight:600!important">An ancient flame reborn from the frozen ashes. Almost impossible to find.</p><span class="small">🔒 Rare hidden collectible</span></div>':'';
+  const frostfireCard=showFrostfire?'<div class="card collection-card owner-god-card frostfire-secret" style="border:2px solid #ff9b45;background:linear-gradient(145deg,#35151e,#24113b);box-shadow:0 0 28px #ff6b3577,0 0 38px #a34cff33"><div class="emoji" style="font-size:4rem;text-shadow:0 0 18px #ff8b38,0 0 30px #b45cff">🔥</div><h3 style="color:#ffd29b;text-shadow:0 0 12px #ff7138">Frostfire Phoenix</h3><span class="rarity Chroma">MYTHICAL</span><p><span class="owned-count">Owned ×'+secretQty+'</span></p><p class="frostfire-description" style="display:block!important;visibility:visible!important;opacity:1!important;color:#ffe6cf!important;font-size:14px!important;line-height:1.5!important;margin:12px 0!important;font-weight:600!important">An ancient flame reborn from the frozen ashes. Almost impossible to find.</p><span class="small">🔒 Rare hidden collectible</span></div>':'';
  const daBearsCard=showDaBears?'<div class="card collection-card owner-god-card" style="border:2px solid #fff;background:linear-gradient(145deg,#080808,#383838);box-shadow:0 0 24px #ffffff44"><div class="emoji" style="font-size:4rem;text-shadow:0 0 22px #ffffff">🐻</div><h3 style="color:#fff">Da Bears</h3><span class="secret-exclusive-stripes">SECRET EXCLUSIVE</span><p><span class="owned-count">Owned ×'+daBearsQty+'</span></p><p class="small">A permanent, untradeable gift from the Linket owner. Cannot be sold.</p><span class="small">🔒 Permanently protected</span></div>':'';
  const voidEmperorCard=showVoidEmperor?'<div class="card collection-card owner-god-card" style="border:2px solid #9b7cff;background:linear-gradient(145deg,#100b25,#30205a);box-shadow:0 0 30px #9b7cff88"><div class="emoji" style="font-size:4rem;text-shadow:0 0 24px #c7aaff">🤴</div><h3 style="color:#e6d5ff">Void Emperor</h3><span class="secret-exclusive-stripes">SECRET EXCLUSIVE</span><p><span class="owned-count">Owned ×'+voidEmperorQty+'</span></p><p class="small">A permanent, untradeable gift from the Linket owner. Cannot be sold.</p><span class="small">🔒 Permanently protected</span></div>':'';
  const regular=visible.length?visible.map(v=>{const x=v.item,i=v.index,qty=v.qty,owned=qty>0,festive=["Gingerbread Buddy","Snowflake Sprite","Peppermint Penguin","Frosty Snowman","Reindeer Dasher","Santa Claus"].includes(x[0]);return '<div class="card collection-card '+(festive?'christmas-animated':'')+'">'+(owned?collectibleArt(x[0],x[1],"collection-art"):'<div class="emoji">❔</div>')+'<h3>'+(owned?x[0]:"Undiscovered")+'</h3><span class="rarity '+x[2]+'">'+x[2]+'</span><p>'+(owned?'<span class="owned-count">Owned ×'+qty+'</span>':'<span class="small">Not collected yet</span>')+'</p>'+(owned?'<p class="small">Sell value: '+prices[x[2]]+' tokens each</p><input aria-label="Quantity to sell" id="sellQty'+i+'" type="number" min="1" max="'+qty+'" value="1"><button onclick="sellCollectible('+i+')">💰 Sell copies</button>':'')+'</div>';}).join(""):'<div class="collection-empty">No collectibles match that search. Try another name or rarity.</div>';
