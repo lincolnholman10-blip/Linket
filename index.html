@@ -353,7 +353,13 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div class="card owner-section"><h2>🎁 Grant a collectible</h2><label for="ownerCollectibleTarget">Player</label><select id="ownerCollectibleTarget" class="owner-select"></select>
 <label for="ownerCollectibleChoice">Collectible</label><select id="ownerCollectibleChoice" class="owner-select"></select>
 <label for="ownerCollectibleQuantity">Quantity</label><input id="ownerCollectibleQuantity" type="number" min="1" max="1000" value="1">
-<button onclick="ownerGrantCollectible()">Grant collectible</button></div>
+<button onclick="ownerGrantCollectible()">Grant collectible</button>
+<hr style="margin:16px 0;border-color:#ffffff22">
+<h3>🗑️ Remove a collectible</h3>
+<label for="ownerRemoveCollectibleQuantity">Quantity to remove</label><input id="ownerRemoveCollectibleQuantity" type="number" min="1" max="1000" value="1">
+<label for="ownerRemoveCollectibleReason">Reason <span style="color:#ffd166">(required)</span></label>
+<textarea id="ownerRemoveCollectibleReason" maxlength="300" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="Explain why this collectible is being removed…"></textarea>
+<button class="secondary" style="background:#b94747" onclick="ownerRemoveCollectible()">－ Remove collectible</button></div>
 </div>
 <div class="card owner-section"><h2>🛠️ Admin controls</h2>
 <label for="adminNewUsername">Change selected player's username</label><input id="adminNewUsername" maxlength="24" placeholder="New username">
@@ -1134,6 +1140,37 @@ function selectOwnerPlayer(id){
   if(controls)controls.scrollIntoView({behavior:"smooth",block:"center"});
   const target=document.getElementById("ownerTarget");
   if(target)target.focus({preventScroll:true});
+}
+async function ownerRemoveCollectible(){
+ if(!player||!player.owner)return;
+ const target=document.getElementById("ownerCollectibleTarget").value;
+ const collectible=document.getElementById("ownerCollectibleChoice").value;
+ const quantity=Number(document.getElementById("ownerRemoveCollectibleQuantity").value);
+ const reason=(document.getElementById("ownerRemoveCollectibleReason")?.value||"").trim();
+ const isOwnerGod=collectible==="__OWNER_GOD__";
+ const displayName=isOwnerGod?"Owner God":collectible;
+ if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){
+  ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;
+ }
+ if(!reason){ownerMessage("A reason is required before removing a collectible.");alert("Please enter a reason so the player knows why the collectible is being removed.");document.getElementById("ownerRemoveCollectibleReason")?.focus();return;}
+ const selected=ownerPlayers.find(p=>String(p.player_id)===String(target));
+ if(!selected){ownerMessage("That player could not be found. Refresh the dashboard and try again.");return;}
+ if(!confirm("Are you sure you want to remove "+quantity+" × "+displayName+" from "+selected.username+"?\n\nReason: "+reason))return;
+ ownerMessage("Removing "+displayName+"…");
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_owner_remove_collectible",{p_user_id:target,p_collectible_id:collectible,p_quantity:quantity,p_reason:reason});
+  if(error)throw error;
+  if(data===null||data===undefined)throw new Error("The database did not return the remaining quantity.");
+  await loadOwnerDashboard();
+  const remaining=Number(data);
+  const resultText=remaining>0?" They now have "+remaining+" remaining.":" They no longer have this collectible.";
+  ownerMessage("Removed "+displayName+" from "+selected.username+"'s collection."+resultText+" Player notification queued.");
+  alert("Success! Removed "+quantity+" × "+displayName+" from "+selected.username+"'s collection."+resultText+" A notification will appear when they log in.");
+ }catch(e){
+  console.error("Linket collectible removal failed:",e);
+  ownerMessage("Could not remove collectible: "+(e.message||e));
+  alert("Could not remove collectible:\n"+(e.message||e));
+ }
 }
 async function ownerGrantCollectible(){
  if(!player||!player.owner)return;
