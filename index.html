@@ -812,12 +812,19 @@ function renderOwnerDashboard(){
  if(collectibleCount)collectibleCount.textContent=player.owned.length;
 }
 let ownerPlayerFilter="all";
+function ownerPlayerIsBanned(p){
+ const value=p?.is_banned;
+ return value===true||value===1||["true","t","1","yes","banned"].includes(String(value??"").trim().toLowerCase());
+}
 function filterOwnerPlayers(filter){
  const allowed=["all","active","banned"];
- ownerPlayerFilter=allowed.includes(String(filter).toLowerCase())?String(filter).toLowerCase():"all";
+ ownerPlayerFilter=allowed.includes(String(filter??"").trim().toLowerCase())?String(filter).trim().toLowerCase():"all";
  const search=document.getElementById("ownerPlayerSearch");if(search)search.value="";
  renderOwnerPlayerRows();
+ const count=ownerPlayers.filter(p=>ownerPlayerFilter==="all"||(ownerPlayerFilter==="banned"?ownerPlayerIsBanned(p):!ownerPlayerIsBanned(p))).length;
+ ownerMessage("Showing "+count.toLocaleString()+" "+(ownerPlayerFilter==="all"?"total":ownerPlayerFilter)+" player"+(count===1?"":"s")+".");
 }
+window.filterOwnerPlayers=filterOwnerPlayers;
 function renderOwnerPlayerRows(){
  const body=document.getElementById("ownerPlayersBody");if(!body)return;
  document.querySelectorAll("#ownerPlayerFilters [data-player-filter]").forEach(button=>{
@@ -826,16 +833,15 @@ function renderOwnerPlayerRows(){
   button.setAttribute("aria-pressed",selected?"true":"false");
  });
  const term=(document.getElementById("ownerPlayerSearch")?.value||"").trim().toLowerCase();
- const isBanned=p=>p.is_banned===true||p.is_banned===1||String(p.is_banned).toLowerCase()==="true";
  const rows=ownerPlayers.filter(p=>{
-  const banned=isBanned(p);
+  const banned=ownerPlayerIsBanned(p);
   if(ownerPlayerFilter==="active"&&banned)return false;
   if(ownerPlayerFilter==="banned"&&!banned)return false;
   return !term||String(p.username||"").toLowerCase().includes(term)||(banned?"banned":"active").includes(term);
  });
  body.innerHTML=rows.length?rows.map(p=>{
-  const banned=isBanned(p);
-  return '<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(banned?'Banned':'Player'))+'</td><td><button type="button" onclick="selectOwnerPlayer(&quot;'+ownerEscape(p.player_id)+'&quot;)">Manage</button></td></tr>';
+  const banned=ownerPlayerIsBanned(p);
+  return '<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(banned?'Banned':'Active'))+'</td><td><button type="button" onclick="selectOwnerPlayer(&quot;'+ownerEscape(p.player_id)+'&quot;)">Manage</button></td></tr>';
  }).join(""):'<tr><td colspan="5">No '+(ownerPlayerFilter==="active"?"active":ownerPlayerFilter==="banned"?"banned":"")+' players match this search.</td></tr>';
 }
 async function adminPublishEvent(){
