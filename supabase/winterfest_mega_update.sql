@@ -45,7 +45,14 @@ on conflict(pack_cost,collectible_id) do nothing;
 
 -- Reserve exactly 0.01% for the secret and scale the six normal Christmas drops to 99.99%.
 update public.linket_pack_odds
-set chance_percent=round(chance_percent*0.9999,6)
+set chance_percent=case collectible_id
+ when 'Gingerbread Buddy' then 34.9965
+ when 'Snowflake Sprite' then 34.9965
+ when 'Peppermint Penguin' then 19.998
+ when 'Frosty Snowman' then 6.9993
+ when 'Reindeer Dasher' then 2.949705
+ when 'Santa Claus' then 0.049995
+ else chance_percent end
 where pack_cost=50 and collectible_id in
  ('Gingerbread Buddy','Snowflake Sprite','Peppermint Penguin','Frosty Snowman','Reindeer Dasher','Santa Claus');
 insert into public.linket_pack_odds(pack_cost,collectible_id,pack_name,emoji,rarity,chance_percent)
