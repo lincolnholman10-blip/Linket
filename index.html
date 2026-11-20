@@ -449,8 +449,13 @@ function showNextGiftNotification(){
  const overlay=document.getElementById("giftNotification");
  if(!overlay||!linketGiftQueue.length){if(overlay)overlay.classList.add("hidden");return;}
  const gift=linketGiftQueue.shift();
- document.getElementById("giftNotificationTitle").textContent=gift.title||"You got a gift!";
+ const isTokenUpdate=String(gift.title||"").includes("Token update");
+ document.getElementById("giftNotificationTitle").textContent=gift.title||(isTokenUpdate?"⚠️ Token update":"You got a gift!");
  document.getElementById("giftNotificationMessage").textContent=gift.message||"Someone sent you something special!";
+ const present=document.querySelector("#giftNotification .gift-present");
+ const kicker=document.querySelector("#giftNotification .gift-kicker");
+ if(present)present.textContent=isTokenUpdate?"🪙":"🎁";
+ if(kicker)kicker.textContent=isTokenUpdate?"IMPORTANT ACCOUNT UPDATE":"A LITTLE LINKET SURPRISE";
  overlay.classList.remove("hidden");
 }
 function closeGiftNotification(){
