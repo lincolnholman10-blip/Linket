@@ -950,7 +950,7 @@ async function loadOwnerDashboard(){
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
   const collectibleSelect=document.getElementById("ownerCollectibleChoice");
-  collectibleSelect.innerHTML=items.map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("");
+  collectibleSelect.innerHTML='<option value="__OWNER_GOD__">👑 Owner God — Secret Exclusive</option>'+items.map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("");
   const activity=document.getElementById("ownerActivity");
   const entries=activityResult.data||[];
   activity.innerHTML=entries.length?entries.map(a=>'<div class="activity-item"><strong>'+ownerEscape(a.action.replaceAll("_"," "))+'</strong> · '+ownerEscape(a.actor_username||"Former user")+(a.target_username?' → '+ownerEscape(a.target_username):'')+'<small>'+ownerEscape(JSON.stringify(a.details||{}))+' · '+new Date(a.created_at).toLocaleString()+'</small></div>').join(""):'No owner actions recorded yet.';
@@ -1052,22 +1052,30 @@ async function ownerGrantCollectible(){
  const target=document.getElementById("ownerCollectibleTarget").value;
  const collectible=document.getElementById("ownerCollectibleChoice").value;
  const quantity=Number(document.getElementById("ownerCollectibleQuantity").value);
+ const isOwnerGod=collectible==="__OWNER_GOD__";
+ const displayName=isOwnerGod?"Owner God":collectible;
  if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;}
- if(!confirm("Grant "+quantity+" × "+collectible+" to the selected player?"))return;
- ownerMessage("Granting collectible…");
+ if(!confirm("Grant "+quantity+" × "+displayName+" to the selected player?"))return;
+ ownerMessage("Granting "+displayName+"…");
  try{
-  const {data,error}=await supabaseClient.rpc("linket_owner_grant_collectible",{p_user_id:target,p_collectible_id:collectible,p_quantity:quantity});
+  let data,error;
+  if(isOwnerGod){
+   const result=await supabaseClient.rpc("linket_owner_god_grant",{p_user_id:target,p_quantity:quantity});
+   data=result.data;error=result.error;
+  }else{
+   const result=await supabaseClient.rpc("linket_owner_grant_collectible",{p_user_id:target,p_collectible_id:collectible,p_quantity:quantity});
+   data=result.data;error=result.error;
+  }
   if(error)throw error;
   if(target!==session.user.id){
    try{
-    await sendOwnerGiftNotification(target,"🎁 You received a collectible!","The Linket owner gave you "+quantity+" × "+collectible+"!");
+    await sendOwnerGiftNotification(target,isOwnerGod?"👑 You received Owner God!":"🎁 You received a collectible!",isOwnerGod?"The Linket owner granted you "+quantity+" × Owner God — a secret exclusive collectible!":"The Linket owner gave you "+quantity+" × "+collectible+"!");
    }catch(notificationError){
     console.warn("Collectible was granted, but the gift message could not be sent:",notificationError.message||notificationError);
    }
   }
-  ownerMessage("Granted! That player now owns "+data+" of this collectible.");
+  ownerMessage("Granted! That player now has "+data+" × "+displayName+".");
   await loadOwnerDashboard();
-  if(target===session.user.id){await refreshSavedGame();drawCollection();renderOwnerDashboard();}
  }catch(e){ownerMessage("Could not grant collectible: "+e.message);}
 }
 async function ownerUnlockAll(){
