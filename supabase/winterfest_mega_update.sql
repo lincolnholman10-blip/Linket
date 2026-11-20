@@ -19,6 +19,30 @@ on conflict (collectible_id) do update
 set display_name=excluded.display_name,emoji=excluded.emoji,rarity=excluded.rarity,
     pack_name=excluded.pack_name,drop_weight=excluded.drop_weight,enabled=true;
 
+-- Ensure all six regular Christmas drops exist even if the installer button was never used.
+insert into public.linket_collectible_catalog
+ (collectible_id,display_name,emoji,rarity,pack_name,drop_weight,enabled)
+values
+ ('Gingerbread Buddy','Gingerbread Buddy','🍪','Common','Christmas Pack',35,true),
+ ('Snowflake Sprite','Snowflake Sprite','❄️','Common','Christmas Pack',35,true),
+ ('Peppermint Penguin','Peppermint Penguin','🐧','Rare','Christmas Pack',20,true),
+ ('Frosty Snowman','Frosty Snowman','☃️','Epic','Christmas Pack',7,true),
+ ('Reindeer Dasher','Reindeer Dasher','🦌','Legendary','Christmas Pack',2.95,true),
+ ('Santa Claus','Santa Claus','🎅','Mythical','Christmas Pack',0.05,true)
+on conflict (collectible_id) do update
+set display_name=excluded.display_name,emoji=excluded.emoji,rarity=excluded.rarity,
+    pack_name=excluded.pack_name,enabled=true;
+
+insert into public.linket_pack_odds(pack_cost,collectible_id,pack_name,emoji,rarity,chance_percent)
+values
+ (50,'Gingerbread Buddy','Christmas','🍪','Common',35),
+ (50,'Snowflake Sprite','Christmas','❄️','Common',35),
+ (50,'Peppermint Penguin','Christmas','🐧','Rare',20),
+ (50,'Frosty Snowman','Christmas','☃️','Epic',7),
+ (50,'Reindeer Dasher','Christmas','🦌','Legendary',2.95),
+ (50,'Santa Claus','Christmas','🎅','Mythical',0.05)
+on conflict(pack_cost,collectible_id) do nothing;
+
 -- Reserve exactly 0.01% for the secret and scale the six normal Christmas drops to 99.99%.
 update public.linket_pack_odds
 set chance_percent=round(chance_percent*0.9999,6)
@@ -191,6 +215,24 @@ begin
 end;
 $$;
 
+
+create or replace function public.linket_player_list_active_events()
+returns table(id uuid,title text,message text,reward_tokens integer,reward_collectible_id text,temporary_reward_hours integer,claimed boolean,ends_at timestamptz)
+language plpgsql security definer set search_path=public
+as $
+begin
+ if auth.uid() is null then raise exception 'Sign in first.'; end if;
+ return query
+ select e.id,e.title,e.message,e.reward_tokens,e.reward_collectible_id,e.temporary_reward_hours,
+        exists(select 1 from public.linket_live_event_claims c where c.event_id=e.id and c.user_id=auth.uid()),
+        e.ends_at
+ from public.linket_live_events e
+ where e.status='active' and (e.starts_at is null or e.starts_at<=now())
+   and (e.ends_at is null or e.ends_at>now())
+ order by e.starts_at nulls first,e.created_at desc;
+end;
+$;
+
 create or replace function public.linket_player_claim_event_reward(p_event_id uuid)
 returns table(tokens bigint,collectible_id text,expires_at timestamptz)
 language plpgsql security definer set search_path=public
@@ -231,11 +273,13 @@ revoke all on function public.linket_player_list_temporary_collectibles() from p
 revoke all on function public.linket_owner_grant_temporary_collectible(uuid,text,integer,integer) from public,anon;
 revoke all on function public.linket_owner_set_event_collectible_reward(uuid,text,integer) from public,anon;
 revoke all on function public.linket_player_claim_event_reward(uuid) from public,anon;
+revoke all on function public.linket_player_list_active_events() from public,anon;
 grant execute on function public.linket_get_christmas_secret_quantity() to authenticated;
 grant execute on function public.linket_claim_christmas_collection_bonus() to authenticated;
 grant execute on function public.linket_player_list_temporary_collectibles() to authenticated;
 grant execute on function public.linket_owner_grant_temporary_collectible(uuid,text,integer,integer) to authenticated;
 grant execute on function public.linket_owner_set_event_collectible_reward(uuid,text,integer) to authenticated;
 grant execute on function public.linket_player_claim_event_reward(uuid) to authenticated;
+grant execute on function public.linket_player_list_active_events() to authenticated;
 grant execute on function public.linket_open_pack(integer) to authenticated;
 notify pgrst,'reload schema';
