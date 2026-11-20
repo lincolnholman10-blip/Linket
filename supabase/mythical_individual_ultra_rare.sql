@@ -1,15 +1,13 @@
 -- Give every Mythical collectible its own individual ultra-rare chance.
--- The most common Mythical in each pack is capped at 0.005%; each subsequent
--- Mythical in that pack gets a strictly smaller chance. Chroma odds are not changed.
+-- Mythical collectibles are ranked globally, so each one gets a different chance.
+-- The rarest starts at 0.005%; each subsequent Mythical gets less. Chroma is unchanged.
 -- Remaining non-Mythical/non-Chroma odds are scaled proportionally to keep packs at 100%.
 
 with ranked_mythicals as (
   select
     pack_cost,
     collectible_id,
-    0.005::numeric / row_number() over (
-      partition by pack_cost order by collectible_id
-    ) as new_chance
+    0.005::numeric / row_number() over (order by collectible_id) as new_chance
   from public.linket_pack_odds
   where lower(rarity) = 'mythical'
     and chance_percent > 0
