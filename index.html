@@ -328,7 +328,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div class="card"><div class="emoji">👑</div><h2 id="ownerName">—</h2><p>Signed-in owner</p></div>
 </div>
 <div class="card owner-section"><h2>👥 Player management</h2><p class="small">Review player accounts and select one to manage.</p>
-<label for="ownerPlayerSearch">🔎 Search players</label><input id="ownerPlayerSearch" type="search" placeholder="Search by username or account status" oninput="renderOwnerPlayerRows()"><div class="owner-actions" id="ownerPlayerFilters"><button type="button" data-player-filter="all" class="secondary" >All players</button><button type="button" data-player-filter="active" class="secondary">Active</button><button type="button" data-player-filter="banned" class="secondary">Banned</button></div><div class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div><p id="ownerSelectedPlayer" class="small" role="status" aria-live="polite">Choose Manage beside a player to jump to their controls.</p></div>
+<label for="ownerPlayerSearch">🔎 Search players</label><input id="ownerPlayerSearch" type="search" placeholder="Search by username or account status" oninput="renderOwnerPlayerRows()"><div class="owner-actions" id="ownerPlayerFilters"><button type="button" data-player-filter="all" class="secondary" >All players</button><button type="button" data-player-filter="active" class="secondary">Active</button><button type="button" data-player-filter="banned" class="secondary">Banned</button></div><div id="ownerPlayersTableWrap" class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div><div id="ownerActivePlayersGrid" class="grid hidden" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:14px"></div><p id="ownerSelectedPlayer" class="small" role="status" aria-live="polite">Choose Manage beside a player to jump to their controls.</p></div>
 <div class="grid owner-tools-grid">
 <div class="card owner-section"><h2>🪙 Adjust player tokens</h2><label for="ownerTarget">Player</label><select id="ownerTarget" class="owner-select"></select>
 <label for="ownerTokenAmount">Amount</label><input id="ownerTokenAmount" type="number" min="1" max="1000000000" value="100">
@@ -836,7 +836,10 @@ if(ownerFilterBar&&!ownerFilterBar.dataset.bound){
  });
 }
 function renderOwnerPlayerRows(){
- const body=document.getElementById("ownerPlayersBody");if(!body)return;
+ const body=document.getElementById("ownerPlayersBody");
+ const tableWrap=document.getElementById("ownerPlayersTableWrap");
+ const activeGrid=document.getElementById("ownerActivePlayersGrid");
+ if(!body||!tableWrap||!activeGrid)return;
  document.querySelectorAll("#ownerPlayerFilters [data-player-filter]").forEach(button=>{
   const selected=button.dataset.playerFilter===ownerPlayerFilter;
   button.classList.toggle("active",selected);
@@ -849,10 +852,18 @@ function renderOwnerPlayerRows(){
   if(ownerPlayerFilter==="banned"&&!banned)return false;
   return !term||String(p.username||"").toLowerCase().includes(term)||(banned?"banned":"active").includes(term);
  });
- body.innerHTML=rows.length?rows.map(p=>{
-  const banned=ownerPlayerIsBanned(p);
-  return '<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(banned?'Banned':'Active'))+'</td><td><button type="button" onclick="selectOwnerPlayer(&quot;'+ownerEscape(p.player_id)+'&quot;)">Manage</button></td></tr>';
- }).join(""):'<tr><td colspan="5">No '+(ownerPlayerFilter==="active"?"active":ownerPlayerFilter==="banned"?"banned":"")+' players match this search.</td></tr>';
+ if(ownerPlayerFilter==="active"){
+  tableWrap.classList.add("hidden");
+  activeGrid.classList.remove("hidden");
+  activeGrid.innerHTML=rows.length?rows.map(p=>'<div class="card" style="text-align:left;background:#202f53;border:1px solid #526187"><div style="font-size:24px">🟢</div><h3 style="margin:6px 0">'+ownerEscape(p.username)+'</h3><p class="small">🪙 '+Number(p.tokens||0).toLocaleString()+' tokens</p><p class="small">🎒 '+Number(p.collectible_count||0)+' collectibles</p><button type="button" onclick="selectOwnerPlayer(&quot;'+ownerEscape(p.player_id)+'&quot;)">Manage player</button></div>').join(""):'<div class="card">No active players match this search.</div>';
+ }else{
+  activeGrid.classList.add("hidden");
+  tableWrap.classList.remove("hidden");
+  body.innerHTML=rows.length?rows.map(p=>{
+   const banned=ownerPlayerIsBanned(p);
+   return '<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(banned?'Banned':'Active'))+'</td><td><button type="button" onclick="selectOwnerPlayer(&quot;'+ownerEscape(p.player_id)+'&quot;)">Manage</button></td></tr>';
+  }).join(""):'<tr><td colspan="5">No '+(ownerPlayerFilter==="banned"?"banned":"")+' players match this search.</td></tr>';
+ }
 }
 async function adminPublishEvent(){
  const title=document.getElementById("adminEventTitle").value.trim(),message=document.getElementById("adminEventDetails").value.trim();
