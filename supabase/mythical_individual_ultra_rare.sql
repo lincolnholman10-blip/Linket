@@ -1,6 +1,7 @@
 -- Give every Mythical collectible its own individual ultra-rare chance.
 -- Mythical collectibles are ranked globally, so each one gets a different chance.
--- The rarest starts at 0.005%; each subsequent Mythical gets less. Chroma is unchanged.
+-- The rarest Mythical starts at 0.005%; each subsequent Mythical gets less.
+-- Every Chroma is set to 0.0001%, rarer than the lowest Mythical chance.
 -- Remaining non-Mythical/non-Chroma odds are scaled proportionally to keep packs at 100%.
 
 with ranked_mythicals as (
@@ -32,7 +33,16 @@ set drop_weight = r.new_weight
 from ranked_catalog r
 where c.collectible_id = r.collectible_id;
 
--- Redistribute only ordinary rarity odds. Chroma odds remain exactly as configured.
+-- Make Chroma rarer than every Mythical, including Void Unicorn.
+update public.linket_pack_odds
+set chance_percent = 0.0001
+where lower(rarity) = 'chroma' and chance_percent > 0;
+
+update public.linket_collectible_catalog
+set drop_weight = 0.0001
+where lower(rarity) = 'chroma' and enabled = true;
+
+-- Redistribute ordinary rarity odds so each pack remains at exactly 100%.
 with pack_totals as (
   select
     pack_cost,
