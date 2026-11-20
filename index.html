@@ -1011,13 +1011,13 @@ function ownerEscape(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&
 async function loadOwnerDashboard(){
  if(!player||!player.owner)return;
  ownerMessage("Loading live player data…");
+ let ownerLoadStep="player list";
  try{
-  const [playersResult,activityResult]=await Promise.all([
-   supabaseClient.rpc("linket_owner_list_players"),
-   supabaseClient.rpc("linket_owner_recent_activity",{p_limit:30})
-  ]);
-  if(playersResult.error)throw playersResult.error;
-  if(activityResult.error)throw activityResult.error;
+  const playersResult=await supabaseClient.rpc("linket_owner_list_players");
+  if(playersResult.error)throw new Error("Player list: "+playersResult.error.message);
+  ownerLoadStep="recent activity";
+  const activityResult=await supabaseClient.rpc("linket_owner_recent_activity",{p_limit:30});
+  if(activityResult.error)throw new Error("Recent activity: "+activityResult.error.message);
   ownerPlayers=playersResult.data||[];
   const tokenTotal=ownerPlayers.reduce((sum,p)=>sum+Number(p.tokens||0),0);
   const collectibleTotal=ownerPlayers.reduce((sum,p)=>sum+Number(p.collectible_count||0),0);
@@ -1033,7 +1033,7 @@ async function loadOwnerDashboard(){
   document.getElementById("ownerAverageCollectibles").textContent=averageCollectibles;
   document.getElementById("ownerTopPlayer").textContent=topPlayer?topPlayer.username:"—";
   document.getElementById("ownerBannedCount").textContent=ownerPlayers.filter(p=>p.is_banned).length.toLocaleString();
-  await ownerLoadCatalog();await ownerLoadPackOdds();await ownerLoadEvents();await ownerLoadFeatureControls();
+  ownerLoadStep="collectible catalog";await ownerLoadCatalog();ownerLoadStep="pack drop chances";await ownerLoadPackOdds();ownerLoadStep="live events";await ownerLoadEvents();ownerLoadStep="feature controls";await ownerLoadFeatureControls();
 
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
@@ -1043,7 +1043,7 @@ async function loadOwnerDashboard(){
   const entries=activityResult.data||[];
   activity.innerHTML=entries.length?entries.map(a=>'<div class="activity-item"><strong>'+ownerEscape(a.action.replaceAll("_"," "))+'</strong> · '+ownerEscape(a.actor_username||"Former user")+(a.target_username?' → '+ownerEscape(a.target_username):'')+'<small>'+ownerEscape(JSON.stringify(a.details||{}))+' · '+new Date(a.created_at).toLocaleString()+'</small></div>').join(""):'No owner actions recorded yet.';
   ownerMessage("Dashboard updated just now.");
- }catch(e){ownerMessage("Could not load owner dashboard: "+(e.message||e));}
+ }catch(e){ownerMessage("Could not load owner dashboard ("+ownerLoadStep+"): "+(e.message||e));}
 }
 
 async function loadAnnouncements(){
