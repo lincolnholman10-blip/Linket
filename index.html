@@ -627,6 +627,7 @@ async function refreshLiveRoom(){
     {id:"relaxed_round",icon:"🌿",name:"Relaxed Round",tag:"Take your time",rule:"30 seconds per question · 75 points"}
    ];
    const selectedMode=modeChoices.find(function(x){return x.id===mode;})||modeChoices[0];
+   const durationPicker=isHost?'<div class="card" style="text-align:left"><h3>⏱️ Choose match length</h3><p class="small">The whole room will play until this shared timer reaches zero.</p><select id="liveDurationChoice" onchange="setLiveDuration(this.value)" style="width:100%"><option value="5" '+(Number(room.duration_minutes||10)===5?'selected':'')+'>⚡ 5 minutes · Quick match</option><option value="10" '+(Number(room.duration_minutes||10)===10?'selected':'')+'>🎯 10 minutes · Standard match</option><option value="15" '+(Number(room.duration_minutes||10)===15?'selected':'')+'>🏆 15 minutes · Extended match</option><option value="20" '+(Number(room.duration_minutes||10)===20?'selected':'')+'>👑 20 minutes · Marathon match</option></select></div>':'<p class="small">⏱️ Match length: '+Number(room.duration_minutes||10)+' minutes · chosen by the host</p>';
    const modulePicker=isHost?'<div class="card" style="text-align:left"><h3>🧩 Choose questions</h3><p class="small">Pick one set of questions for everyone playing.</p><input id="liveModuleSearch" placeholder="Search modules..." oninput="filterLiveModuleChoices(this.value)" style="width:100%;margin-bottom:8px"><div id="liveModuleChoices" style="max-height:230px;overflow-y:auto">'+renderLiveModuleChoiceButtons(room)+'</div></div>':'';
 
    const modePicker=isHost?
@@ -635,7 +636,7 @@ async function refreshLiveRoom(){
      return '<button type="button" class="live-mode-card '+(selected?'selected':'')+'" '+(selected?'aria-pressed="true"':'aria-pressed="false"')+' onclick="setLiveGameMode(\''+choice.id+'\')" '+(liveModeSaving?'disabled':'')+'><span class="mode-icon">'+choice.icon+'</span><span class="mode-title">'+choice.name+'</span><span class="mode-rule">'+choice.tag+'<br>'+choice.rule+'</span><span class="mode-selected">'+(selected?'✓ Selected':'Tap to choose')+'</span></button>';
     }).join("")+'</div><p class="small" style="text-align:center">Your friends will see the mode you choose.</p><button onclick="startLiveGame()">🚀 Start '+selectedMode.name+'</button>'
     :'<div class="card"><h2>'+selectedMode.icon+' '+selectedMode.name+'</h2><p>'+selectedMode.tag+'</p><p class="small">'+selectedMode.rule+'</p><p class="small">Waiting for the host to start the game…</p></div>';
-   liveRoomMessage('<div class="live-room-screen">'+code+avatarPicker+modulePicker+modePicker+roster+leave+'</div>');
+   liveRoomMessage('<div class="live-room-screen">'+code+avatarPicker+durationPicker+modulePicker+modePicker+roster+leave+'</div>');
    return;
   }
   const scores=room.scores||{};
@@ -645,18 +646,22 @@ async function refreshLiveRoom(){
    return;
   }
   const questions=Array.isArray(room.module_questions)&&room.module_questions.length?room.module_questions:liveQuizQuestions.map(function(q){return {question:q[0],options:q[1],answer:q[2]};});
-  const qIndex=Math.max(0,Math.min(questions.length-1,Number(room.current_question)||0)),q=questions[qIndex],answers=room.answers||{},mine=answers[session.user.id];
+  const qIndex=Math.max(0,Number(room.current_question)||0),q=questions[qIndex%questions.length],answers=room.answers||{},mine=answers[session.user.id];
   const elapsed=room.question_started_at?Math.max(0,(Date.now()-new Date(room.question_started_at).getTime())/1000):0;
   const timeLimit=room.game_mode==="speed_round"?8:room.game_mode==="relaxed_round"?30:15;
   const points=room.game_mode==="speed_round"?150:room.game_mode==="relaxed_round"?75:100;
   const seconds=Math.max(0,timeLimit-Math.floor(elapsed));
-  const progress='<p><b>Question '+(qIndex+1)+' of '+questions.length+'</b> · ⏱ '+seconds+' seconds left</p><div class="small">Answered: '+Object.keys(answers).length+' / '+players.length+' · Correct answer: '+points+' points</div>';
+  const matchSeconds=room.ends_at?Math.max(0,Math.ceil((new Date(room.ends_at).getTime()-Date.now())/1000)):Number(room.duration_minutes||10)*60;
+  const progress='<div class="card" style="text-align:center"><div class="small">⏳ MATCH TIME REMAINING</div><div style="font-size:2rem;font-weight:900;color:var(--accent)">'+Math.floor(matchSeconds/60)+':'+String(matchSeconds%60).padStart(2,'0')+'</div><p><b>Question '+(qIndex+1)+'</b> · ⏱ '+seconds+' seconds for this question</p><div class="small">Answered: '+Object.keys(answers).length+' / '+players.length+' · Correct answer: '+points+' points</div></div>';
   let question='<h2>'+accountSafe(q.question||q[0])+'</h2><div class="grid">'+(q.options||q[1]).map(function(option,index){return '<button '+(mine?'disabled':'')+' class="'+(mine&&Number(mine.answer)===index?'secondary':'')+'" onclick="submitLiveAnswer('+qIndex+','+index+')">'+accountSafe(option)+'</button>';}).join("")+'</div>';
   if(mine)question+='<p>'+(mine.correct?'✅ Correct! +'+points+' points':'❌ Not quite!')+' Your answer has been recorded.</p>';
   const board='<h3>Live scores</h3><ol>'+ranked.map(function(p){return '<li>'+accountSafe(p.name)+' — '+p.score+' points</li>';}).join("")+'</ol>';
   const hostControl=isHost?'<button class="secondary" onclick="advanceLiveQuestion()">'+(qIndex===questions.length-1?'Finish Game':'Next Question')+'</button><p class="small">The next question unlocks when everyone answers or the timer reaches zero.</p>':'<p class="small">The host will move to the next question when everyone has answered or time runs out.</p>';
   liveRoomMessage('<div class="live-room-screen">'+code+roster+progress+question+board+hostControl+leave+'</div>');
-  if(isHost&&(seconds===0||Object.keys(answers).length>=players.length)){
+  if(isHost&&matchSeconds===0){
+   const {error}=await supabaseClient.rpc(room.module_id?"linket_module_live_advance":"linket_live_advance_question",{p_room_id:room.id});
+   if(!error)await refreshLiveRoom();
+  }else if(isHost&&(seconds===0||Object.keys(answers).length>=players.length)){
    const {error}=await supabaseClient.rpc(room.module_id?"linket_module_live_advance":"linket_live_advance_question",{p_room_id:room.id});
    if(!error)await refreshLiveRoom();
   }
@@ -669,6 +674,13 @@ async function setLiveRoundAvatar(choice){
  catch(error){alert(error.message||"Could not set your round avatar.");await refreshLiveRoom();}
 }
 let liveModeSaving=false;
+async function setLiveDuration(minutes){
+ if(!activeLiveRoom)return;
+ const value=Number(minutes);
+ if(![5,10,15,20].includes(value))return;
+ try{const {error}=await supabaseClient.rpc("linket_live_set_duration",{p_room_id:activeLiveRoom.id,p_duration_minutes:value});if(error)throw error;await refreshLiveRoom();}
+ catch(error){alert(error.message||"Could not set the match length.");await refreshLiveRoom();}
+}
 async function setLiveGameMode(mode){
  if(!activeLiveRoom||liveModeSaving)return;
  if(!["quiz_battle","speed_round","relaxed_round"].includes(mode))return;
