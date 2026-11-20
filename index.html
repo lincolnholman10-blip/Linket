@@ -894,9 +894,21 @@ async function ownerSaveCollectible(){
 }
 function ownerClearEventForm(){["ownerEventId","adminEventTitle","adminEventDetails","adminEventStart","adminEventEnd"].forEach(id=>document.getElementById(id).value="");document.getElementById("adminEventReward").value="0";document.getElementById("adminEventStatus").value="draft";}
 async function ownerSaveEvent(){
+ const button=Array.from(document.querySelectorAll(".owner-section button")).find(b=>b.getAttribute("onclick")==="ownerSaveEvent()");
  const id=document.getElementById("ownerEventId").value||null,title=document.getElementById("adminEventTitle").value.trim(),message=document.getElementById("adminEventDetails").value.trim(),start=document.getElementById("adminEventStart").value,end=document.getElementById("adminEventEnd").value,reward=Number(document.getElementById("adminEventReward").value),status=document.getElementById("adminEventStatus").value;
- try{const {error}=await supabaseClient.rpc("linket_owner_save_event",{p_event_id:id,p_title:title,p_message:message,p_starts_at:start?new Date(start).toISOString():null,p_ends_at:end?new Date(end).toISOString():null,p_reward_tokens:reward,p_status:status});if(error)throw error;ownerMessage("Event saved.");ownerClearEventForm();await ownerLoadEvents();}
- catch(e){ownerMessage("Could not save event: "+e.message);}
+ if(!title){ownerMessage("Enter an event title before saving.");document.getElementById("adminEventTitle").focus();return;}
+ if(message.length>1000){ownerMessage("Event details must be 1,000 characters or fewer.");return;}
+ if(!Number.isInteger(reward)||reward<0||reward>1000000){ownerMessage("Token reward must be a whole number from 0 to 1,000,000.");return;}
+ if(start&&end&&new Date(end)<=new Date(start)){ownerMessage("The end time must be later than the start time.");return;}
+ if(button){button.disabled=true;button.textContent="⏳ Saving event…";}
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_owner_save_event",{p_event_id:id,p_title:title,p_message:message,p_starts_at:start?new Date(start).toISOString():null,p_ends_at:end?new Date(end).toISOString():null,p_reward_tokens:reward,p_status:status});
+  if(error)throw error;
+  ownerMessage("🎉 Event saved successfully.");
+  ownerClearEventForm();
+  await ownerLoadEvents();
+ }catch(e){ownerMessage("Could not save event: "+(e.message||"Unknown database error."));}
+ finally{if(button){button.disabled=false;button.textContent="💾 Save event";}}
 }
 async function ownerLoadEvents(){
  const box=document.getElementById("ownerEventsList");if(!box)return;
