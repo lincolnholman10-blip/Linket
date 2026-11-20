@@ -1266,7 +1266,7 @@ async function ownerGrantTemporaryCollectible(){
  try{const {data,error}=await supabaseClient.rpc("linket_owner_grant_temporary_collectible",{p_user_id:target,p_collectible_id:collectible,p_quantity:quantity,p_hours:hours});if(error)throw error;if(target!==session.user.id)await sendOwnerGiftNotification(target,"⏳ Temporary collectible received!",quantity+" × "+collectible+" was added to your collection and expires "+new Date(data).toLocaleString()+".");ownerMessage("Temporary collectible granted. Expires "+new Date(data).toLocaleString()+".");if(target===session.user.id){await refreshSavedGame();drawCollection();}}
  catch(e){ownerMessage("Could not grant temporary collectible: "+(e.message||e));}
 }
-function ownerGrantCollectible(){
+async function ownerGrantCollectible(){
  if(!player||!player.owner)return;
  const target=document.getElementById("ownerCollectibleTarget").value;
  const collectible=document.getElementById("ownerCollectibleChoice").value;
