@@ -75,7 +75,7 @@ BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'You must be signed in.'; END IF;
   SELECT * INTO v_room FROM public.linket_live_rooms WHERE id=p_room_id FOR UPDATE;
   IF NOT FOUND OR v_room.status<>'playing' THEN RAISE EXCEPTION 'This game is not active.'; END IF;
-  IF v_room.host_user_id<>auth.uid() THEN RAISE EXCEPTION 'Only the host can advance the game.'; END IF;
+  IF v_room.host_user_id<>auth.uid() AND (v_room.ends_at IS NULL OR now()<v_room.ends_at) THEN RAISE EXCEPTION 'Only the host can advance the game before the match timer ends.'; END IF;
   IF v_room.ends_at IS NOT NULL AND now()>=v_room.ends_at THEN
     UPDATE public.linket_live_rooms SET status='finished' WHERE id=p_room_id;
     RETURN 'finished';
