@@ -216,6 +216,21 @@ end;
 $$;
 
 
+
+create or replace function public.linket_owner_list_event_rewards()
+returns table(event_id uuid,reward_collectible_id text,temporary_reward_hours integer)
+language plpgsql security definer set search_path=public
+as $
+begin
+ if auth.uid() is null or not public.linket_owner_dashboard_is_owner() then raise exception 'Owner access required.'; end if;
+ return query select e.id,e.reward_collectible_id,e.temporary_reward_hours from public.linket_live_events e;
+end;
+$;
+
+create or replace function public.linket_get_christmas_bonus_claimed()
+returns boolean language sql stable security definer set search_path=public
+as $ select exists(select 1 from public.linket_christmas_collection_claims c where c.user_id=auth.uid()); $;
+
 create or replace function public.linket_player_list_active_events()
 returns table(id uuid,title text,message text,reward_tokens integer,reward_collectible_id text,temporary_reward_hours integer,claimed boolean,ends_at timestamptz)
 language plpgsql security definer set search_path=public
@@ -274,6 +289,8 @@ revoke all on function public.linket_owner_grant_temporary_collectible(uuid,text
 revoke all on function public.linket_owner_set_event_collectible_reward(uuid,text,integer) from public,anon;
 revoke all on function public.linket_player_claim_event_reward(uuid) from public,anon;
 revoke all on function public.linket_player_list_active_events() from public,anon;
+revoke all on function public.linket_owner_list_event_rewards() from public,anon;
+revoke all on function public.linket_get_christmas_bonus_claimed() from public,anon;
 grant execute on function public.linket_get_christmas_secret_quantity() to authenticated;
 grant execute on function public.linket_claim_christmas_collection_bonus() to authenticated;
 grant execute on function public.linket_player_list_temporary_collectibles() to authenticated;
@@ -281,5 +298,7 @@ grant execute on function public.linket_owner_grant_temporary_collectible(uuid,t
 grant execute on function public.linket_owner_set_event_collectible_reward(uuid,text,integer) to authenticated;
 grant execute on function public.linket_player_claim_event_reward(uuid) to authenticated;
 grant execute on function public.linket_player_list_active_events() to authenticated;
+grant execute on function public.linket_owner_list_event_rewards() to authenticated;
+grant execute on function public.linket_get_christmas_bonus_claimed() to authenticated;
 grant execute on function public.linket_open_pack(integer) to authenticated;
 notify pgrst,'reload schema';
