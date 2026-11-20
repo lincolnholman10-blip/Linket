@@ -1322,9 +1322,20 @@ async function ownerUnlockAll(){
  try{
   const {error}=await supabaseClient.rpc("linket_owner_unlock_all");
   if(error)throw error;
+  // Frostfire Phoenix is stored in its protected secret-holder table,
+  // so the normal unlock-all RPC does not include it.
+  const {data:secretQty,error:secretError}=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
+  if(secretError)throw secretError;
+  if(Number(secretQty||0)<1){
+   const {error:grantError}=await supabaseClient.rpc("linket_owner_grant_christmas_secret",{
+    p_user_id:session.user.id,p_quantity:1
+   });
+   if(grantError)throw grantError;
+  }
   await refreshSavedGame();
   drawCollection();renderOwnerDashboard();
-  alert("Every Linket collectible has been saved to your account.");
+  if(Number(player.christmasSecretQuantity||0)<1)throw new Error("Frostfire Phoenix was not returned by the collection refresh. Please sign out and back in, then try again.");
+  alert("Every Linket collectible, including 1 × Frostfire Phoenix (Chroma), has been saved to your account.");
  }catch(e){alert("Could not unlock collectibles: "+e.message);}
 }
 async function ownerRestoreTokens(){
