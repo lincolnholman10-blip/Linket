@@ -370,7 +370,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 <label for="adminAnnouncementMessage">Message</label><textarea id="adminAnnouncementMessage" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="Message for all Linket players"></textarea>
 <button onclick="adminPublishAnnouncement()">Publish announcement</button></div>
 <div class="card owner-section"><h2>🎨 Collectible manager</h2><p class="small">Edit the saved catalog, rarity, pack label, display emoji, and drop weight. The current pack-opening RPC still controls actual rewards until its odds logic is migrated to this catalog.</p><div id="ownerCollectibleCatalog" class="grid"></div><div class="owner-tools-grid"><div><label for="ownerItemId">Collectible ID (existing name for edits)</label><input id="ownerItemId" maxlength="80" placeholder="Happy Turtle"><label for="ownerItemName">Display name</label><input id="ownerItemName" maxlength="80" placeholder="Happy Turtle"><label for="ownerItemEmoji">Emoji</label><input id="ownerItemEmoji" maxlength="12" value="✨"><label for="ownerItemRarity">Rarity</label><select id="ownerItemRarity"><option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythical</option></select><label for="ownerItemPack">Pack</label><input id="ownerItemPack" maxlength="80" value="All Packs"><label for="ownerItemWeight">Drop weight</label><input id="ownerItemWeight" type="number" min="0" max="1000000" step="0.0001" value="1"><label><input id="ownerItemEnabled" type="checkbox" checked> Enabled in catalog</label><button onclick="ownerSaveCollectible()">💾 Save collectible</button></div></div></div>
-<div class="card owner-section" id="ownerSportsPackOverview"><h2>🎲 All Pack Drop Chances</h2><p class="small">Edit the chance of every collectible in every pack. Percentages must total exactly 100% within each pack. Changes affect real pack openings after you save.</p><div id="ownerPackOddsEditor">Loading pack odds…</div><button onclick="ownerSaveAllPackOdds()">💾 Save all pack chances</button><p id="ownerPackOddsStatus" class="small"></p></div><div class="card owner-section"><h2>🎉 Live event manager</h2><p class="small">Create drafts, schedule events, activate them, or mark them ended. Token reward amounts are stored with each event; automatic reward distribution is not enabled yet.</p><input id="ownerEventId" type="hidden"><label for="adminEventTitle">Event title</label><input id="adminEventTitle" maxlength="100" placeholder="Weekend Token Boost"><label for="adminEventDetails">Event details</label><textarea id="adminEventDetails" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="Tell players what is happening…"></textarea><label for="adminEventStart">Starts</label><input id="adminEventStart" type="datetime-local"><label for="adminEventEnd">Ends</label><input id="adminEventEnd" type="datetime-local"><label for="adminEventReward">Token reward</label><input id="adminEventReward" type="number" min="0" max="1000000" value="0"><label for="adminEventStatus">Status</label><select id="adminEventStatus"><option value="draft">Draft</option><option value="scheduled">Scheduled</option><option value="active">Active now</option><option value="ended">Ended</option></select><div class="owner-actions"><button onclick="ownerSaveEvent()">💾 Save event</button><button class="secondary" onclick="ownerClearEventForm()">Clear form</button></div><div id="ownerEventsList" class="activity-list">Load events after running the SQL setup.</div></div><div class="card owner-section"><h2>🎁 Daily reward settings</h2><p class="small">Set the daily token reward and bonus for consecutive login days.</p><label><input type="checkbox" id="ownerDailyEnabled" checked> Enable daily rewards</label><label for="ownerDailyBase">Base reward</label><input id="ownerDailyBase" type="number" min="0" max="1000000" value="50"><label for="ownerDailyBonus">Bonus tokens per streak day</label><input id="ownerDailyBonus" type="number" min="0" max="100000" value="10"><label for="ownerDailyCap">Maximum bonus days</label><input id="ownerDailyCap" type="number" min="1" max="365" value="7"><button onclick="ownerSaveDailySettings()">💾 Save daily rewards</button></div><div class="card owner-section"><h2>📜 Quest manager</h2><input id="ownerQuestId" type="hidden"><label for="ownerQuestTitle">Quest title</label><input id="ownerQuestTitle" maxlength="100" placeholder="Win 3 games"><label for="ownerQuestDescription">Description</label><input id="ownerQuestDescription" maxlength="240" placeholder="Complete three games"><label for="ownerQuestMetric">Goal type</label><select id="ownerQuestMetric"><option value="wins">Game wins</option><option value="score">Best score</option><option value="tokens">Tokens held</option><option value="collectibles">Collectibles owned</option></select><label for="ownerQuestTarget">Goal amount</label><input id="ownerQuestTarget" type="number" min="1" value="3"><label for="ownerQuestReward">Token reward</label><input id="ownerQuestReward" type="number" min="0" value="100"><label><input id="ownerQuestEnabled" type="checkbox" checked> Quest enabled</label><div class="owner-actions"><button onclick="ownerSaveQuest()">💾 Save quest</button><button class="secondary" onclick="ownerClearQuest()">Clear</button></div><div id="ownerQuestList" class="feature-list"></div></div><div class="card owner-section"><h2>🏅 Achievement manager</h2><label for="ownerAchievementId">Achievement ID</label><input id="ownerAchievementId" maxlength="60" placeholder="first_win"><label for="ownerAchievementTitle">Title</label><input id="ownerAchievementTitle" maxlength="100" placeholder="First Victory"><label for="ownerAchievementDescription">Description</label><input id="ownerAchievementDescription" maxlength="240" placeholder="Win your first game"><label for="ownerAchievementIcon">Icon</label><input id="ownerAchievementIcon" maxlength="12" value="🏆"><label for="ownerAchievementMetric">Goal type</label><select id="ownerAchievementMetric"><option value="wins">Game wins</option><option value="score">Best score</option><option value="tokens">Tokens held</option><option value="collectibles">Collectibles owned</option></select><label for="ownerAchievementTarget">Goal amount</label><input id="ownerAchievementTarget" type="number" min="1" value="1"><label><input id="ownerAchievementEnabled" type="checkbox" checked> Achievement enabled</label><button onclick="ownerSaveAchievement()">💾 Save achievement</button><div id="ownerAchievementList" class="feature-list"></div></div><div class="card owner-section"><h2>🧾 Recent owner activity</h2><div id="ownerActivity" class="activity-list">Loading activity…</div></div>
+<div class="card owner-section" id="ownerSportsPackOverview"><h2>🎲 All Pack Drop Chances</h2><p class="small">Edit the chance of every collectible in every pack. Percentages must total exactly 100% within each pack. Changes affect real pack openings after you save.</p><div id="ownerPackOddsEditor">Loading pack odds…</div><button onclick="ownerInstallChristmasDrops()">🎄 Install Christmas collectibles &amp; drops</button><button onclick="ownerSaveAllPackOdds()">💾 Save all pack chances</button><p id="ownerPackOddsStatus" class="small">Install the festive collectibles once to replace the ordinary Christmas Pack drops.</p></div><div class="card owner-section"><h2>🎉 Live event manager</h2><p class="small">Create drafts, schedule events, activate them, or mark them ended. Token reward amounts are stored with each event; automatic reward distribution is not enabled yet.</p><input id="ownerEventId" type="hidden"><label for="adminEventTitle">Event title</label><input id="adminEventTitle" maxlength="100" placeholder="Weekend Token Boost"><label for="adminEventDetails">Event details</label><textarea id="adminEventDetails" maxlength="1000" rows="3" style="width:100%;border-radius:10px;padding:12px" placeholder="Tell players what is happening…"></textarea><label for="adminEventStart">Starts</label><input id="adminEventStart" type="datetime-local"><label for="adminEventEnd">Ends</label><input id="adminEventEnd" type="datetime-local"><label for="adminEventReward">Token reward</label><input id="adminEventReward" type="number" min="0" max="1000000" value="0"><label for="adminEventStatus">Status</label><select id="adminEventStatus"><option value="draft">Draft</option><option value="scheduled">Scheduled</option><option value="active">Active now</option><option value="ended">Ended</option></select><div class="owner-actions"><button onclick="ownerSaveEvent()">💾 Save event</button><button class="secondary" onclick="ownerClearEventForm()">Clear form</button></div><div id="ownerEventsList" class="activity-list">Load events after running the SQL setup.</div></div><div class="card owner-section"><h2>🎁 Daily reward settings</h2><p class="small">Set the daily token reward and bonus for consecutive login days.</p><label><input type="checkbox" id="ownerDailyEnabled" checked> Enable daily rewards</label><label for="ownerDailyBase">Base reward</label><input id="ownerDailyBase" type="number" min="0" max="1000000" value="50"><label for="ownerDailyBonus">Bonus tokens per streak day</label><input id="ownerDailyBonus" type="number" min="0" max="100000" value="10"><label for="ownerDailyCap">Maximum bonus days</label><input id="ownerDailyCap" type="number" min="1" max="365" value="7"><button onclick="ownerSaveDailySettings()">💾 Save daily rewards</button></div><div class="card owner-section"><h2>📜 Quest manager</h2><input id="ownerQuestId" type="hidden"><label for="ownerQuestTitle">Quest title</label><input id="ownerQuestTitle" maxlength="100" placeholder="Win 3 games"><label for="ownerQuestDescription">Description</label><input id="ownerQuestDescription" maxlength="240" placeholder="Complete three games"><label for="ownerQuestMetric">Goal type</label><select id="ownerQuestMetric"><option value="wins">Game wins</option><option value="score">Best score</option><option value="tokens">Tokens held</option><option value="collectibles">Collectibles owned</option></select><label for="ownerQuestTarget">Goal amount</label><input id="ownerQuestTarget" type="number" min="1" value="3"><label for="ownerQuestReward">Token reward</label><input id="ownerQuestReward" type="number" min="0" value="100"><label><input id="ownerQuestEnabled" type="checkbox" checked> Quest enabled</label><div class="owner-actions"><button onclick="ownerSaveQuest()">💾 Save quest</button><button class="secondary" onclick="ownerClearQuest()">Clear</button></div><div id="ownerQuestList" class="feature-list"></div></div><div class="card owner-section"><h2>🏅 Achievement manager</h2><label for="ownerAchievementId">Achievement ID</label><input id="ownerAchievementId" maxlength="60" placeholder="first_win"><label for="ownerAchievementTitle">Title</label><input id="ownerAchievementTitle" maxlength="100" placeholder="First Victory"><label for="ownerAchievementDescription">Description</label><input id="ownerAchievementDescription" maxlength="240" placeholder="Win your first game"><label for="ownerAchievementIcon">Icon</label><input id="ownerAchievementIcon" maxlength="12" value="🏆"><label for="ownerAchievementMetric">Goal type</label><select id="ownerAchievementMetric"><option value="wins">Game wins</option><option value="score">Best score</option><option value="tokens">Tokens held</option><option value="collectibles">Collectibles owned</option></select><label for="ownerAchievementTarget">Goal amount</label><input id="ownerAchievementTarget" type="number" min="1" value="1"><label><input id="ownerAchievementEnabled" type="checkbox" checked> Achievement enabled</label><button onclick="ownerSaveAchievement()">💾 Save achievement</button><div id="ownerAchievementList" class="feature-list"></div></div><div class="card owner-section"><h2>🧾 Recent owner activity</h2><div id="ownerActivity" class="activity-list">Loading activity…</div></div>
 </section>
 
 </div>
@@ -393,7 +393,8 @@ const items = [
  ["Seashell Snail","🐌","Common"],["Surfer Seal","🦭","Common"],["Crab Pal","🦀","Rare"],["Coral Turtle","🐢","Epic"],["Pearl Dolphin","🐬","Legendary"],["Tidal Phoenix","🦅","Mythical"],
  ["Moon Moth","🦋","Common"],["Astro Pup","🐕‍🦺","Common"],["Comet Cat","🐈","Rare"],["Nebula Fox","🦊","Epic"],["Solar Dragon","🐲","Legendary"],["Void Unicorn","🦄","Mythical"],
  ["Puppy Pal","🐶","Common"],["Corgi Buddy","🐕","Common"],["Dalmatian Dash","🐾","Rare"],["Shiba Star","🐕","Epic"],["Golden Retriever","🦮","Legendary"],["Cosmic Wolf","🐺","Mythical"],
- ["Rookie Hooper","🏀","Common"],["Goal Getter","⚽","Common"],["Court Captain","🏀","Rare"],["Grand Slam Star","⚾","Epic"],["Championship MVP","🏆","Legendary"],["Mason Plumlee","🗿","Mythical"]
+ ["Rookie Hooper","🏀","Common"],["Goal Getter","⚽","Common"],["Court Captain","🏀","Rare"],["Grand Slam Star","⚾","Epic"],["Championship MVP","🏆","Legendary"],["Mason Plumlee","🗿","Mythical"],
+ ["Gingerbread Buddy","🍪","Common"],["Snowflake Sprite","❄️","Common"],["Peppermint Penguin","🐧","Rare"],["Frosty Snowman","☃️","Epic"],["Reindeer Dasher","🦌","Legendary"],["Santa Claus","🎅","Mythical"]
 ];
 const modes = [["🛡️","Tower Defense"],["💰","Gold Quest"],["☕","Cafe"],["🏭","Factory"]];
 const packs = [["🎄","Christmas Pack",50],["🏖️","Beach Pack",75],["🌈","Rainbow Pack",100],["🚀","Space Pack",125],["🌌","Galaxy Pack",150],["🐶","Dog Pack",175],["🏀","Sports Pack",200]];
@@ -900,6 +901,48 @@ async function adminPublishEvent(){
   ownerMessage("Event announcement published!");await loadAnnouncements();await loadOwnerDashboard();
  }catch(e){ownerMessage("Could not publish event announcement: "+e.message);}
 }
+async function ownerInstallChristmasDrops(){
+ const status=document.getElementById("ownerPackOddsStatus");
+ const drops=[
+  ["Gingerbread Buddy","Iced gingerbread cookie with candy buttons","🍪","Common",35,35],
+  ["Snowflake Sprite","Glowing six-point snowflake with icy sparkles","❄️","Common",35,35],
+  ["Peppermint Penguin","Festive penguin with a peppermint scarf","🐧","Rare",20,20],
+  ["Frosty Snowman","Snowman with a top hat, carrot nose, and coal buttons","☃️","Epic",7,7],
+  ["Reindeer Dasher","Christmas reindeer with antlers and a tiny bell","🦌","Legendary",2.95,2.95],
+  ["Santa Claus","Santa in a red suit with a white beard and gift sack","🎅","Mythical",0.05,0.05]
+ ];
+ if(!player||!player.owner){status.textContent="Owner access is required.";return;}
+ status.textContent="Installing Christmas collectibles…";
+ try{
+  for(const d of drops){
+   const {error}=await supabaseClient.rpc("linket_owner_save_collectible",{
+    p_collectible_id:d[0],p_display_name:d[0],p_emoji:d[2],p_rarity:d[3],
+    p_pack_name:"Christmas",p_drop_weight:d[4],p_enabled:true
+   });
+   if(error)throw error;
+  }
+  const oldRows=(window.ownerPackOddsRows||[]).filter(x=>Number(x.pack_cost)===50);
+  for(const row of oldRows){
+   if(!drops.some(d=>d[0]===row.collectible_id)){
+    const {error}=await supabaseClient.rpc("linket_owner_set_pack_odds",{
+     p_pack_cost:50,p_collectible_id:row.collectible_id,p_chance_percent:0
+    });
+    if(error)throw error;
+   }
+  }
+  for(const d of drops){
+   const {error}=await supabaseClient.rpc("linket_owner_set_pack_odds",{
+    p_pack_cost:50,p_collectible_id:d[0],p_chance_percent:d[4]
+   });
+   if(error)throw error;
+  }
+  await ownerLoadPackOdds();
+  await ownerLoadCatalog();
+  status.textContent="Christmas Pack installed! Its six festive drops now total exactly 100%.";
+ }catch(e){
+  status.textContent="Could not finish installing Christmas drops: "+(e.message||e)+". You can click Install again safely.";
+ }
+}
 async function ownerLoadPackOdds(){
  const box=document.getElementById("ownerPackOddsEditor");if(!box)return;
  const {data,error}=await supabaseClient.rpc("linket_owner_list_pack_odds");if(error)throw error;
@@ -1276,7 +1319,13 @@ const collectibleLooks={
  "Dalmatian Dash":["#d8dce5","#ffffff","🐾","Dalmatian spots and speedy paws"],
  "Shiba Star":["#d68a45","#ffe0a8","🌟","Shiba cheeks and star charm"],
  "Golden Retriever":["#d9a34a","#fff0bd","🎾","Golden coat and tennis ball"],
- "Cosmic Wolf":["#586ca8","#dce6ff","🌌","Cosmic fur and constellation marks"]
+ "Cosmic Wolf":["#586ca8","#dce6ff","🌌","Cosmic fur and constellation marks"],
+ "Gingerbread Buddy":["#a96b3b","#ffe0a6","🍬","Iced gingerbread cookie with candy buttons"],
+ "Snowflake Sprite":["#6fc9f5","#e5f8ff","❄️","Glowing six-point snowflake with icy sparkles"],
+ "Peppermint Penguin":["#d94b5d","#ffe7ed","🍬","Festive penguin with a peppermint scarf"],
+ "Frosty Snowman":["#75c9ef","#f2fcff","🎩","Snowman with a top hat, carrot nose, and coal buttons"],
+ "Reindeer Dasher":["#b77a42","#ffe0a8","🛷","Christmas reindeer with antlers and a tiny bell"],
+ "Santa Claus":["#d9434e","#fff0c8","🎁","Santa in a red suit with a white beard and gift sack"]
 };
 function collectibleArt(name,fallback,extraClass=""){
  const safeName=accountSafe(name),safeEmoji=String(fallback||"✨"),look=collectibleLooks[name]||["#55b879","#d9ffe5","✦",name];
@@ -1349,6 +1398,10 @@ const packContents = [
  ],
  [
   ["Rookie Hooper",40],["Goal Getter",30],["Court Captain",20],["Grand Slam Star",7],["Championship MVP",2.995],["Mason Plumlee",0.005]
+ ],
+ [
+  ["Gingerbread Buddy",35],["Snowflake Sprite",35],["Peppermint Penguin",20],
+  ["Frosty Snowman",7],["Reindeer Dasher",2.95],["Santa Claus",0.05]
  ]
 ];
 function renderPackContents(index){
