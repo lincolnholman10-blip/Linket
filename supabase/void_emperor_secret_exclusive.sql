@@ -13,7 +13,7 @@ REVOKE ALL ON TABLE public.linket_void_emperor_holders FROM PUBLIC, anon, authen
 -- Give the primary Linket owner one copy.
 INSERT INTO public.linket_void_emperor_holders(user_id,quantity,granted_by)
 SELECT p.id,1,p.id FROM public.profiles p
-WHERE p.is_owner=true ORDER BY p.created_at ASC LIMIT 1
+WHERE p.is_owner=true
 ON CONFLICT(user_id) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION public.linket_get_void_emperor_quantity()
