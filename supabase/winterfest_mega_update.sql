@@ -63,7 +63,7 @@ set pack_name=excluded.pack_name,emoji=excluded.emoji,rarity=excluded.rarity,cha
 
 create or replace function public.linket_owner_grant_christmas_secret(p_user_id uuid,p_quantity integer default 1)
 returns integer language plpgsql security definer set search_path=public
-as $
+as $$
 declare v_qty integer;
 begin
  if auth.uid() is null or not public.linket_owner_dashboard_is_owner() then raise exception 'Owner access only.'; end if;
@@ -75,7 +75,7 @@ begin
  returning quantity into v_qty;
  return v_qty;
 end;
-$;
+$$;
 
 create or replace function public.linket_get_christmas_secret_quantity()
 returns integer language plpgsql stable security definer set search_path=public
@@ -244,21 +244,21 @@ $$;
 create or replace function public.linket_owner_list_event_rewards()
 returns table(event_id uuid,reward_collectible_id text,temporary_reward_hours integer)
 language plpgsql security definer set search_path=public
-as $
+as $$
 begin
  if auth.uid() is null or not public.linket_owner_dashboard_is_owner() then raise exception 'Owner access required.'; end if;
  return query select e.id,e.reward_collectible_id,e.temporary_reward_hours from public.linket_live_events e;
 end;
-$;
+$$;
 
 create or replace function public.linket_get_christmas_bonus_claimed()
 returns boolean language sql stable security definer set search_path=public
-as $ select exists(select 1 from public.linket_christmas_collection_claims c where c.user_id=auth.uid()); $;
+as $$ select exists(select 1 from public.linket_christmas_collection_claims c where c.user_id=auth.uid()); $$;
 
 create or replace function public.linket_player_list_active_events()
 returns table(id uuid,title text,message text,reward_tokens integer,reward_collectible_id text,temporary_reward_hours integer,claimed boolean,ends_at timestamptz)
 language plpgsql security definer set search_path=public
-as $
+as $$
 begin
  if auth.uid() is null then raise exception 'Sign in first.'; end if;
  return query
@@ -270,7 +270,7 @@ begin
    and (e.ends_at is null or e.ends_at>now())
  order by e.starts_at nulls first,e.created_at desc;
 end;
-$;
+$$;
 
 create or replace function public.linket_player_claim_event_reward(p_event_id uuid)
 returns table(tokens bigint,collectible_id text,expires_at timestamptz)
