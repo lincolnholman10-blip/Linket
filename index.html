@@ -454,8 +454,16 @@ async function loadGameData(){
  if(ownerGodError)throw new Error("Could not load your secret Owner God collectible: "+ownerGodError.message);
  const {data:daBearsQuantity,error:daBearsError}=await supabaseClient.rpc("linket_get_da_bears_quantity");
  if(daBearsError)throw new Error("Could not load your secret Da Bears collectible: "+daBearsError.message);
- const {data:secretQuantity,error:secretError}=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
+ let {data:secretQuantity,error:secretError}=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
  if(secretError)throw new Error("Could not load your Christmas secret collectible: "+secretError.message);
+ // Automatically grant Frostfire Phoenix once to the Linket owner account.
+ if(profile.is_owner===true&&Number(secretQuantity||0)<1){
+  const {error:grantError}=await supabaseClient.rpc("linket_owner_grant_christmas_secret",{p_user_id:session.user.id,p_quantity:1});
+  if(grantError)throw new Error("Could not add your Chroma collectible: "+grantError.message);
+  const refreshedSecret=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
+  if(refreshedSecret.error)throw new Error("Could not refresh your Chroma collectible: "+refreshedSecret.error.message);
+  secretQuantity=refreshedSecret.data;
+ }
  const {data:temporaryRows,error:temporaryError}=await supabaseClient.rpc("linket_player_list_temporary_collectibles");
  if(temporaryError)throw new Error("Could not load temporary collectibles: "+temporaryError.message);
  player={name:profile.username||"Player",tokens:Number(profile.tokens)||0,
@@ -1340,8 +1348,16 @@ async function refreshSavedGame(){
  if(error)throw error;
  const {data:daBearsQuantity,error:daBearsError}=await supabaseClient.rpc("linket_get_da_bears_quantity");
  if(daBearsError)throw daBearsError;
- const {data:secretQuantity,error:secretError}=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
+ let {data:secretQuantity,error:secretError}=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
  if(secretError)throw secretError;
+ // Keep the owner's Frostfire Phoenix permanently present after every refresh.
+ if(profileData.is_owner===true&&Number(secretQuantity||0)<1){
+  const {error:grantError}=await supabaseClient.rpc("linket_owner_grant_christmas_secret",{p_user_id:session.user.id,p_quantity:1});
+  if(grantError)throw grantError;
+  const refreshedSecret=await supabaseClient.rpc("linket_get_christmas_secret_quantity");
+  if(refreshedSecret.error)throw refreshedSecret.error;
+  secretQuantity=refreshedSecret.data;
+ }
  const {data:temporaryRows,error:temporaryError}=await supabaseClient.rpc("linket_player_list_temporary_collectibles");
  if(temporaryError)throw temporaryError;
  player.daBearsQuantity=Number(daBearsQuantity)||0;player.christmasSecretQuantity=Number(secretQuantity)||0;player.tempRows=temporaryRows||[];
