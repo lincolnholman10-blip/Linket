@@ -912,12 +912,13 @@ async function adminPublishEvent(){
 async function ownerInstallChristmasDrops(){
  const status=document.getElementById("ownerPackOddsStatus");
  const drops=[
-  ["Gingerbread Buddy","Iced gingerbread cookie with candy buttons","🍪","Common",35,35],
-  ["Snowflake Sprite","Glowing six-point snowflake with icy sparkles","❄️","Common",35,35],
-  ["Peppermint Penguin","Festive penguin with a peppermint scarf","🐧","Rare",20,20],
-  ["Frosty Snowman","Snowman with a top hat, carrot nose, and coal buttons","☃️","Epic",7,7],
-  ["Reindeer Dasher","Christmas reindeer with antlers and a tiny bell","🦌","Legendary",2.95,2.95],
-  ["Santa Claus","Santa in a red suit with a white beard and gift sack","🎅","Mythical",0.05,0.05]
+  ["Gingerbread Buddy","Iced gingerbread cookie with candy buttons","🍪","Common",34.9965,34.9965],
+  ["Snowflake Sprite","Glowing six-point snowflake with icy sparkles","❄️","Common",34.9965,34.9965],
+  ["Peppermint Penguin","Festive penguin with a peppermint scarf","🐧","Rare",19.998,19.998],
+  ["Frosty Snowman","Snowman with a top hat, carrot nose, and coal buttons","☃️","Epic",6.9993,6.9993],
+  ["Reindeer Dasher","Christmas reindeer with antlers and a tiny bell","🦌","Legendary",2.949705,2.949705],
+  ["Santa Claus","Santa in a red suit with a white beard and gift sack","🎅","Mythical",0.049995,0.049995],
+  ["Frostfire Phoenix","A secret phoenix with frost and flame wings","🔥","Mythical",0.01,0.01]
  ];
  if(!player||!player.owner){status.textContent="Owner access is required.";return;}
  status.textContent="Installing Christmas collectibles…";
@@ -1458,8 +1459,8 @@ const packContents = [
   ["Rookie Hooper",40],["Goal Getter",30],["Court Captain",20],["Grand Slam Star",7],["Championship MVP",2.995],["Mason Plumlee",0.005]
  ],
  [
-  ["Gingerbread Buddy",35],["Snowflake Sprite",35],["Peppermint Penguin",20],
-  ["Frosty Snowman",7],["Reindeer Dasher",2.95],["Santa Claus",0.05],["Frostfire Phoenix",0.01]
+  ["Gingerbread Buddy",34.9965],["Snowflake Sprite",34.9965],["Peppermint Penguin",19.998],
+  ["Frosty Snowman",6.9993],["Reindeer Dasher",2.949705],["Santa Claus",0.049995],["Frostfire Phoenix",0.01]
  ]
 ];
 function renderPackContents(index){
