@@ -1009,12 +1009,16 @@ async function ownerSaveEvent(){
 }
 async function ownerLoadEvents(){
  const box=document.getElementById("ownerEventsList");if(!box)return;
- const {data,error}=await supabaseClient.rpc("linket_owner_list_events");if(error)throw error;
+ const [events,rewards]=await Promise.all([supabaseClient.rpc("linket_owner_list_events"),supabaseClient.rpc("linket_owner_list_event_rewards")]);if(events.error)throw events.error;if(rewards.error)throw rewards.error;
+ const data=events.data||[];window.ownerEventRewardRows=rewards.data||[];
  box.innerHTML=(data||[]).map(e=>'<div class="activity-item"><strong>'+ownerEscape(e.title)+'</strong><p>'+ownerEscape(e.status)+' · '+Number(e.reward_tokens)+' tokens</p><p class="small">'+ownerEscape(e.message)+'</p><small>'+(e.starts_at?new Date(e.starts_at).toLocaleString():"No start")+' → '+(e.ends_at?new Date(e.ends_at).toLocaleString():"No end")+'</small><button class="secondary" onclick="ownerEditEvent(\''+e.id+'\')">Edit</button></div>').join("")||"No events created yet.";
  window.ownerEventRows=data||[];
 }
 function ownerEditEvent(id){
  const e=(window.ownerEventRows||[]).find(x=>x.id===id);if(!e)return;
+ const reward=(window.ownerEventRewardRows||[]).find(x=>x.event_id===id);
+ const rewardSelect=document.getElementById("ownerEventCollectibleReward"),hoursInput=document.getElementById("ownerEventTemporaryHours");
+ if(rewardSelect)rewardSelect.value=reward?.reward_collectible_id||"";if(hoursInput)hoursInput.value=reward?.temporary_reward_hours||0;
  document.getElementById("ownerEventId").value=e.id;document.getElementById("adminEventTitle").value=e.title;document.getElementById("adminEventDetails").value=e.message;document.getElementById("adminEventStart").value=e.starts_at?new Date(e.starts_at).toISOString().slice(0,16):"";document.getElementById("adminEventEnd").value=e.ends_at?new Date(e.ends_at).toISOString().slice(0,16):"";document.getElementById("adminEventReward").value=e.reward_tokens;document.getElementById("adminEventStatus").value=e.status;
 }
 async function ownerLoadFeatureControls(){
@@ -1114,10 +1118,12 @@ async async function loadWinterfestMegaFeatures(){
  if(!session)return;
  const status=document.getElementById("christmasBonusStatus"),box=document.getElementById("eventRewardBoard");
  try{
-  const [secret,temps,events]=await Promise.all([supabaseClient.rpc("linket_get_christmas_secret_quantity"),supabaseClient.rpc("linket_player_list_temporary_collectibles"),supabaseClient.rpc("linket_player_list_active_events")]);
-  if(secret.error)throw secret.error;if(temps.error)throw temps.error;if(events.error)throw events.error;
+  const [secret,temps,events,claimed]=await Promise.all([supabaseClient.rpc("linket_get_christmas_secret_quantity"),supabaseClient.rpc("linket_player_list_temporary_collectibles"),supabaseClient.rpc("linket_player_list_active_events"),supabaseClient.rpc("linket_get_christmas_bonus_claimed")]);
+  if(secret.error)throw secret.error;if(temps.error)throw temps.error;if(events.error)throw events.error;if(claimed.error)throw claimed.error;
   player.christmasSecretQuantity=Number(secret.data)||0;player.tempRows=temps.data||[];
-  if(status)status.textContent="Own all six regular Christmas drops to unlock the one-time 5,000-token bonus. "+(player.christmasSecretQuantity?"🔥 Frostfire Phoenix owned ×"+player.christmasSecretQuantity+".":"");
+  const bonusButton=document.getElementById("claimChristmasCollectionBonus");
+  if(bonusButton){bonusButton.disabled=!!claimed.data;bonusButton.textContent=claimed.data?"✅ Bonus already claimed":"🎁 Claim 5,000 tokens";}
+  if(status)status.textContent=claimed.data?"You already claimed your 5,000-token Christmas collection bonus.":"Own all six regular Christmas drops to unlock the one-time 5,000-token bonus. "+(player.christmasSecretQuantity?"🔥 Frostfire Phoenix owned ×"+player.christmasSecretQuantity+".":"");
   if(box)box.innerHTML=(events.data||[]).map(e=>'<div class="card"><h3>🎉 '+accountSafe(e.title)+'</h3><p class="small">'+accountSafe(e.message||"")+'</p><p><b>🪙 '+Number(e.reward_tokens||0).toLocaleString()+' tokens</b>'+(e.reward_collectible_id?' · '+accountSafe(e.reward_collectible_id):"")+'</p>'+(e.temporary_reward_hours>0?'<p class="small">⏳ Collectible expires after '+e.temporary_reward_hours+' hours</p>':"")+'<button '+(e.claimed?'disabled':'')+' onclick="claimLiveEventReward(\''+e.id+'\')">'+(e.claimed?'✅ Reward claimed':'🎁 Claim event reward')+'</button></div>').join("")||'<div class="card">No active event rewards right now. Check back during the next event!</div>';
   drawCollection();
  }catch(e){if(status)status.textContent="Winterfest rewards need the mega-update SQL installed: "+(e.message||e);if(box)box.textContent="Event rewards could not load: "+(e.message||e);}
@@ -1393,7 +1399,7 @@ function drawCollection(){
  const godCard=showOwnerGod?'<div class="card collection-card owner-god-card" style="border:2px solid #f5c542;background:linear-gradient(145deg,#21133d,#453078);box-shadow:0 0 24px #f5c54255"><div class="emoji" style="font-size:4rem;text-shadow:0 0 22px #ffe77a">👑</div><h3 style="color:#ffe77a">Owner God</h3><span class="secret-exclusive-stripes">SECRET EXCLUSIVE</span><p><span class="owned-count">Owned ×'+ownerGodQty+'</span></p><p class="small">A permanent, untradeable gift from the Linket owner. Cannot be sold.</p><span class="small">🔒 Permanently protected</span></div>':'';
  const frostfireCard=showFrostfire?'<div class="card collection-card christmas-animated frostfire-secret"><div class="emoji">🔥</div><h3>Frostfire Phoenix</h3><span class="secret-exclusive-stripes">WINTERFEST SECRET</span><p><span class="owned-count">Owned ×'+secretQty+'</span></p><p class="small">A 0.01% Christmas Pack secret. Permanently yours and cannot be sold.</p><span class="small">✨ Mythical · Secret drop</span></div>':'';
  const daBearsCard=showDaBears?'<div class="card collection-card owner-god-card" style="border:2px solid #fff;background:linear-gradient(145deg,#080808,#383838);box-shadow:0 0 24px #ffffff44"><div class="emoji" style="font-size:4rem;text-shadow:0 0 22px #ffffff">🐻</div><h3 style="color:#fff">Da Bears</h3><span class="secret-exclusive-stripes">SECRET EXCLUSIVE</span><p><span class="owned-count">Owned ×'+daBearsQty+'</span></p><p class="small">A permanent, untradeable gift from the Linket owner. Cannot be sold.</p><span class="small">🔒 Permanently protected</span></div>':'';
- const regular=visible.length?visible.map(v=>{const x=v.item,i=v.index,qty=v.qty,owned=qty>0;return '<div class="card collection-card">'+(owned?collectibleArt(x[0],x[1],"collection-art"):'<div class="emoji">❔</div>')+'<h3>'+(owned?x[0]:"Undiscovered")+'</h3><span class="rarity '+x[2]+'">'+x[2]+'</span><p>'+(owned?'<span class="owned-count">Owned ×'+qty+'</span>':'<span class="small">Not collected yet</span>')+'</p>'+(owned?'<p class="small">Sell value: '+prices[x[2]]+' tokens each</p><input aria-label="Quantity to sell" id="sellQty'+i+'" type="number" min="1" max="'+qty+'" value="1"><button onclick="sellCollectible('+i+')">💰 Sell copies</button>':'')+'</div>';}).join(""):'<div class="collection-empty">No collectibles match that search. Try another name or rarity.</div>';
+ const regular=visible.length?visible.map(v=>{const x=v.item,i=v.index,qty=v.qty,owned=qty>0,festive=["Gingerbread Buddy","Snowflake Sprite","Peppermint Penguin","Frosty Snowman","Reindeer Dasher","Santa Claus"].includes(x[0]);return '<div class="card collection-card '+(festive?'christmas-animated':'')+'">'+(owned?collectibleArt(x[0],x[1],"collection-art"):'<div class="emoji">❔</div>')+'<h3>'+(owned?x[0]:"Undiscovered")+'</h3><span class="rarity '+x[2]+'">'+x[2]+'</span><p>'+(owned?'<span class="owned-count">Owned ×'+qty+'</span>':'<span class="small">Not collected yet</span>')+'</p>'+(owned?'<p class="small">Sell value: '+prices[x[2]]+' tokens each</p><input aria-label="Quantity to sell" id="sellQty'+i+'" type="number" min="1" max="'+qty+'" value="1"><button onclick="sellCollectible('+i+')">💰 Sell copies</button>':'')+'</div>';}).join(""):'<div class="collection-empty">No collectibles match that search. Try another name or rarity.</div>';
  document.getElementById("collection").innerHTML=godCard+daBearsCard+frostfireCard+regular+(player.tempRows||[]).filter(t=>new Date(t.expires_at)>new Date()).map(t=>{const item=items.find(x=>x[0]===t.collectible_id);if(!item)return "";return '<div class="card collection-card temporary-collectible"><div class="emoji">'+item[1]+'</div><h3>'+item[0]+'</h3><span class="rarity '+item[2]+'">TEMPORARY</span><p><span class="owned-count">Owned ×'+Number(t.quantity)+'</span></p><p class="small">Expires '+new Date(t.expires_at).toLocaleString()+'</p></div>';}).join("");
 }
 async function sellCollectible(index){const item=items[index],qty=Number(document.getElementById("sellQty"+index).value),owned=Number(player.quantities?.[item[0]]||0);if(!Number.isInteger(qty)||qty<1||qty>owned){alert("Choose a quantity from 1 to "+owned+".");return;}if(!confirm("Sell "+qty+" × "+item[0]+"?"))return;try{const {data,error}=await supabaseClient.rpc("linket_sell_collectibles",{p_collectible_id:item[0],p_quantity:qty});if(error)throw error;const r=Array.isArray(data)?data[0]:data;await refreshSavedGame();drawCollection();alert("Sold for "+Number(r.tokens_earned).toLocaleString()+" tokens!");}catch(e){alert(e.message||"Sale failed.");}}
@@ -1453,7 +1459,8 @@ const packContents = [
  ]
 ];
 function renderPackContents(index){
- const entries=packContents[index]||[];
+ const packContentIndex=[7,3,1,4,2,5,6][index]??index;
+ const entries=packContents[packContentIndex]||[];
  const rows=entries.map(function(entry){
   const item=items.find(function(x){return x[0]===entry[0];});
   if(!item)return "";
