@@ -328,7 +328,7 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div class="card"><div class="emoji">👑</div><h2 id="ownerName">—</h2><p>Signed-in owner</p></div>
 </div>
 <div class="card owner-section"><h2>👥 Player management</h2><p class="small">Review player accounts and select one to manage.</p>
-<label for="ownerPlayerSearch">🔎 Search players</label><input id="ownerPlayerSearch" type="search" placeholder="Search by username or account status" oninput="renderOwnerPlayerRows()"><div class="owner-actions"><button class="secondary" onclick="filterOwnerPlayers('all')">All players</button><button class="secondary" onclick="filterOwnerPlayers('active')">Active</button><button class="secondary" onclick="filterOwnerPlayers('banned')">Banned</button></div><div class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div><p id="ownerSelectedPlayer" class="small" role="status" aria-live="polite">Choose Manage beside a player to jump to their controls.</p></div>
+<label for="ownerPlayerSearch">🔎 Search players</label><input id="ownerPlayerSearch" type="search" placeholder="Search by username or account status" oninput="renderOwnerPlayerRows()"><div class="owner-actions" id="ownerPlayerFilters"><button type="button" data-player-filter="all" class="secondary" onclick="filterOwnerPlayers('all')">All players</button><button type="button" data-player-filter="active" class="secondary" onclick="filterOwnerPlayers('active')">Active</button><button type="button" data-player-filter="banned" class="secondary" onclick="filterOwnerPlayers('banned')">Banned</button></div><div class="table-wrap"><table class="owner-table"><thead><tr><th>Username</th><th>Tokens</th><th>Collectibles</th><th>Account</th><th></th></tr></thead><tbody id="ownerPlayersBody"><tr><td colspan="5">Loading players…</td></tr></tbody></table></div><p id="ownerSelectedPlayer" class="small" role="status" aria-live="polite">Choose Manage beside a player to jump to their controls.</p></div>
 <div class="grid owner-tools-grid">
 <div class="card owner-section"><h2>🪙 Adjust player tokens</h2><label for="ownerTarget">Player</label><select id="ownerTarget" class="owner-select"></select>
 <label for="ownerTokenAmount">Amount</label><input id="ownerTokenAmount" type="number" min="1" max="1000000000" value="100">
@@ -812,17 +812,31 @@ function renderOwnerDashboard(){
  if(collectibleCount)collectibleCount.textContent=player.owned.length;
 }
 let ownerPlayerFilter="all";
-function filterOwnerPlayers(filter){ownerPlayerFilter=filter;renderOwnerPlayerRows();}
+function filterOwnerPlayers(filter){
+ const allowed=["all","active","banned"];
+ ownerPlayerFilter=allowed.includes(String(filter).toLowerCase())?String(filter).toLowerCase():"all";
+ const search=document.getElementById("ownerPlayerSearch");if(search)search.value="";
+ renderOwnerPlayerRows();
+}
 function renderOwnerPlayerRows(){
  const body=document.getElementById("ownerPlayersBody");if(!body)return;
+ document.querySelectorAll("#ownerPlayerFilters [data-player-filter]").forEach(button=>{
+  const selected=button.dataset.playerFilter===ownerPlayerFilter;
+  button.classList.toggle("active",selected);
+  button.setAttribute("aria-pressed",selected?"true":"false");
+ });
  const term=(document.getElementById("ownerPlayerSearch")?.value||"").trim().toLowerCase();
+ const isBanned=p=>p.is_banned===true||p.is_banned===1||String(p.is_banned).toLowerCase()==="true";
  const rows=ownerPlayers.filter(p=>{
-  const banned=!!p.is_banned;
+  const banned=isBanned(p);
   if(ownerPlayerFilter==="active"&&banned)return false;
   if(ownerPlayerFilter==="banned"&&!banned)return false;
-  return String(p.username||"").toLowerCase().includes(term)||(banned?"banned":"active").includes(term);
+  return !term||String(p.username||"").toLowerCase().includes(term)||(banned?"banned":"active").includes(term);
  });
- body.innerHTML=rows.length?rows.map(p=>'<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(p.is_banned?'Banned':'Player'))+'</td><td><button onclick="selectOwnerPlayer(\''+p.player_id+'\')">Manage</button></td></tr>').join(""):'<tr><td colspan="5">No players match this search.</td></tr>';
+ body.innerHTML=rows.length?rows.map(p=>{
+  const banned=isBanned(p);
+  return '<tr><td>'+ownerEscape(p.username)+'</td><td>'+Number(p.tokens||0).toLocaleString()+'</td><td>'+Number(p.collectible_count||0)+'</td><td>'+(p.is_owner?'Owner':(banned?'Banned':'Player'))+'</td><td><button type="button" onclick="selectOwnerPlayer(&quot;'+ownerEscape(p.player_id)+'&quot;)">Manage</button></td></tr>';
+ }).join(""):'<tr><td colspan="5">No '+(ownerPlayerFilter==="active"?"active":ownerPlayerFilter==="banned"?"banned":"")+' players match this search.</td></tr>';
 }
 async function adminPublishEvent(){
  const title=document.getElementById("adminEventTitle").value.trim(),message=document.getElementById("adminEventDetails").value.trim();
