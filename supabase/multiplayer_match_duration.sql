@@ -52,7 +52,7 @@ BEGIN
     RAISE EXCEPTION 'The multiplayer match time is over.';
   END IF;
   IF NOT EXISTS(SELECT 1 FROM public.linket_live_room_players WHERE room_id=p_room_id AND user_id=auth.uid()) THEN RAISE EXCEPTION 'You are not in this room.'; END IF;
-  IF p_question<>v_room.current_question OR p_question NOT BETWEEN 0 AND 4 THEN RAISE EXCEPTION 'That question is no longer active.'; END IF;
+  IF p_question<>v_room.current_question OR p_question<0 THEN RAISE EXCEPTION 'That question is no longer active.'; END IF;
   IF p_answer NOT BETWEEN 0 AND 2 THEN RAISE EXCEPTION 'Invalid answer.'; END IF;
   IF v_room.question_started_at<now()-make_interval(secs=>CASE v_room.game_mode WHEN 'speed_round' THEN 8 WHEN 'relaxed_round' THEN 30 ELSE 15 END) THEN RAISE EXCEPTION 'Time is up for this question.'; END IF;
   IF v_room.answers ? v_user THEN RAISE EXCEPTION 'You already answered this question.'; END IF;
