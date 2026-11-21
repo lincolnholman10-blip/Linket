@@ -722,6 +722,7 @@ function renderAccount(){
  if(Number(player.daBearsQuantity||0)>0)secretAvatars.push(["__DA_BEARS__","🐻","Da Bears"]);
  if(Number(player.voidEmperorQuantity||0)>0)secretAvatars.push(["__VOID_EMPEROR__","🤴","Void Emperor"]);
  if(Number(player.linketGodQuantity||0)>0)secretAvatars.push(["__LINKET_GOD__","🌌","Linket God"]);
+ if(Number(player.linketGodQuantity||0)>0)secretAvatars.push(["__LINKET_GOD__","🌌","Linket God"]);
  if(Number(player.christmasSecretQuantity||0)>0)secretAvatars.push(["Frostfire Phoenix","🔥","Frostfire Phoenix"]);
  const current=profile.avatar_collectible||"";
  const secretOptions=secretAvatars.map(function(item){return '<option value="'+item[0]+'" '+(current===item[0]?'selected':'')+'>'+item[1]+' '+item[2]+' (Secret)</option>';}).join("");
@@ -752,7 +753,7 @@ async function changeMyUsername(){
 }
 async function saveAvatar(){
  const choice=document.getElementById("avatarChoice").value;
- const secretOwned=(choice==="__OWNER_GOD__"&&Number(player.ownerGodQuantity||0)>0)||(choice==="__DA_BEARS__"&&Number(player.daBearsQuantity||0)>0)||(choice==="__VOID_EMPEROR__"&&Number(player.voidEmperorQuantity||0)>0)||(choice==="__LINKET_GOD__"&&Number(player.linketGodQuantity||0)>0)||(choice==="Frostfire Phoenix"&&Number(player.christmasSecretQuantity||0)>0);
+ const secretOwned=(choice==="__LINKET_GOD__"&&Number(player.linketGodQuantity||0)>0)||(choice==="__OWNER_GOD__"&&Number(player.ownerGodQuantity||0)>0)||(choice==="__DA_BEARS__"&&Number(player.daBearsQuantity||0)>0)||(choice==="__VOID_EMPEROR__"&&Number(player.voidEmperorQuantity||0)>0)||(choice==="__LINKET_GOD__"&&Number(player.linketGodQuantity||0)>0)||(choice==="Frostfire Phoenix"&&Number(player.christmasSecretQuantity||0)>0);
  if(choice&&!Number(player.quantities?.[choice]||0)&&!secretOwned){alert("You can only use a collectible you own.");renderAccount();return;}
  try{
   const {error}=await supabaseClient.rpc("linket_set_avatar_with_secrets",{p_collectible_id:choice||null});
@@ -1459,6 +1460,7 @@ async function ownerRemoveCollectible(){
  const isOwnerGod=collectible==="__OWNER_GOD__";
  const isDaBears=collectible==="__DA_BEARS__";
  const isVoidEmperor=collectible==="__VOID_EMPEROR__";
+ const isLinketGod=collectible==="__LINKET_GOD__";
  const isFrostfire=collectible==="Frostfire Phoenix";
  const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":collectible;
  if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){
@@ -1499,6 +1501,7 @@ async function ownerGrantCollectible(){
  const isOwnerGod=collectible==="__OWNER_GOD__";
  const isDaBears=collectible==="__DA_BEARS__";
  const isVoidEmperor=collectible==="__VOID_EMPEROR__";
+ const isLinketGod=collectible==="__LINKET_GOD__";
  const isFrostfire=collectible==="Frostfire Phoenix";
  const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":isLinketGod?"Linket God":(collectible==="Frostfire Phoenix")?"Frostfire Phoenix":collectible;
  if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;}
@@ -1514,6 +1517,9 @@ async function ownerGrantCollectible(){
    data=result.data;error=result.error;
   }else if(isVoidEmperor){
    const result=await supabaseClient.rpc("linket_void_emperor_grant",{p_user_id:target,p_quantity:quantity});
+   data=result.data;error=result.error;
+  }else if(isLinketGod){
+   const result=await supabaseClient.rpc("linket_linket_god_grant",{p_user_id:target,p_quantity:quantity});
    data=result.data;error=result.error;
   }else if((collectible==="Frostfire Phoenix")){
    const result=await supabaseClient.rpc("linket_owner_grant_christmas_secret",{p_user_id:target,p_quantity:quantity});
@@ -1658,7 +1664,7 @@ function drawCollection(){
  const voidEmperorCard=showVoidEmperor?'<div class="card collection-card owner-god-card" style="border:2px solid #9b7cff;background:linear-gradient(145deg,#100b25,#30205a);box-shadow:0 0 30px #9b7cff88"><div class="emoji" style="font-size:4rem;text-shadow:0 0 24px #c7aaff">🤴</div><h3 style="color:#e6d5ff">Void Emperor</h3><span class="secret-exclusive-stripes">SECRET EXCLUSIVE</span><p><span class="owned-count">Owned ×'+voidEmperorQty+'</span></p><p class="small">A permanent, untradeable gift from the Linket owner. Cannot be sold.</p><span class="small">🔒 Permanently protected</span></div>':'';
  const linketGodCard=showLinketGod?'<div class="card collection-card owner-god-card" style="border:2px solid #62eaff;background:radial-gradient(circle at top,#254c83,#10152f 75%);box-shadow:0 0 32px #62eaff99,0 0 55px #9b7cff55"><div class="emoji" style="font-size:4rem;text-shadow:0 0 26px #62eaff">🌌</div><h3 style="color:#a8f3ff;text-shadow:0 0 12px #62eaff">Linket God</h3><span class="secret-exclusive-stripes">SECRET EXCLUSIVE</span><p><span class="owned-count">Owned ×'+linketGodQty+'</span></p><p class="small">The ultimate force behind Linket. A permanent, untradeable gift from the Linket owner.</p><span class="small">🔒 Permanently protected</span></div>':'';
  const regular=visible.length?visible.map(v=>{const x=v.item,i=v.index,qty=v.qty,owned=qty>0,festive=["Gingerbread Buddy","Snowflake Sprite","Peppermint Penguin","Frosty Snowman","Reindeer Dasher","Santa Claus"].includes(x[0]);return '<div class="card collection-card '+(festive?'christmas-animated':'')+'">'+(owned?collectibleArt(x[0],x[1],"collection-art"):'<div class="emoji">❔</div>')+'<h3>'+(owned?x[0]:"Undiscovered")+'</h3><span class="rarity '+x[2]+'">'+x[2]+'</span><p>'+(owned?'<span class="owned-count">Owned ×'+qty+'</span>':'<span class="small">Not collected yet</span>')+'</p>'+(owned?'<p class="small">Sell value: '+prices[x[2]]+' tokens each</p><input aria-label="Quantity to sell" id="sellQty'+i+'" type="number" min="1" max="'+qty+'" value="1"><button onclick="sellCollectible('+i+')">💰 Sell copies</button>':'')+'</div>';}).join(""):'<div class="collection-empty">No collectibles match that search. Try another name or rarity.</div>';
- document.getElementById("collection").innerHTML=godCard+daBearsCard+voidEmperorCard+frostfireCard+regular+(player.tempRows||[]).filter(t=>new Date(t.expires_at)>new Date()).map(t=>{const secretItems={"__OWNER_GOD__":["Owner God","👑","Secret Exclusive"],"__DA_BEARS__":["Da Bears","🐻","Secret Exclusive"],"__VOID_EMPEROR__":["Void Emperor","🤴","Secret Exclusive"],"Frostfire Phoenix":["Frostfire Phoenix","🔥","Christmastime Exclusive"]};const item=items.find(x=>x[0]===t.collectible_id);const secret=secretItems[t.collectible_id];const name=item?item[0]:secret?.[0],emoji=item?item[1]:secret?.[1],rarity=item?item[2]:secret?.[2];if(!name)return "";return '<div class="card collection-card temporary-collectible"><div class="emoji">'+emoji+'</div><h3>'+name+'</h3><span class="rarity '+(rarity==="Mythical"?"Mythical":"SecretExclusive")+'">TEMPORARY</span><p><span class="owned-count">Owned ×'+Number(t.quantity)+'</span></p><p class="small">Expires '+new Date(t.expires_at).toLocaleString()+'</p></div>';}).join("");
+ document.getElementById("collection").innerHTML=godCard+daBearsCard+voidEmperorCard+linketGodCard+frostfireCard+regular+(player.tempRows||[]).filter(t=>new Date(t.expires_at)>new Date()).map(t=>{const secretItems={"__OWNER_GOD__":["Owner God","👑","Secret Exclusive"],"__DA_BEARS__":["Da Bears","🐻","Secret Exclusive"],"__VOID_EMPEROR__":["Void Emperor","🤴","Secret Exclusive"],"Frostfire Phoenix":["Frostfire Phoenix","🔥","Christmastime Exclusive"]};const item=items.find(x=>x[0]===t.collectible_id);const secret=secretItems[t.collectible_id];const name=item?item[0]:secret?.[0],emoji=item?item[1]:secret?.[1],rarity=item?item[2]:secret?.[2];if(!name)return "";return '<div class="card collection-card temporary-collectible"><div class="emoji">'+emoji+'</div><h3>'+name+'</h3><span class="rarity '+(rarity==="Mythical"?"Mythical":"SecretExclusive")+'">TEMPORARY</span><p><span class="owned-count">Owned ×'+Number(t.quantity)+'</span></p><p class="small">Expires '+new Date(t.expires_at).toLocaleString()+'</p></div>';}).join("");
 }
 async function sellCollectible(index){const item=items[index],qty=Number(document.getElementById("sellQty"+index).value),owned=Number(player.quantities?.[item[0]]||0);if(!Number.isInteger(qty)||qty<1||qty>owned){alert("Choose a quantity from 1 to "+owned+".");return;}if(!confirm("Sell "+qty+" × "+item[0]+"?"))return;try{const {data,error}=await supabaseClient.rpc("linket_sell_collectibles",{p_collectible_id:item[0],p_quantity:qty});if(error)throw error;const r=Array.isArray(data)?data[0]:data;await refreshSavedGame();drawCollection();alert("Sold for "+Number(r.tokens_earned).toLocaleString()+" tokens!");}catch(e){alert(e.message||"Sale failed.");}}
 
