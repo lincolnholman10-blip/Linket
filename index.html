@@ -1150,7 +1150,7 @@ async function loadOwnerDashboard(){
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
   const collectibleSelect=document.getElementById("ownerCollectibleChoice");
-  collectibleSelect.innerHTML='<option value="__OWNER_GOD__">👑 Owner God — Secret Exclusive</option><option value="__DA_BEARS__">🐻 Da Bears — Secret Exclusive</option><option value="__VOID_EMPEROR__">🤴 Void Emperor — Secret Exclusive</option>'+items.map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("");
+  collectibleSelect.innerHTML='<option value="">Choose a collectible…</option>'+items.map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("")+'<option value="__OWNER_GOD__">👑 Owner God — Secret Exclusive</option><option value="__DA_BEARS__">🐻 Da Bears — Secret Exclusive</option><option value="__VOID_EMPEROR__">🤴 Void Emperor — Secret Exclusive</option>';
   const activity=document.getElementById("ownerActivity");
   const entries=activityResult.data||[];
   window.ownerActivityEntries=entries;
@@ -1310,7 +1310,7 @@ async function ownerRemoveCollectible(){
 async function ownerGrantTemporaryCollectible(){
  if(!player||!player.owner)return;
  const target=document.getElementById("ownerCollectibleTarget").value,collectible=document.getElementById("ownerCollectibleChoice").value,quantity=Number(document.getElementById("ownerCollectibleQuantity").value),hours=Number(document.getElementById("ownerTemporaryHours").value);
- if(!target||!collectible||collectible.startsWith("__")||!Number.isInteger(quantity)||quantity<1||quantity>1000||!Number.isInteger(hours)||hours<1||hours>8760){ownerMessage("Choose a regular collectible, player, quantity, and expiry from 1 to 8,760 hours.");return;}
+ if(!target){ownerMessage("Choose a player before granting a temporary collectible.");return;}if(!collectible){ownerMessage("Choose a regular collectible (not a Secret Exclusive).");return;}if(collectible.startsWith("__")){ownerMessage("Temporary grants currently support regular catalog collectibles, not Secret Exclusives.");return;}if(!Number.isInteger(quantity)||quantity<1||quantity>1000){ownerMessage("Enter a quantity from 1 to 1,000.");return;}if(!Number.isInteger(hours)||hours<1||hours>8760){ownerMessage("Set an expiry from 1 to 8,760 hours.");return;}
  try{const {data,error}=await supabaseClient.rpc("linket_owner_grant_temporary_collectible",{p_user_id:target,p_collectible_id:collectible,p_quantity:quantity,p_hours:hours});if(error)throw error;if(target!==session.user.id)await sendOwnerGiftNotification(target,"⏳ Temporary collectible received!",quantity+" × "+collectible+" was added to your collection and expires "+new Date(data).toLocaleString()+".");ownerMessage("Temporary collectible granted. Expires "+new Date(data).toLocaleString()+".");if(target===session.user.id){await refreshSavedGame();drawCollection();}}
  catch(e){ownerMessage("Could not grant temporary collectible: "+(e.message||e));}
 }
