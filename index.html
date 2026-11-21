@@ -1324,7 +1324,7 @@ async function loadOwnerDashboard(){
   const selects=[document.getElementById("ownerTarget"),document.getElementById("ownerCollectibleTarget")];
   selects.forEach(sel=>{const previous=sel.value;sel.innerHTML=ownerPlayers.map(p=>'<option value="'+p.player_id+'">'+ownerEscape(p.username)+(p.is_owner?' (Owner)':'')+'</option>').join("");if(ownerPlayers.some(p=>p.player_id===previous))sel.value=previous;});
   const collectibleSelect=document.getElementById("ownerCollectibleChoice");
-  collectibleSelect.innerHTML='<option value="">Choose a collectible…</option>'+items.filter(i=>i[0]!=="Frostfire Phoenix").map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("")+'<option value="__OWNER_GOD__">👑 Owner God — Secret Exclusive</option><option value="__DA_BEARS__">🐻 Da Bears — Secret Exclusive</option><option value="__VOID_EMPEROR__">🤴 Void Emperor — Secret Exclusive</option><option value="Frostfire Phoenix">🔥 Frostfire Phoenix — Secret Exclusive</option>';
+  collectibleSelect.innerHTML='<option value="">Choose a collectible…</option>'+items.filter(i=>i[0]!=="Frostfire Phoenix").map(i=>'<option value="'+ownerEscape(i[0])+'">'+i[1]+' '+ownerEscape(i[0])+' — '+i[2]+'</option>').join("")+'<option value="__OWNER_GOD__">👑 Owner God — Secret Exclusive</option><option value="__DA_BEARS__">🐻 Da Bears — Secret Exclusive</option><option value="__VOID_EMPEROR__">🤴 Void Emperor — Secret Exclusive</option><option value="__LINKET_GOD__">🌌 Linket God — Secret Exclusive</option><option value="Frostfire Phoenix">🔥 Frostfire Phoenix — Secret Exclusive</option>';
   const activity=document.getElementById("ownerActivity");
   const entries=activityResult.data||[];
   window.ownerActivityEntries=entries;
