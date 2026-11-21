@@ -720,7 +720,25 @@ function renderAccount(){
  const secretAvatar=secretAvatars.find(function(item){return item[0]===current;});
  const avatarEmoji=avatar?avatar[1]:(secretAvatar?secretAvatar[1]:"👤");
  const avatarName=avatar?avatar[0]:(secretAvatar?secretAvatar[2]:"Default avatar");
- document.getElementById("accountDetails").innerHTML='<div class="card avatar-card" style="text-align:center"><div class="avatar-card-kicker">✨ YOUR PLAYER IDENTITY</div><div class="avatar-preview-ring"><div class="avatar-preview-emoji">'+avatarEmoji+'</div></div><h2 class="avatar-name">'+accountSafe(avatarName)+'</h2><p class="small">Make your profile yours! Pick any collectible or secret collectible you own.</p><label for="avatarChoice">Choose your champion</label><select id="avatarChoice" class="avatar-picker" style="width:100%;margin:10px 0">'+options+'</select><button class="avatar-save-btn" onclick="saveAvatar()">🚀 Equip My Avatar</button><p class="small">Secret avatars appear here only while you own them.</p></div>'+rows.map(function(row){return '<div class="card" style="text-align:left"><div class="small">'+row[0]+'</div><h3 style="overflow-wrap:anywhere">'+accountSafe(row[1])+'</h3></div>';}).join("");
+ document.getElementById("accountDetails").innerHTML='<div class="card avatar-card" style="text-align:center"><div class="avatar-card-kicker">✏️ CHANGE USERNAME</div><h2>Choose a new username</h2><p class="small">Your new username will appear across Linket, including player searches and leaderboards.</p><label for="newUsername">New username</label><input id="newUsername" maxlength="24" minlength="3" value="'+accountSafe(profile.username||player.name)+'" autocomplete="nickname" placeholder="3–24 characters" style="width:100%;margin:10px 0"><button class="avatar-save-btn" onclick="changeMyUsername()">💾 Save Username</button><p id="usernameChangeStatus" class="small" role="status" aria-live="polite"></p></div><div class="card avatar-card" style="text-align:center"><div class="avatar-card-kicker">✨ YOUR PLAYER IDENTITY</div><div class="avatar-preview-ring"><div class="avatar-preview-emoji">'+avatarEmoji+'</div></div><h2 class="avatar-name">'+accountSafe(avatarName)+'</h2><p class="small">Make your profile yours! Pick any collectible or secret collectible you own.</p><label for="avatarChoice">Choose your champion</label><select id="avatarChoice" class="avatar-picker" style="width:100%;margin:10px 0">'+options+'</select><button class="avatar-save-btn" onclick="saveAvatar()">🚀 Equip My Avatar</button><p class="small">Secret avatars appear here only while you own them.</p></div>'+rows.map(function(row){return '<div class="card" style="text-align:left"><div class="small">'+row[0]+'</div><h3 style="overflow-wrap:anywhere">'+accountSafe(row[1])+'</h3></div>';}).join("");
+}
+async function changeMyUsername(){
+ const input=document.getElementById("newUsername"),status=document.getElementById("usernameChangeStatus"),button=input?.parentElement?.querySelector("button");
+ const username=(input?.value||"").trim();
+ if(!/^[A-Za-z0-9_ ]{3,24}$/.test(username)){if(status)status.textContent="Use 3–24 letters, numbers, spaces, or underscores.";return;}
+ if(username.toLowerCase()===(profile.username||"").toLowerCase()){if(status)status.textContent="That is already your username.";return;}
+ if(button){button.disabled=true;button.textContent="Saving…";}
+ if(status)status.textContent="Updating your username…";
+ try{
+  const {data,error}=await supabaseClient.rpc("linket_change_username",{p_username:username});
+  if(error)throw error;
+  profile.username=String(data||username);player.name=profile.username;
+  if(status)status.textContent="Username changed successfully to "+profile.username+".";
+  renderAccount();
+  if(player.owner)loadOwnerDashboard();
+  if(typeof loadLeaderboard==="function")loadLeaderboard();
+ }catch(e){if(status)status.textContent="Could not change username: "+(e.message||e);}
+ finally{const b=document.querySelector("#accountDetails button[onclick='changeMyUsername()']");if(b){b.disabled=false;b.textContent="💾 Save Username";}}
 }
 async function saveAvatar(){
  const choice=document.getElementById("avatarChoice").value;
