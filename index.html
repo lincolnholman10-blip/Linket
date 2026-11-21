@@ -2159,7 +2159,7 @@ function answerLinketAdventure(choice){
   s.streak++;s.score+=100+Math.min(s.streak,5)*20+Math.max(0,s.timeLeft)*3;
   if(s.kind==="racing"){if(s.lane===s.obstacleLane){s.progress=Math.max(0,s.progress-5);s.streak=0;document.getElementById("advFeedback").textContent="💥 You hit a roadblock! Choose another lane next time.";}else{s.progress=Math.min(100,s.progress+15);document.getElementById("advFeedback").textContent="🚀 Clean boost! Your kart races forward!";}s.obstacleLane=Math.floor(Math.random()*3);}
   else if(s.kind==="battle"){s.enemyHp--;document.getElementById("advFeedback").textContent="⚔️ Direct hit! The rival loses 1 HP.";}
-  else if(s.kind==="fishing"){s.catches++;s.bait=Math.max(0,s.bait-1);document.getElementById("advFeedback").textContent=["🐟 Common catch!","🐠 Rare catch!","🦈 Epic catch!"][Math.floor(Math.random()*3)];}
+  else if(s.kind==="fishing"){s.catches++;document.getElementById("advFeedback").textContent=["🐟 Common catch!","🐠 Rare catch!","🦈 Epic catch!"][Math.floor(Math.random()*3)];}
   else if(s.kind==="monster"){s.monsterHp-=s.streak>=3?2:1;document.getElementById("advFeedback").textContent=s.streak>=3?"💥 COMBO ATTACK! 2 damage!":"🥊 You landed a hit!";}
   else if(s.kind==="crypto"){s.keys++;document.getElementById("advFeedback").textContent="🔑 Access key secured!";}
   else document.getElementById("advFeedback").textContent="✅ Correct! Your streak bonus is growing.";
