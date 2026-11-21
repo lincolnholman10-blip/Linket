@@ -2192,6 +2192,108 @@ function answerLinketAdventure(choice){
  setTimeout(()=>{if(modeState===s&&!s.finished)renderLinketAdventureQuestion();},500);
 }
 
+
+/* Rebuilt first four modes with visibly different gameplay */
+window.startMode=function(id){
+ if(modeTimer){clearInterval(modeTimer);modeTimer=null;}
+ if(id===0)return window.startTower();
+ if(id===1)return window.startGold();
+ if(id===2)return window.startCafe();
+ if(id===3)return window.startFactory();
+};
+window.startTower=function(){
+ const lv=modeUnlocks.tower||1;
+ modeState={kind:"tower",finished:false,wave:0,hp:8,kills:0,coins:15,towers:[],enemies:[],spawn:0,tick:0};
+ modeShell("🛡️ Tower Defense — Wave 1","Build towers along the road, then launch waves. Towers automatically attack approaching monsters. Earn coins for every monster defeated.",'<span>🏰 Base HP: <b id="tdHp">8</b></span><span>👾 Kills: <b id="tdKills">0</b></span><span>🪙 Coins: <b id="tdCoins">15</b></span><span>🌊 Wave: <b id="tdWave">0</b>/5</span>','<p>Choose a tile to build a tower (5 coins). Select a tower to upgrade it (4 coins).</p><div id="tdBoard" class="game-board" style="grid-template-columns:repeat(5,1fr)"></div><button onclick="towerStartWave()">🚨 Launch wave</button>');
+ const b=document.getElementById("tdBoard");for(let i=0;i<25;i++){const x=document.createElement("button");x.className="game-cell";x.textContent=(i%5===2?"🛤️":"·");x.onclick=()=>towerPlace(i);b.appendChild(x);}
+};
+window.towerPlace=function(i){
+ const s=modeState;if(!s||s.finished||s.waveActive)return;let t=s.towers.find(x=>x.pos===i);
+ if(t){if(t.level>=3||s.coins<4)return modeNote("Max level reached or not enough coins.");s.coins-=4;t.level++;modeNote("⬆️ Tower upgraded to level "+t.level+".");}
+ else{if(s.coins<5||s.towers.length>=8)return modeNote("Need 5 coins or all tower slots are full.");s.coins-=5;s.towers.push({pos:i,level:1});modeNote("🗼 Tower built!");}
+ document.getElementById("tdCoins").textContent=s.coins;towerDrawBoard(s);
+};
+window.towerDrawBoard=function(s){
+ const b=document.getElementById("tdBoard");if(!b)return;[...b.children].forEach((x,i)=>{const t=s.towers.find(z=>z.pos===i),e=s.enemies.find(z=>z.pos===i);x.textContent=e?"👾":t?["","🗼","🏰","👑"][t.level]:(i%5===2?"🛤️":"·");});
+};
+window.towerStartWave=function(){
+ const s=modeState;if(!s||s.finished||s.waveActive)return;if(!s.towers.length)return modeNote("Build at least one tower first.");
+ if(s.wave>=5)return modeWin("🏆 You defended the base through all 5 waves!");
+ s.wave++;s.waveActive=true;s.spawn=0;s.tick=0;s.enemies=[];document.getElementById("tdWave").textContent=s.wave;modeNote("🌊 Wave "+s.wave+" incoming!");
+ if(modeTimer)clearInterval(modeTimer);
+ modeTimer=setInterval(()=>{
+  if(modeState!==s||s.finished){clearInterval(modeTimer);modeTimer=null;return;}s.tick++;
+  const count=5+s.wave*2;
+  if(s.spawn<count&&s.tick%2===0){s.enemies.push({pos:0,hp:1+s.wave});s.spawn++;}
+  s.towers.forEach(t=>{const e=s.enemies.find(x=>x.hp>0&&Math.abs(x.pos-t.pos)<=2+t.level);if(e){e.hp-=t.level;if(e.hp<=0){s.kills++;s.coins+=2;}}});
+  s.enemies.forEach(e=>{if(e.hp>0)e.pos++;});
+  s.enemies=s.enemies.filter(e=>{if(e.hp>0&&e.pos>=25){s.hp--;return false;}return e.hp>0;});
+  towerDrawBoard(s);document.getElementById("tdHp").textContent=s.hp;document.getElementById("tdKills").textContent=s.kills;document.getElementById("tdCoins").textContent=s.coins;
+  if(s.hp<=0){s.finished=true;clearInterval(modeTimer);modeTimer=null;s.waveActive=false;modeNote("💥 Base destroyed! You stopped "+s.kills+" monsters.");}
+  else if(s.spawn>=count&&!s.enemies.length){clearInterval(modeTimer);modeTimer=null;s.waveActive=false;modeNote("✅ Wave cleared! Spend coins and launch the next wave.");if(s.wave===5)modeWin("🏆 All 5 waves defeated!");}
+ },550);
+};
+window.startGold=function(){
+ const level=modeUnlocks.gold||1;modeState={kind:"gold",finished:false,gold:0,turns:18,traps:0,shield:1,dynamite:1,streak:0,revealed:[]};
+ modeShell("💰 Gold Quest — Treasure Mine","Dig through the mine! Find gold, avoid traps, use your shield, and save dynamite for a big reveal.",'<span>💰 Gold: <b id="gGold">0</b>/8</span><span>⛏️ Digs: <b id="gTurns">18</b></span><span>💥 Traps: <b id="gTraps">0</b></span><span>🛡️ Shield: <b id="gShield">1</b></span><span>🔥 Streak: <b id="gStreak">0</b></span>','<div id="goldBoard" class="game-board" style="grid-template-columns:repeat(4,1fr)"></div><button id="gDynamite" onclick="goldDynamite()">🧨 Blast 3 tiles</button>');
+ const b=document.getElementById("goldBoard");for(let i=0;i<16;i++){const x=document.createElement("button");x.className="game-cell";x.textContent="❔";x.onclick=()=>goldPick(i,x);b.appendChild(x);}
+};
+window.goldPick=function(i,b){
+ const s=modeState;if(!s||s.finished||s.revealed.includes(i)||s.turns<=0)return;s.revealed.push(i);s.turns--;
+ const r=Math.random();if(r<.13){s.streak=0;if(s.shield){s.shield--;b.textContent="🛡️";modeNote("Shield blocked the trap!");}else{s.traps++;b.textContent="💣";modeNote("Trap! You lost a dig.");}}
+ else if(r<.58){const n=r<.27?2:1;s.gold+=n;s.streak++;b.textContent=n===2?"💎":"🪙";modeNote(n===2?"Jackpot gem! +2 gold.":"Gold found!");if(s.streak===3){s.gold+=2;s.streak=0;modeNote("🔥 3-pick streak! Bonus +2 gold!");}}
+ else{s.streak=0;b.textContent="🪨";modeNote("Rock! No treasure here.");}
+ b.disabled=true;document.getElementById("gGold").textContent=s.gold;document.getElementById("gTurns").textContent=s.turns;document.getElementById("gTraps").textContent=s.traps;document.getElementById("gShield").textContent=s.shield;document.getElementById("gStreak").textContent=s.streak;
+ if(s.gold>=8)modeWin("💰 Mine cleared! You found 8 gold!");else if(!s.turns){s.finished=true;modeNote("Mine closed! You collected "+s.gold+" gold.");}
+};
+window.goldDynamite=function(){
+ const s=modeState;if(!s||s.finished||!s.dynamite)return;s.dynamite=0;const btn=document.getElementById("gDynamite");btn.disabled=true;btn.textContent="🧨 Used!";
+ const hidden=[...document.getElementById("goldBoard").children].map((b,i)=>({b,i})).filter(x=>!s.revealed.includes(x.i));
+ for(let n=0;n<3&&hidden.length&&!s.finished;n++){const j=Math.floor(Math.random()*hidden.length),x=hidden.splice(j,1)[0];goldPick(x.i,x.b);}
+};
+window.startCafe=function(){
+ modeState={kind:"cafe",finished:false,served:0,goal:8,lives:3,patience:15,combo:0,tips:0,time:75,step:0};
+ modeShell("☕ Cafe Rush — Lunch Shift","Run your own cafe! Read each customer's order, tap ingredients in the right sequence, and serve them before their patience runs out.",'<span>⭐ Served: <b id="cScore">0</b>/8</span><span>❤️ Lives: <b id="cLives">3</b></span><span>⌛ Patience: <b id="cPatience">15</b>s</span><span>🔥 Combo: <b id="cCombo">0</b></span><span>🪙 Tips: <b id="cTips">0</b></span><span>⏱️ Shift: <b id="cTime">75</b>s</span>','<div class="card"><h2 id="cOrder">Customer waiting…</h2><p id="cRecipe"></p><div id="cProgress" class="game-hud"></div><div id="cChoices" class="game-hud"></div></div>');
+ cafeNext();
+ if(modeTimer)clearInterval(modeTimer);
+ modeTimer=setInterval(()=>{const s=modeState;if(!s||s.finished)return;s.time--;s.patience--;document.getElementById("cTime").textContent=s.time;document.getElementById("cPatience").textContent=s.patience;if(s.patience<=0){s.lives--;s.combo=0;document.getElementById("cLives").textContent=s.lives;document.getElementById("cCombo").textContent=0;if(s.lives<=0){s.finished=true;clearInterval(modeTimer);modeTimer=null;return modeNote("Cafe closed! You served "+s.served+" customers.");}modeNote("Customer walked out! New customer.");cafeNext();}if(s.time<=0){s.finished=true;clearInterval(modeTimer);modeTimer=null;modeNote("Shift ended! You served "+s.served+" customers and earned "+s.tips+" tips.");}},1000);
+};
+window.cafeNext=function(){
+ const s=modeState;if(!s||s.finished)return;if(s.served>=s.goal)return modeWin("🏆 Cafe champion! You served 8 customers and earned "+s.tips+" tips!");
+ const recipes=[{name:"Strawberry smoothie",seq:["🍓","🥛","🍯"]},{name:"Blueberry toast",seq:["🍞","🫐","🧈"]},{name:"Banana sundae",seq:["🍌","🍦","🍯"]},{name:"Chocolate shake",seq:["🍫","🥛","🍦"]}];
+ s.current=recipes[Math.floor(Math.random()*recipes.length)];s.step=0;s.patience=15;
+ document.getElementById("cOrder").textContent="🧑 Customer "+(s.served+1)+": "+s.current.name;
+ document.getElementById("cRecipe").textContent="Recipe: "+s.current.seq.join(" → ");
+ document.getElementById("cProgress").textContent="Ingredients: 0 / "+s.current.seq.length;
+ document.getElementById("cChoices").innerHTML=["🍓","🫐","🥛","🍞","🍯","🧈","🍎","🍌","🍫","🍦"].map(x=>'<button class="game-choice" onclick="cafeChoose(\''+x+'\')">'+x+'</button>').join("");
+};
+window.cafeChoose=function(x){
+ const s=modeState;if(!s||s.finished)return;if(x!==s.current.seq[s.step]){s.lives--;s.combo=0;document.getElementById("cLives").textContent=s.lives;document.getElementById("cCombo").textContent=0;s.step=0;document.getElementById("cProgress").textContent="Wrong ingredient! Start the recipe again.";if(s.lives<=0){s.finished=true;if(modeTimer)clearInterval(modeTimer);modeTimer=null;modeNote("Cafe closed! You served "+s.served+".");}return;}
+ s.step++;document.getElementById("cProgress").textContent="Ingredients: "+s.step+" / "+s.current.seq.length;
+ if(s.step===s.current.seq.length){s.served++;s.combo++;s.tips+=5+s.combo*2;document.getElementById("cScore").textContent=s.served;document.getElementById("cCombo").textContent=s.combo;document.getElementById("cTips").textContent=s.tips;modeNote("Order served! +"+(5+s.combo*2)+" tip coins.");setTimeout(()=>{if(modeState===s&&!s.finished)cafeNext();},400);}
+};
+window.startFactory=function(){
+ modeState={kind:"factory",finished:false,sorted:0,goal:15,left:25,lives:3,streak:0,quality:0,time:60,target:"🤖"};
+ modeShell("🏭 Factory Frenzy — Conveyor Shift","Work the moving production line! Sort the target product, reject defective ⚠️ items, and avoid mistakes before the shift ends.",'<span>🎯 Sorted: <b id="fScore">0</b>/15</span><span>📦 Items: <b id="fLeft">25</b></span><span>❤️ Lives: <b id="fLives">3</b></span><span>🔥 Streak: <b id="fStreak">0</b></span><span>⭐ Quality: <b id="fQuality">0</b></span><span>⏱️ <b id="fTime">60</b>s</span>','<h2 id="fTarget"></h2><div id="fBelt" class="game-board" style="grid-template-columns:repeat(5,1fr)"></div><p>Tap matching products to sort them. Tap ⚠️ to reject defects.</p>');
+ factoryNext();if(modeTimer)clearInterval(modeTimer);
+ modeTimer=setInterval(()=>{const s=modeState;if(!s||s.finished)return;s.time--;document.getElementById("fTime").textContent=s.time;if(s.time<=0){s.finished=true;clearInterval(modeTimer);modeTimer=null;modeNote("Shift over! You sorted "+s.sorted+" products.");}},1000);
+};
+window.factoryNext=function(){
+ const s=modeState;if(!s||s.finished)return;if(s.sorted>=s.goal)return modeWin("🏭 Production target reached! Factory shift complete.");if(s.left<=0){s.finished=true;if(modeTimer)clearInterval(modeTimer);modeTimer=null;return modeNote("Conveyor empty! You sorted "+s.sorted+" products.");}
+ const types=["🤖","🦊","🐝","🐢","🐉"];s.target=types[Math.floor(Math.random()*types.length)];document.getElementById("fTarget").textContent="🎯 SORT THIS PRODUCT: "+s.target;
+ const belt=document.getElementById("fBelt");belt.innerHTML="";const items=[];for(let i=0;i<5;i++){let x=Math.random()<.18?"⚠️":types[Math.floor(Math.random()*types.length)];if(i===0&&Math.random()<.7)x=s.target;items.push(x);}
+ items.forEach(x=>{const b=document.createElement("button");b.className="game-cell";b.textContent=x;b.onclick=()=>factoryPick(x);belt.appendChild(b);});
+};
+window.factoryPick=function(x){
+ const s=modeState;if(!s||s.finished)return;s.left--;
+ if(x==="⚠️"){s.quality++;s.streak++;modeNote("✅ Defect rejected! Quality +1.");}
+ else if(x===s.target){s.sorted++;s.streak++;modeNote(s.streak%3===0?"🔥 Triple-sort streak!":"Correct product sorted!");}
+ else{s.lives--;s.streak=0;modeNote("❌ Wrong product! You lost a life.");}
+ document.getElementById("fScore").textContent=s.sorted;document.getElementById("fLeft").textContent=s.left;document.getElementById("fLives").textContent=s.lives;document.getElementById("fStreak").textContent=s.streak;document.getElementById("fQuality").textContent=s.quality;
+ if(s.lives<=0){s.finished=true;if(modeTimer)clearInterval(modeTimer);modeTimer=null;modeNote("Factory shutdown! Correctly sorted "+s.sorted+".");return;}
+ factoryNext();
+};
+
 (async function restoreSession(){
  try{
   const {data,error}=await supabaseClient.auth.getSession();
