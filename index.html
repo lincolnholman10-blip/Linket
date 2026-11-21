@@ -343,6 +343,10 @@ input,select,textarea{border:1px solid #b9cdbb}
 <div class="owner-actions"><button onclick="loadOwnerDashboard()">↻ Refresh dashboard</button><button onclick="ownerUnlockAll()">✨ Unlock every collectible for me</button><button onclick="ownerRestoreTokens()">🪙 Restore my 1,000,000,000,000,000 tokens</button></div>
 <p id="ownerStatus" class="small" role="status" aria-live="polite"></p>
 <div class="card owner-section"><h2>📊 Game overview</h2><div class="grid owner-stats"><div class="card"><div class="emoji">📈</div><h3 id="ownerAverageTokens">—</h3><p>Average tokens per player</p></div><div class="card"><div class="emoji">🏆</div><h3 id="ownerTopPlayer">—</h3><p>Top token holder</p></div><div class="card"><div class="emoji">🎒</div><h3 id="ownerAverageCollectibles">—</h3><p>Average collectibles per player</p></div><div class="card"><div class="emoji">🚫</div><h3 id="ownerBannedCount">—</h3><p>Banned accounts</p></div></div><p class="small">Calculated from live player records.</p><div class="grid owner-stats"><div class="card"><div class="emoji">🪙</div><h3 id="ownerZeroTokenPlayers">—</h3><p>Players with zero tokens</p></div><div class="card"><div class="emoji">🎒</div><h3 id="ownerPlayersWithCollectibles">—</h3><p>Players with collectibles</p></div></div></div>
+<div class="grid owner-tools-grid">
+<div class="card owner-section"><h2>💰 Live Economy Monitor</h2><p class="small">Live estimates calculated from current player balances.</p><div class="grid owner-stats"><div class="card"><h3 id="ownerEconomyCirculation">—</h3><p>Tokens in circulation</p></div><div class="card"><h3 id="ownerEconomyRichest">—</h3><p>Richest player balance</p></div><div class="card"><h3 id="ownerEconomyMedian">—</h3><p>Median player balance</p></div></div><p id="ownerEconomyUpdated" class="small">Refresh the dashboard for the latest snapshot.</p></div>
+<div class="card owner-section"><h2>🛡️ Security Center</h2><p class="small">Highlights sensitive actions found in the recent activity log. This is an activity review, not a live login-failure or anti-cheat detector.</p><div class="grid owner-stats"><div class="card"><h3 id="ownerSecurityFlagCount">—</h3><p>Flagged recent actions</p></div><div class="card"><h3 id="ownerSecurityReviewed">—</h3><p>Actions reviewed</p></div></div><div id="ownerSecurityFeed" class="activity-list">Refresh the dashboard to review recent activity.</div></div>
+</div>
 <div class="grid owner-stats">
 <div class="card"><div class="emoji">👥</div><h2 id="ownerPlayerCount">—</h2><p>Total players</p></div>
 <div class="card"><div class="emoji">🪙</div><h2 id="ownerTokenTotal">—</h2><p>Tokens across all players</p></div>
@@ -1202,6 +1206,24 @@ async function loadLeaderboard(){
  try{const {data,error}=await supabaseClient.rpc("linket_get_leaderboard",{p_category:category,p_limit:50});if(error)throw error;body.innerHTML=(data||[]).map(p=>'<tr><td class="leaderboard-rank">#'+p.rank+'</td><td>'+accountSafe(p.username)+(p.user_id===session.user.id?' <b>(You)</b>':'')+'</td><td>'+Number(p.score||0).toLocaleString()+' '+accountSafe(p.detail)+'</td></tr>').join("")||'<tr><td colspan="3">No rankings yet. Be the first!</td></tr>';document.getElementById("leaderboardStatus").textContent="Showing the top 50 players.";}
  catch(e){body.innerHTML='<tr><td colspan="3">Leaderboard setup needed: '+accountSafe(e.message)+'</td></tr>';document.getElementById("leaderboardStatus").textContent="";}
 }
+function updateOwnerEconomy(players){
+ const balances=players.map(p=>Number(p.tokens||0)).sort((a,b)=>a-b);
+ const total=balances.reduce((sum,n)=>sum+n,0),middle=Math.floor(balances.length/2);
+ const median=balances.length?(balances.length%2?balances[middle]:(balances[middle-1]+balances[middle])/2):0;
+ const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+ set("ownerEconomyCirculation",total.toLocaleString());
+ set("ownerEconomyRichest",(balances[balances.length-1]||0).toLocaleString());
+ set("ownerEconomyMedian",Math.round(median).toLocaleString());
+ set("ownerEconomyUpdated","Updated "+new Date().toLocaleTimeString());
+}
+function updateOwnerSecurity(entries){
+ const terms=["ban","delete","remove","adjust","grant","rename","unlock","password","failed","suspicious"];
+ const flagged=(entries||[]).filter(a=>{const action=String(a.action||"").toLowerCase();return terms.some(t=>action.includes(t));});
+ const count=document.getElementById("ownerSecurityFlagCount"),reviewed=document.getElementById("ownerSecurityReviewed"),feed=document.getElementById("ownerSecurityFeed");
+ if(count)count.textContent=flagged.length.toLocaleString();
+ if(reviewed)reviewed.textContent=(entries||[]).length.toLocaleString();
+ if(feed)feed.innerHTML=flagged.length?flagged.slice(0,12).map(a=>'<div class="activity-item"><strong>🔎 '+ownerEscape(String(a.action||"activity").replaceAll("_"," "))+'</strong> · '+ownerEscape(a.actor_username||"Former user")+(a.target_username?' → '+ownerEscape(a.target_username):'')+'<small>'+ownerEscape(JSON.stringify(a.details||{}))+' · '+new Date(a.created_at).toLocaleString()+'</small></div>').join(""):'<div class="activity-item">No sensitive actions were flagged in the recent activity window.</div>';
+}
 function renderOwnerActivity(entries){const box=document.getElementById("ownerActivity");if(!box)return;box.innerHTML=entries.length?entries.map(a=>'<div class="activity-item"><strong>'+ownerEscape(String(a.action||"activity").replaceAll("_"," "))+'</strong> · '+ownerEscape(a.actor_username||"Former user")+(a.target_username?' → '+ownerEscape(a.target_username):'')+'<small>'+ownerEscape(JSON.stringify(a.details||{}))+' · '+new Date(a.created_at).toLocaleString()+'</small></div>').join(""):'No activity recorded yet.';}
 function filterOwnerActivity(){const q=(document.getElementById("ownerActivitySearch")?.value||"").trim().toLowerCase();const entries=window.ownerActivityEntries||[];renderOwnerActivity(entries.filter(a=>[a.action,a.actor_username,a.target_username,JSON.stringify(a.details||{})].join(" ").toLowerCase().includes(q)));}
 async function ownerLoadSecretCreations(){const box=document.getElementById("ownerSecretList");if(!box)return;const {data,error}=await supabaseClient.rpc("linket_owner_list_secret_creations");if(error)throw error;const rows=data||[];box.innerHTML=rows.length?rows.map(s=>'<div class="activity-item"><strong>'+ownerEscape(s.emoji)+' '+ownerEscape(s.collectible_id)+'</strong><p>'+ownerEscape(s.rarity)+' · '+ownerEscape(s.description)+'</p><small>Created '+new Date(s.created_at).toLocaleString()+'</small></div>').join(""):'No custom secrets created yet.';}
@@ -1219,6 +1241,7 @@ async function loadOwnerDashboard(){
   const activityResult=await supabaseClient.rpc("linket_owner_recent_activity",{p_limit:30});
   if(activityResult.error)throw new Error("Recent activity: "+activityResult.error.message);
   ownerPlayers=playersResult.data||[];
+  updateOwnerEconomy(ownerPlayers);
   const tokenTotal=ownerPlayers.reduce((sum,p)=>sum+Number(p.tokens||0),0);
   const collectibleTotal=ownerPlayers.reduce((sum,p)=>sum+Number(p.collectible_count||0),0);
   document.getElementById("ownerPlayerCount").textContent=ownerPlayers.length.toLocaleString();
@@ -1245,6 +1268,7 @@ async function loadOwnerDashboard(){
   const entries=activityResult.data||[];
   window.ownerActivityEntries=entries;
   renderOwnerActivity(entries);
+  updateOwnerSecurity(entries);
   ownerLoadStep="secret creations";await ownerLoadSecretCreations();
   ownerMessage("Dashboard updated just now.");
  }catch(e){ownerMessage("Could not load owner dashboard ("+ownerLoadStep+"): "+(e.message||e));}
