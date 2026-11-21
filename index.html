@@ -1462,7 +1462,7 @@ async function ownerRemoveCollectible(){
  const isVoidEmperor=collectible==="__VOID_EMPEROR__";
  const isLinketGod=collectible==="__LINKET_GOD__";
  const isFrostfire=collectible==="Frostfire Phoenix";
- const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":collectible;
+ const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":isLinketGod?"Linket God":collectible;
  if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){
   ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;
  }
