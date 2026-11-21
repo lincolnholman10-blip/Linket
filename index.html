@@ -1322,7 +1322,8 @@ async function ownerGrantCollectible(){
  const isOwnerGod=collectible==="__OWNER_GOD__";
  const isDaBears=collectible==="__DA_BEARS__";
  const isVoidEmperor=collectible==="__VOID_EMPEROR__";
- const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":collectible;
+ const isFrostfire=collectible==="Frostfire Phoenix";
+ const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":isFrostfire?"Frostfire Phoenix":collectible;
  if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;}
  if(!confirm("Grant "+quantity+" × "+displayName+" to the selected player?"))return;
  ownerMessage("Granting "+displayName+"…");
