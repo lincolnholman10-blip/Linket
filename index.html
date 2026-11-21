@@ -1322,8 +1322,8 @@ async function ownerGrantCollectible(){
  const isOwnerGod=collectible==="__OWNER_GOD__";
  const isDaBears=collectible==="__DA_BEARS__";
  const isVoidEmperor=collectible==="__VOID_EMPEROR__";
- const isFrostfire=collectible==="Frostfire Phoenix";
- const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":isFrostfire?"Frostfire Phoenix":collectible;
+ const (collectible==="Frostfire Phoenix")=collectible==="Frostfire Phoenix";
+ const displayName=isOwnerGod?"Owner God":isDaBears?"Da Bears":isVoidEmperor?"Void Emperor":(collectible==="Frostfire Phoenix")?"Frostfire Phoenix":collectible;
  if(!target||!collectible||!Number.isInteger(quantity)||quantity<1||quantity>1000){ownerMessage("Choose a player and collectible, and enter a quantity from 1 to 1000.");return;}
  if(!confirm("Grant "+quantity+" × "+displayName+" to the selected player?"))return;
  ownerMessage("Granting "+displayName+"…");
@@ -1338,7 +1338,7 @@ async function ownerGrantCollectible(){
   }else if(isVoidEmperor){
    const result=await supabaseClient.rpc("linket_void_emperor_grant",{p_user_id:target,p_quantity:quantity});
    data=result.data;error=result.error;
-  }else if(isFrostfire){
+  }else if((collectible==="Frostfire Phoenix")){
    const result=await supabaseClient.rpc("linket_owner_grant_christmas_secret",{p_user_id:target,p_quantity:quantity});
    data=result.data;error=result.error;
   }else{
@@ -1348,7 +1348,7 @@ async function ownerGrantCollectible(){
   if(error)throw error;
   if(target!==session.user.id){
    try{
-    await sendOwnerGiftNotification(target,isOwnerGod?"👑 You received Owner God!":isDaBears?"🐻 You received Da Bears!":isVoidEmperor?"🤴 You received Void Emperor!":isFrostfire?"🔥 You received Frostfire Phoenix!":"🎁 You received a collectible!",isOwnerGod?"The Linket owner granted you "+quantity+" × Owner God — a secret exclusive collectible!":isDaBears?"The Linket owner granted you "+quantity+" × Da Bears — a secret exclusive collectible!":isVoidEmperor?"The Linket owner granted you "+quantity+" × Void Emperor — a secret exclusive collectible!":isFrostfire?"The Linket owner granted you "+quantity+" × Frostfire Phoenix — a hidden Christmas secret!":"The Linket owner gave you "+quantity+" × "+collectible+"!");
+    await sendOwnerGiftNotification(target,isOwnerGod?"👑 You received Owner God!":isDaBears?"🐻 You received Da Bears!":isVoidEmperor?"🤴 You received Void Emperor!":(collectible==="Frostfire Phoenix")?"🔥 You received Frostfire Phoenix!":"🎁 You received a collectible!",isOwnerGod?"The Linket owner granted you "+quantity+" × Owner God — a secret exclusive collectible!":isDaBears?"The Linket owner granted you "+quantity+" × Da Bears — a secret exclusive collectible!":isVoidEmperor?"The Linket owner granted you "+quantity+" × Void Emperor — a secret exclusive collectible!":(collectible==="Frostfire Phoenix")?"The Linket owner granted you "+quantity+" × Frostfire Phoenix — a hidden Christmas secret!":"The Linket owner gave you "+quantity+" × "+collectible+"!");
    }catch(notificationError){
     console.warn("Collectible was granted, but the gift message could not be sent:",notificationError.message||notificationError);
    }
